@@ -1,0 +1,9 @@
+tweepy
+pandas
+scikit-learn
+matplotlib
+sqlalchemy
+fastapi
+uvicorn
+pytest
+python-dotenv
