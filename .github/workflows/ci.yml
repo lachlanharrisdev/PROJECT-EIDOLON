@@ -33,7 +33,7 @@ jobs:
         
     - name: Upload Keyword Monitor Results
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: keyword-monitor-results
         path: data/tests/keyword_monitor_results.json
