@@ -1,0 +1,593 @@
+{
+  "entities": {
+    "David Pocock": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Guardian": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Trump": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Dutton": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Australia": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Australian": {
+      "type": "NORP",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Daggy Dads": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Algeria": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "French": {
+      "type": "NORP",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Sky News Australia": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "The Canberra Times": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Scunthorpe": {
+      "type": "NORP",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "UK": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Albo": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Sunak": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Sky News": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Harry": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "The Australia Institute": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Albanese": {
+      "type": "NORP",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Crikey": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Parliament": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Taylor": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Australian Broadcasting Corporation": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Peter Dutton": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Anthony Albanese": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Letters - The Guardian": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Monique Ryan": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "US": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Qld": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Coalition": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Grenfell": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "ABC": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Sofi Oksanen": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Grattan": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Michelle Grattan": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Hugh White": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Perth": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "West Australian": {
+      "type": "NORP",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Muslims": {
+      "type": "NORP",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Islam": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Kenan Malik - The Guardian": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "EU": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Ukraine": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Turkey": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Anthony Albanese\u2019s": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Plibersek": {
+      "type": "NORP",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Liberal, Labor": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Nicolle Flint": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Boothby": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Hong Kong": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "China": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Democrats": {
+      "type": "NORP",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Ta-Nehisi Coates": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Brussels": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "The University of Melbourne": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Dutton\u2019s Aukus": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Wollongong - University of Wollongong": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Zombie": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "British": {
+      "type": "NORP",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Cabinet": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Syria": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "South Korea": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "CNN": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Melburnians": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Italy": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "NATO": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "\u2019s EU": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Mahmoud Khalil\u2019s": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Jo-Ann Mort - The Guardian": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Hong Kah North MP": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Amy Khor": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "The Straits Times": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "koala habitat": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Labour": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Twiggy": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Strategist": {
+      "type": "NORP",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Politics for Women": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Bernie Sanders": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Coachella": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Donald Trump": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Christopher Luxon": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Winston Peters": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Brazil": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Germany": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Lowy Institute": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "BBC": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "New Caledonia's": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Punter's": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Australians": {
+      "type": "NORP",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Parliament - Australian Broadcasting Corporation": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Bill Shorten": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Peter Dutton's": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "backflip": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Lodge": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "National Trust": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "Bob Hawke": {
+      "type": "PERSON",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "The University of Sydney": {
+      "type": "ORG",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    },
+    "BRICS": {
+      "type": "GPE",
+      "mentions": 1,
+      "first_seen": "2025-04-14T21:13:56.112112",
+      "last_seen": "2025-04-14T21:13:56.112112"
+    }
+  },
+  "last_updated": "2025-04-14T21:13:56.112112"
+}

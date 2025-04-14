@@ -21,7 +21,19 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        python -m spacy download en_core_web_sm
 
     - name: Run Tests
       run: |
         pytest
+
+    - name: Test Keyword Monitor
+      run: |
+        python tests/core/analysis/test_keyword_monitor.py
+        
+    - name: Upload Keyword Monitor Results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: keyword-monitor-results
+        path: data/tests/keyword_monitor_results.json
