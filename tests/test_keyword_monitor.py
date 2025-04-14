@@ -13,7 +13,13 @@ from urllib.parse import urlparse
 # Add parent directory to path to allow imports
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from core.analysis.keyword_monitor import KeywordMonitor, refresh_political_keywords, get_political_keywords
+try:
+    from core.analysis.keyword_monitor import KeywordMonitor, refresh_political_keywords, get_political_keywords
+except ModuleNotFoundError:
+    import sys
+    from pathlib import Path
+    sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
+    from core.analysis.keyword_monitor import KeywordMonitor, refresh_political_keywords, get_political_keywords
 
 def setup_logging():
     """Configure logging for the test script"""
