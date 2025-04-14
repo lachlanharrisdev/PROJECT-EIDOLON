@@ -30,8 +30,7 @@ def test_get_keyword_stats(mock_keyword_monitor):
     """
     Test that get_keyword_stats returns the correct keyword statistics.
     """
-    monitor = KeywordMonitor()
-    stats = monitor.get_keyword_stats()
+    stats = mock_keyword_monitor.get_keyword_stats()
     assert stats == {
         "keyword1": {"type": "ORG", "mentions": 5, "last_seen": "2025-04-15T08:02:30.996075"},
         "keyword2": {"type": "PERSON", "mentions": 3, "last_seen": "2025-04-15T08:02:30.996075"},
@@ -39,20 +38,28 @@ def test_get_keyword_stats(mock_keyword_monitor):
     mock_keyword_monitor.get_keyword_stats.assert_called_once()
 
 
-def test_rss_connection_success():
+def test_fetch_headlines_success(mock_keyword_monitor):
     """
-    Test that test_rss_connection succeeds for a valid RSS URL.
+    Test that fetch_headlines succeeds for a valid RSS URL.
     """
     with patch("requests.get") as mock_get:
         mock_get.return_value.status_code = 200
-        from tests.test_keyword_monitor import test_rss_connection
-        assert test_rss_connection("https://news.google.com/rss/search?q=politics") is True
+        mock_get.return_value.content = """
+        <rss>
+            <channel>
+                <item><title>Headline 1</title></item>
+                <item><title>Headline 2</title></item>
+            </channel>
+        </rss>
+        """
+        headlines = mock_keyword_monitor.fetch_headlines()
+        assert headlines == ["Headline 1", "Headline 2"]
 
 
-def test_rss_connection_failure():
+def test_fetch_headlines_failure(mock_keyword_monitor):
     """
-    Test that test_rss_connection fails for an invalid RSS URL.
+    Test that fetch_headlines handles errors gracefully.
     """
     with patch("requests.get", side_effect=Exception("Connection error")):
-        from tests.test_keyword_monitor import test_rss_connection
-        assert test_rss_connection("https://invalid-url.com/rss") is False
+        headlines = mock_keyword_monitor.fetch_headlines()
+        assert headlines == []

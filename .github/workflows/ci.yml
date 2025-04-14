@@ -26,7 +26,7 @@ jobs:
 
     - name: Run Tests
       run: |
-        pytest
+        pytest --log-cli-level=INFO
 
     - name: Test Keyword Monitor
       run: |

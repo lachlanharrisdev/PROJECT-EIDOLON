@@ -12,8 +12,10 @@ async def test_schedule_task_runs_periodically():
     async def mock_task():
         results.append("task executed")
 
-    # Run the scheduler for 3 intervals
-    await asyncio.wait_for(schedule_task(mock_task, interval=1), timeout=3.5)
+    # Run the scheduler in the background
+    task = asyncio.create_task(schedule_task(mock_task, interval=1))
+    await asyncio.sleep(3.5)  # Allow the task to run for 3 intervals
+    task.cancel()  # Cancel the scheduler task
 
     # Verify the task was executed 3 times
     assert len(results) == 3
@@ -31,8 +33,10 @@ async def test_schedule_task_handles_exceptions():
             raise ValueError("Simulated task failure")
         results.append("task executed")
 
-    # Run the scheduler for 2 intervals
-    await asyncio.wait_for(schedule_task(mock_task, interval=1), timeout=2.5)
+    # Run the scheduler in the background
+    task = asyncio.create_task(schedule_task(mock_task, interval=1))
+    await asyncio.sleep(2.5)  # Allow the task to run for 2 intervals
+    task.cancel()  # Cancel the scheduler task
 
     # Verify the task was executed at least once after the exception
     assert len(results) == 1
