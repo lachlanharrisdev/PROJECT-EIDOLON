@@ -1,19 +1,6 @@
-tweepy
-pandas
-scikit-learn
-matplotlib
-sqlalchemy
-fastapi
-uvicorn
-pytest
-python-dotenv
-praw  # Reddit API wrapper
-requests
-tqdm
-colorama  # Cross-platform colored terminal output
-facebook-sdk  # Facebook Graph API
-psutil  # For system monitoring
-pytest-mock
-aiohttp  # For async requests
-spacy>=3.5.0  # NLP library for entity extraction
-beautifulsoup4  # For HTML parsing
+praw==7.8.1
+pytest==8.3.5
+python-dotenv==1.1.0
+Requests==2.32.3
+spacy==3.8.5
+tweepy==4.15.0
