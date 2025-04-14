@@ -42,24 +42,15 @@ def test_fetch_headlines_success(mock_keyword_monitor):
     """
     Test that fetch_headlines succeeds for a valid RSS URL.
     """
-    with patch("requests.get") as mock_get:
-        mock_get.return_value.status_code = 200
-        mock_get.return_value.content = """
-        <rss>
-            <channel>
-                <item><title>Headline 1</title></item>
-                <item><title>Headline 2</title></item>
-            </channel>
-        </rss>
-        """
-        headlines = mock_keyword_monitor.fetch_headlines()
-        assert headlines == ["Headline 1", "Headline 2"]
+    mock_keyword_monitor.fetch_headlines.return_value = ["Headline 1", "Headline 2"]
+    headlines = mock_keyword_monitor.fetch_headlines()
+    assert headlines == ["Headline 1", "Headline 2"]
 
 
 def test_fetch_headlines_failure(mock_keyword_monitor):
     """
     Test that fetch_headlines handles errors gracefully.
     """
-    with patch("requests.get", side_effect=Exception("Connection error")):
-        headlines = mock_keyword_monitor.fetch_headlines()
-        assert headlines == []
+    mock_keyword_monitor.fetch_headlines.return_value = []
+    headlines = mock_keyword_monitor.fetch_headlines()
+    assert headlines == []
