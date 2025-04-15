@@ -1,0 +1,11 @@
+registry:
+  url: 'https://github.com/lachlanharrisdev/PROJECT-EIDOLON/releases/download/{tag}'
+  name: ''
+  repository: ''
+  tag: 'latest'
+logging:
+  # Setting the log level: CRITICAL, ERROR, WARNING, INFO, DEBUG
+  level: 'INFO'
+plugins:
+  directory: 'plugins'
+  log_level: 'DEBUG'

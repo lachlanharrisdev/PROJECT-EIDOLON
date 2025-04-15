@@ -24,13 +24,14 @@ jobs:
         pip install pytest-asyncio
         python -m spacy download en_core_web_sm
 
-    - name: Run Tests
+    - name: Run Core Tests
       run: |
-        pytest --log-cli-level=INFO
-
-    - name: Test Keyword Monitor
+        pytest tests/ --log-cli-level=INFO
+    
+    - name: Run Plugin Tests
       run: |
-        pytest tests/test_keyword_monitor.py
+        pytest default-plugins/ --log-cli-level=INFO --tb=short --disable-warnings -p no:warnings
+        pytest plugins/ --log-cli-level=INFO --tb=short --disable-warnings -p no:warnings
         
     - name: Upload Keyword Monitor Results
       if: always()
