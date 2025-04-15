@@ -27,7 +27,7 @@ class KeywordMonitor:
                 data_file: str = "political_keywords.json", 
                 rss_url: str = "https://news.google.com/rss/search?q=politics",
                 max_age_days: int = 30,
-                min_mentions: int = 2):
+                min_mentions: int = 1):
         """
         Initialize the keyword monitor.
         
