@@ -3,6 +3,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 async def schedule_task(task, interval: int):
     """
     Schedule a task to run periodically.

@@ -30,7 +30,7 @@ jobs:
 
     - name: Test Keyword Monitor
       run: |
-        python tests/test_keyword_monitor.py
+        pytest tests/test_keyword_monitor.py
         
     - name: Upload Keyword Monitor Results
       if: always()
