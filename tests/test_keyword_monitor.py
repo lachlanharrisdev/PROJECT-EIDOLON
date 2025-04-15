@@ -1,5 +1,6 @@
 import asyncio
 import pytest
+
 from app.scheduler import schedule_task
 
 
