@@ -1,116 +1,141 @@
-# Project Eidolon
+# // PROJECT EIDOLON
 
-A system for monitoring online discourse, detecting bot behavior, and analyzing misinformation patterns across social media platforms.
+![Banner](/.github/images/Banner_2x1.jpg)
 
-## Overview
+Project Eidolon is a modular suite of decentralised OSINT tools designed to analyze the evolution of disinformation, mainly in a political context. Eidolon uses clever keyword rotation to scrape popular social media networks (primarily Twitter/X) for posts about major political entities, and tracks accounts towards botnets to identify organisations running unethical political propaganda schemes.
 
-Project Eidolon passively observes public online discourse on political topics, uses various detection algorithms to identify suspected bot behavior, and logs patterns of influence, misinformation tactics, sentiment evolution, and possible coordinated campaigns.
+Project Eidolon isn't just a toolset. It's a **philosophy**:  
+> That the internet should prioritize **human rights over profit**, **truth over traction**, and **transparency over trickery**
 
-## Features
+If you believe the web should be a safe place for people to connect, not a tool for political propaganda, then you're already one of us.
 
-- Multi-platform social media monitoring (Twitter/X, Reddit, Facebook)
-- Bot detection algorithms 
-- Data collection and storage
-- CLI and API interfaces
-- Cross-platform compatibility (Windows, Linux, ARM, x86)
 
-## Setup
+# // OVERVIEW
 
-### Requirements
+Eidolon passively scans public online chatter surrounding **political topics** and **cultural flashpoints**. It flags **inauthentic behavior**, tracks **sentiment over time**, and maps out **influence operations** with eerie precision.
 
-- Python 3.10+
-- API keys for social media platforms
+All of this is done using:
+- Adaptive bot detection algorithms
+- Multi-platform ingestion pipelines
+- Real-time and batch analytics
+- Human-readable interfaces (CLI + API)
 
-### Installation
+## // FEATURES
 
-1. Clone the repository
+- Cross-platform social media monitoring (Twitter/X, Reddit, Facebook)
+- Dynamic keyword rotation based on customiseable RSS feeds
+- Modular bot detection algorithms (with pluggable strategies)
+- Disinformation pattern analysis
+- Data persistence and querying
+- CLI + API interfaces for full control
+- Built as Python modules for clean integration
+- Docker-ready
+- Cross-platform capable
+
+---
+
+# // GETTING STARTED
+
+## REQUIREMENTS
+- Python 3.12 (specifically tested on `3.12.10`)
+
+## INSTALLATION
+
+### MANUAL SETUP
+
+1. Clone the repo
 ```bash
-git clone [repository-url]
+git clone https://github.com/lachlanharrisdev/project-eidolon.git
 cd project-eidolon
 ```
 
-2. Create and activate a virtual environment (recommended)
-```bash
-# On Windows
+2. Set up a virtual environment \[Recommended\]:]
+
+```
+# Windows
 python -m venv venv
 venv\Scripts\activate
 
-# On Linux/macOS
+# Linux/macOS
 python3 -m venv venv
 source venv/bin/activate
 ```
 
-3. Install required packages
-```bash
+3. Install dependencies
+
+```
 pip install -r requirements.txt
 ```
 
-4. Set up environment variables by copying the template
-```bash
+4. Setup your environment
+
+```
 cp .env.example .env
+# Now edit .env with your actual API credentials
 ```
 
-5. Edit the `.env` file with your API credentials
+### DOCKER
 
-### Docker Setup
+1. Build the full Docker image
 
-You can also run the application using Docker:
-
-```bash
-# Build the Docker image
+```
 docker build -f docker/full_build.Dockerfile -t eidolon .
-
-# Run the container in CLI mode
-docker run -it --env-file .env eidolon python main.py
-
-# Run the container in API mode
-docker run -p 8000:8000 --env-file .env eidolon python main.py --mode api
 ```
 
-## Usage
+2.1 To run in CLI mode:
 
-### CLI Interface
-
-```bash
-# Test API connectivity
-python main.py test
-
-# Search Twitter for a query
-python main.py twitter "climate change" --count 50
-
-# Search Reddit in a specific subreddit
-python main.py reddit politics --query "election" --count 30 --sort hot
+```
+docker run -it --env-file .env eidolon python -m app.main
 ```
 
-### API Interface
+2.2 To run in API mode:
 
-Start the API server:
-```bash
-python main.py --mode api
+```
+docker run -p 8000:8000 --env-file .env eidolon python -m app.main --mode api
 ```
 
-The API will be available at `http://localhost:8000` with the following endpoints:
-- `GET /` - Root endpoint
-- `GET /health` - Health check
-- `POST /twitter/search` - Search Twitter
-- `POST /reddit/search` - Search Reddit
+# // USAGE
 
-## Development
+## CLI MODE
 
-### Project Structure
+```
+python -m app.main
+```
 
-- `core/` - Core functionality and algorithms
-- `ingest/` - Data ingestion from social media platforms
-- `interface/` - CLI and API interfaces
-- `data/` - Stored data (automatically created)
-- `tests/` - Unit and integration tests
+## API MODE
 
-### Running Tests
+```
+python -m app.main --mode api
+```
 
-```bash
+API launches at http://localhost:8000 with:
+
+    GET / → Root endpoint
+
+    GET /health → System health check
+
+    POST /twitter/search → Query Twitter
+
+    POST /reddit/search → Query Reddit
+
+# // DEVELOPMENT
+
+## PROJECT STRUCTURE
+
+core/       # detection logic, signal analysis, filtering
+ingest/     # data pipelines for each platform
+interface/  # CLI and API entrypoints
+data/       # persistent storage (autogenerated)
+tests/      # unit and integration tests
+
+## RUNNING TESTS
+
 pytest
-```
 
-## License
+# // THE MISSION
 
-[License information]
+This is just the beginning. Eidolon will evolve — as propaganda does. The methods will change. The truth will stay the same.
+
+Help us build a system that resists the commodification of reality. Contribute code. Fork the project. Share the mission. Start discussions. Name and shame bots.
+
+    Project Eidolon is not a product. It’s a warning shot.
