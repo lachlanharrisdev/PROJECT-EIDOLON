@@ -9,8 +9,8 @@ import requests
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from core.plugins.engine import PluginCore
-from core.plugins.models import Meta, Device
+from core.modules.engine import ModuleCore
+from core.modules.models import Meta, Device
 import core.keywords as keywords
 
 # Check for spaCy
@@ -190,14 +190,14 @@ class KeywordMonitor:
         return self.entities
 
 
-class KeywordMonitorPlugin(PluginCore):
+class KeywordMonitorModule(ModuleCore):
     """
-    Plugin that monitors news headlines for political keywords and entities.
+    Module that monitors news headlines for political keywords and entities.
     Automatically updates the system's keyword list with found entities.
     """
 
-    def __read_plugin_yaml(self) -> dict:
-        with open("plugin.yaml", "r") as file:
+    def __read_module_yaml(self) -> dict:
+        with open("module.yaml", "r") as file:
             data = yaml.safe_load(file)
         return data
 
@@ -205,21 +205,21 @@ class KeywordMonitorPlugin(PluginCore):
         super().__init__(logger)
 
         try:
-            plugin_data = self.__read_plugin_yaml()
+            module_data = self.__read_module_yaml()
             self.meta = Meta(
-                name=plugin_data["name"],
-                description=plugin_data["description"],
-                version=plugin_data["version"],
+                name=module_data["name"],
+                description=module_data["description"],
+                version=module_data["version"],
             )
         except FileNotFoundError:
             self.meta = Meta(
-                name="Keyword Monitor Plugin",
+                name="Keyword Monitor Module",
                 description="Extracts political keywords from news headlines.",
                 version="0.1.0",
             )
-            self._logger.error("plugin.yaml file not found. Using default values.")
+            self._logger.error("module.yaml file not found. Using default values.")
 
-        self._logger.debug(f"Plugin meta: {self.meta}")
+        self._logger.debug(f"Module meta: {self.meta}")
 
         # Initialize the keyword monitor
         self.keyword_monitor = KeywordMonitor(logger=logger)
@@ -250,7 +250,7 @@ class KeywordMonitorPlugin(PluginCore):
         )
 
     def invoke(self, command: chr) -> Device:
-        """Handle commands from the plugin engine."""
+        """Handle commands from the module engine."""
         self._logger.debug(f"Command: {command} -> {self.meta}")
 
         # 'R' for refresh keywords

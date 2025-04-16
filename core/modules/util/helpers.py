@@ -20,10 +20,10 @@ class FileSystem:
         base_dir = FileSystem.__get_base_dir()
         return os.path.join(base_dir, "settings")
 
-    def get_plugins_directory() -> str:
-        """Get the absolute path to the plugins directory in the project root."""
+    def get_modules_directory() -> str:
+        """Get the absolute path to the modules directory in the project root."""
         base_dir = FileSystem.__get_base_dir()
-        return os.path.join(base_dir, "plugins")
+        return os.path.join(base_dir, "modules")
 
     # TODO: make getting these directories more dynamic (especially base dir)
 
@@ -68,6 +68,6 @@ class LogUtil(Logger):
     @staticmethod
     def create(log_level: str = "DEBUG") -> Logger:
         logging.setLoggerClass(LogUtil)
-        logger = logging.getLogger("plugin.architecture")
+        logger = logging.getLogger("module.architecture")
         logger.setLevel(log_level)
         return logger

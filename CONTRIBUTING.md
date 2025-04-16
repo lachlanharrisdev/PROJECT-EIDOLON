@@ -26,7 +26,7 @@ Project Eidolon is a modular, extensible system designed to detect, track, and a
 - Docstrings should follow **Google-style** or **reStructuredText**. If you explain a function like a tutorial for aliens, you're doing great.
 - Commit messages should be clear and purposeful:
   - `fix: resolve tokenization bug in sentiment module`
-  - `feat: add plugin support for Telegram ingestion`
+  - `feat: add module support for Telegram ingestion`
   - `refactor: simplify graph clustering logic`
 
 ## // ARCHITECTURE
