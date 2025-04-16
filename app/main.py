@@ -1,30 +1,50 @@
 import asyncio
-import logging
+import yaml
+from logging import Logger, basicConfig, getLogger
 from app.scheduler import schedule_task
-from core.analysis.keyword_monitor import refresh_political_keywords
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from core.analysis.keyword_monitor import async_refresh_political_keywords
+from core.plugins.engine import PluginEngine
+from core.plugins.util import LogUtil
 
 
-async def async_refresh_political_keywords():
+def load_configuration(config_path: str) -> dict:
     """
-    Asynchronous wrapper for the refresh_political_keywords function.
+    Load the configuration from the YAML file.
     """
-    refresh_political_keywords()
+    with open(config_path, "r") as file:
+        return yaml.safe_load(file)
 
 
-async def main():
-    """
-    Main entry point for the application.
-    Runs the dynamic keyword detection engine periodically.
-    """
-    logger.info("Starting Project Eidolon...")
+class Main:
+    _logger: Logger
 
-    # Schedule the keyword refresh task to run every hour
-    await schedule_task(async_refresh_political_keywords, interval=3600)
+    def __init__(self, **args) -> None:
+        # Load configuration
+        config = load_configuration("settings/configuration.yaml")
+        log_level = config["logging"]["level"]
+
+        # Set up logging
+        basicConfig(level=log_level)
+        self._logger = getLogger(__name__)
+
+        # Initialize the PluginEngine with the correct log level
+        self._plugin_engine = PluginEngine(options={"log_level": log_level})
+
+    async def main(self) -> None:
+        """
+        Main entry point for the application.
+        Runs the dynamic keyword detection engine periodically and loads plugins.
+        """
+        self._logger.info("Starting Project Eidolon...")
+
+        # Load plugins
+        self._logger.info("Loading plugins...")
+        self._plugin_engine.start()
+
+        # Schedule the keyword refresh task to run every hour
+        await schedule_task(async_refresh_political_keywords, interval=3600)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    app = Main()
+    asyncio.run(app.main())

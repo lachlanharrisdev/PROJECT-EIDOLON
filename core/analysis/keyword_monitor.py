@@ -279,3 +279,10 @@ def refresh_political_keywords() -> List[str]:
         _keyword_monitor = KeywordMonitor()
 
     return _keyword_monitor.refresh()
+
+
+async def async_refresh_political_keywords() -> List[str]:
+    """
+    Asynchronous wrapper for refreshing political keywords.
+    """
+    return refresh_political_keywords()
