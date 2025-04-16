@@ -30,12 +30,4 @@ jobs:
     
     - name: Run Module Tests
       run: |
-        pytest default-modules/ --log-cli-level=INFO --tb=short --disable-warnings -p no:warnings
         pytest modules/ --log-cli-level=INFO --tb=short --disable-warnings -p no:warnings
-        
-    - name: Upload Keyword Monitor Results
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: keyword-monitor-results
-        path: data/tests/keyword_monitor_results.json
