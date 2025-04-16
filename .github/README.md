@@ -9,11 +9,9 @@
 
 </div>
 
-<br/>
-Project Eidolon is a decentralised suite of OSINT tools built to analyze the evolution of political disinformation on social media. Eidolon uses clever keyword rotation to scrape popular social media networks (primarily Twitter/X) 
-for posts about major political entities, identifies opinionated posts coming from potential bot accounts, and tracks these accounts towards botnets to identify organisations running unethical political propaganda schemes. 
-<br/>
-We believe Project Eidolon isn't just a toolset. It's a **philosophy**:  
+Project Eidolon is a decentralised suite of OSINT tools built to analyze political disinformation on social media. Eidolon uses clever keyword rotation to scrape popular social media networks for posts about political entities, identifies opinionated posts coming from potential bot accounts, and tracks these accounts towards botnets to identify organisations running unethical political propaganda schemes. 
+
+We believe Project Eidolon isn't just a tool. It's a **philosophy**:  
 
 > That the internet should prioritize **human rights over profit**, **truth over traction**, and **transparency over trickery**
 
@@ -41,6 +39,8 @@ Eidolon passively scans public online chatter surrounding political topics and c
 <br/>
 
 # // GETTING STARTED
+
+To get started with contributing, please read [contributing.md](/CONTRIBUTING.md) & the [code of conduct](/.github/CODE_OF_CONDUCT.md).
 
 ## REQUIREMENTS
 - Python 3.12 (specifically tested on `3.12.10`)
@@ -131,7 +131,7 @@ API launches at http://localhost:8000 with:
 
     GET /health → System health check
 
-# // DEVELOPMENT
+# // DEVELOPMENT && CONTRIBUTING
 
 To see more about how to contribute, please refer to [contributing.md](/CONTRIBUTING.md). We welcome more than just developers - documentation writers, researchers / journalists, funders, bug hunters etc.
 
