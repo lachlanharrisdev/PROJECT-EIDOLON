@@ -2,29 +2,33 @@
 
 ![Banner](/.github/images/Banner_2x1.jpg)
 
-Project Eidolon is a modular suite of decentralised OSINT tools designed to analyze the evolution of disinformation, mainly in a political context. Eidolon uses clever keyword rotation to scrape popular social media networks (primarily Twitter/X) for posts about major political entities, and tracks accounts towards botnets to identify organisations running unethical political propaganda schemes.
+---
+<div align='center'>
+    
+![PYTHON](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue) ![DOCKER](https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white) ![GPL-2.0](https://img.shields.io/badge/GPL--2.0-red?style=for-the-badge)
 
-Project Eidolon isn't just a toolset. It's a **philosophy**:  
+</div>
+<br/>
+Project Eidolon is a decentralised suite of OSINT tools built to analyze the evolution of political disinformation on social media. Eidolon uses clever keyword rotation to scrape popular social media networks (primarily Twitter/X) 
+for posts about major political entities, identifies opinionated posts coming from potential bot accounts, and tracks these accounts towards botnets to identify organisations running unethical political propaganda schemes.
+
+We believe Project Eidolon isn't just a toolset. It's a **philosophy**:  
 > That the internet should prioritize **human rights over profit**, **truth over traction**, and **transparency over trickery**
 
 If you believe the web should be a safe place for people to connect, not a tool for political propaganda, then you're already one of us.
 
+<br/>
 
 # // OVERVIEW
 
-Eidolon passively scans public online chatter surrounding **political topics** and **cultural flashpoints**. It flags **inauthentic behavior**, tracks **sentiment over time**, and maps out **influence operations** with eerie precision.
-
-All of this is done using:
-- Adaptive bot detection algorithms
-- Multi-platform ingestion pipelines
-- Real-time and batch analytics
-- Human-readable interfaces (CLI + API)
+Eidolon passively scans public online chatter surrounding political topics and cultural flashpoints based off of current trending news articles. Keywords are extracted using NLP, which are fed into scrapers for popular social media platforms. These scrapers track posts from low-standing accounts, and using some experimental detection methods, identifies whether these accounts are parts of larger botnets.
 
 ## // FEATURES
 
-- Cross-platform social media monitoring (Twitter/X, Reddit, Facebook)
+- Cross-platform social media monitoring (Twitter/X, Reddit)
 - Dynamic keyword rotation based on customiseable RSS feeds
-- Modular bot detection algorithms (with pluggable strategies)
+- Fully-fledged plugin system extensible on ANY module
+- Modular bot detection algorithms
 - Disinformation pattern analysis
 - Data persistence and querying
 - CLI + API interfaces for full control
@@ -32,12 +36,19 @@ All of this is done using:
 - Docker-ready
 - Cross-platform capable
 
----
+<br/>
 
 # // GETTING STARTED
 
 ## REQUIREMENTS
 - Python 3.12 (specifically tested on `3.12.10`)
+
+**Optional:**
+
+- Docker CLI
+- Python Environment via venv
+- High-speed internet connection
+<br/>
 
 ## INSTALLATION
 
@@ -51,60 +62,64 @@ cd project-eidolon
 
 2. Set up a virtual environment \[Recommended\]:]
 
-```
+```bash
 # Windows
-python -m venv venv
-venv\Scripts\activate
+python -m venv .venv
+.venv\Scripts\activate
 
 # Linux/macOS
-python3 -m venv venv
-source venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 ```
 
 3. Install dependencies
 
-```
+```bash
 pip install -r requirements.txt
 ```
 
 4. Setup your environment
 
-```
+```bash
 cp .env.example .env
 # Now edit .env with your actual API credentials
 ```
+
+<br/>
 
 ### DOCKER
 
 1. Build the full Docker image
 
-```
+```bash
 docker build -f docker/full_build.Dockerfile -t eidolon .
 ```
 
 2.1 To run in CLI mode:
 
-```
+```bash
 docker run -it --env-file .env eidolon python -m app.main
 ```
 
 2.2 To run in API mode:
 
-```
+```bash
 docker run -p 8000:8000 --env-file .env eidolon python -m app.main --mode api
 ```
+
+<br/>
 
 # // USAGE
 
 ## CLI MODE
 
-```
+```bash
 python -m app.main
 ```
 
 ## API MODE
 
-```
+```bash
 python -m app.main --mode api
 ```
 
@@ -114,23 +129,42 @@ API launches at http://localhost:8000 with:
 
     GET /health → System health check
 
-    POST /twitter/search → Query Twitter
-
-    POST /reddit/search → Query Reddit
-
 # // DEVELOPMENT
+
+To see more about how to contribute, please refer to [contributing.md](/CONTRIBUTING.md). We welcome more than just developers - documentation writers, researchers / journalists, funders, bug hunters etc.
+
+<br/>
 
 ## PROJECT STRUCTURE
 
-core/       # detection logic, signal analysis, filtering
-ingest/     # data pipelines for each platform
-interface/  # CLI and API entrypoints
-data/       # persistent storage (autogenerated)
-tests/      # unit and integration tests
+```explorer
+core/            # detection logic, signal analysis, filtering
+ingest/          # data pipelines for each platform
+interface/       # CLI and API entrypoints
+data/            # persistent storage (autogenerated)
+tests/           # unit and integration tests
+plugins/         # plugins that are loaded when running main.py
+default-plugins/ # collection of standard plugins. NOT loaded unless moved into plugins/
+```
 
 ## RUNNING TESTS
 
+This project uses `pytest` for testing. Major modules & every individual plugin uses tests to ensure code quality. All test files begin with the prefix `test_`, as per the [pytest documentation](https://docs.pytest.org/en/stable/getting-started.html).
+
+To run all the tests in the project locally before creating a pull request, run the following in the project directory:
+
+```
 pytest
+```
+
+You can run all tests within a specific directory using:
+```
+pytest <dir>/
+```
+
+For more info, refer to the [pytest documentation](https://docs.pytest.org/en/stable/getting-started.html)
+
+<br/>
 
 # // THE MISSION
 
