@@ -4,7 +4,7 @@ creator: 'John Doe'
 runtime:
   main: 'main.py'
   tests:
-    - 'tests/core.py'
+    - 'tests/test_template.py'
 repository: 'https://github.com/lachlanharrisdev/PROJECT-EIDOLON'
 description: 'This is a sample plugin description'
 version: '0.0.1'
