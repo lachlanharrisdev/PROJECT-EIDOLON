@@ -3,7 +3,7 @@ from typing import List, Optional
 
 
 @dataclass
-class PluginRunTimeOption(object):
+class ModuleRunTimeOption(object):
     main: str
     tests: Optional[List[str]]
 
@@ -18,11 +18,11 @@ class DependencyModule:
 
 
 @dataclass
-class PluginConfig:
+class ModuleConfig:
     name: str
     alias: str
     creator: str
-    runtime: PluginRunTimeOption
+    runtime: ModuleRunTimeOption
     repository: str
     description: str
     version: str

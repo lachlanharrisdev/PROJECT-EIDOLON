@@ -2,8 +2,8 @@ import pytest
 import asyncio
 from unittest.mock import Mock
 
-from core.plugins.util import LogUtil
-from plugins.keyword_monitor.main import KeywordMonitor
+from core.modules.util import LogUtil
+from modules.keyword_monitor.main import KeywordMonitor
 
 from app.scheduler import schedule_task
 

@@ -2,14 +2,14 @@ from logging import Logger
 
 import yaml
 
-from core.plugins.engine import PluginCore
-from core.plugins.models import Meta, Device
+from core.modules.engine import ModuleCore
+from core.modules.models import Meta, Device
 
 
-class SamplePlugin(PluginCore):
+class SampleModule(ModuleCore):
 
-    def __read_plugin_yaml(self) -> dict:
-        with open("plugin.yaml", "r") as file:
+    def __read_module_yaml(self) -> dict:
+        with open("module.yaml", "r") as file:
             data = yaml.safe_load(file)
         return data
 
@@ -17,21 +17,21 @@ class SamplePlugin(PluginCore):
         super().__init__(logger)
 
         try:
-            plugin_data = self.__read_plugin_yaml()
+            module_data = self.__read_module_yaml()
             self.meta = Meta(
-                name=plugin_data["name"],
-                description=plugin_data["description"],
-                version=plugin_data["version"],
+                name=module_data["name"],
+                description=module_data["description"],
+                version=module_data["version"],
             )
         except FileNotFoundError:
             self.meta = Meta(
-                name="Default Plugin",
-                description="This is a default plugin description.",
+                name="Default Module",
+                description="This is a default module description.",
                 version="0.0.0",
             )
-            self._logger.error("plugin.yaml file not found. Using default values.")
+            self._logger.error("module.yaml file not found. Using default values.")
 
-        self._logger.debug(f"Plugin meta: {self.meta}")
+        self._logger.debug(f"Module meta: {self.meta}")
 
     @staticmethod
     def __create_device() -> Device:

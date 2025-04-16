@@ -3,9 +3,8 @@ import yaml
 from logging import Logger, basicConfig, getLogger
 from app.scheduler import schedule_task
 
-# from core.analysis.keyword_monitor import async_refresh_political_keywords
-from core.plugins.engine import PluginEngine
-from core.plugins.util import LogUtil
+from core.modules.engine import ModuleEngine
+from core.modules.util import LogUtil
 
 
 def load_configuration(config_path: str) -> dict:
@@ -28,22 +27,19 @@ class Main:
         basicConfig(level=log_level)
         self._logger = getLogger(__name__)
 
-        # Initialize the PluginEngine with the correct log level
-        self._plugin_engine = PluginEngine(options={"log_level": log_level})
+        # Initialize the ModuleEngine with the correct log level
+        self._module_engine = ModuleEngine(options={"log_level": log_level})
 
     async def main(self) -> None:
         """
         Main entry point for the application.
-        Runs the dynamic keyword detection engine periodically and loads plugins.
+        Runs the dynamic keyword detection engine periodically and loads modules.
         """
         self._logger.info("Starting Project Eidolon...")
 
-        # Load plugins
-        self._logger.info("Loading plugins...")
-        self._plugin_engine.start()
-
-        # Schedule the keyword refresh task to run every hour
-        # await schedule_task(async_refresh_political_keywords, interval=3600)
+        # Load modules
+        self._logger.info("Loading modules...")
+        self._module_engine.start()
 
 
 if __name__ == "__main__":

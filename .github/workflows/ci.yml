@@ -28,10 +28,10 @@ jobs:
       run: |
         pytest tests/ --log-cli-level=INFO
     
-    - name: Run Plugin Tests
+    - name: Run Module Tests
       run: |
-        pytest default-plugins/ --log-cli-level=INFO --tb=short --disable-warnings -p no:warnings
-        pytest plugins/ --log-cli-level=INFO --tb=short --disable-warnings -p no:warnings
+        pytest default-modules/ --log-cli-level=INFO --tb=short --disable-warnings -p no:warnings
+        pytest modules/ --log-cli-level=INFO --tb=short --disable-warnings -p no:warnings
         
     - name: Upload Keyword Monitor Results
       if: always()

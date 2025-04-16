@@ -6,7 +6,7 @@ registry:
 logging:
   # Setting the log level: CRITICAL, ERROR, WARNING, INFO, DEBUG
   level: 'INFO'
-plugins:
-  directory: 'plugins'
+modules:
+  directory: 'modules'
   log_level: 'INFO'
 

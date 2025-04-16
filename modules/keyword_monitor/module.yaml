@@ -1,4 +1,4 @@
-name: 'Keyword Monitor Plugin'
+name: 'Keyword Monitor Module'
 alias: 'keyword-monitor'
 creator: 'Project Eidolon Team'
 runtime:
