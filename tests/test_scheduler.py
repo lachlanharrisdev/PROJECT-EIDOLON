@@ -1,5 +1,5 @@
-import asyncio
 import pytest
+import asyncio
 
 from app.scheduler import schedule_task
 
@@ -15,8 +15,8 @@ async def test_schedule_task_runs_periodically():
         results.append("task executed")
 
     # Run the scheduler in the background
-    task = asyncio.create_task(schedule_task(mock_task, interval=1))
-    await asyncio.sleep(3.5)  # Allow the task to run for 3 intervals
+    task = asyncio.create_task(schedule_task(mock_task, interval=0.1))
+    await asyncio.sleep(0.25)  # Allow the task to run for 3 intervals
     task.cancel()  # Cancel the scheduler task
 
     # Verify the task was executed at least 2 times

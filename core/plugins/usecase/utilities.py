@@ -85,6 +85,12 @@ class PluginUtility:
             plugin_config_data = FileSystem.load_configuration(
                 "plugin.yaml", module_path
             )
+
+            # Extra safety check to ensure plugin_config_data is not None
+            if not plugin_config_data:
+                self._logger.error("Empty or invalid plugin configuration file")
+                return None
+
             plugin_config = from_dict(data_class=PluginConfig, data=plugin_config_data)
             return plugin_config
         except FileNotFoundError as e:

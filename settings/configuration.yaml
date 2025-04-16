@@ -8,4 +8,4 @@ logging:
   level: 'INFO'
 plugins:
   directory: 'plugins'
-  log_level: 'DEBUG'
+  log_level: 'INFO'
