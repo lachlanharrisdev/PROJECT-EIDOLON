@@ -9,3 +9,4 @@ logging:
 plugins:
   directory: 'plugins'
   log_level: 'INFO'
+
