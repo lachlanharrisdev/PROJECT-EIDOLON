@@ -35,6 +35,11 @@ class FileSystem:
             config_directory = FileSystem.__get_config_directory()
         with open(os.path.join(config_directory, name)) as file:
             input_data = yaml.safe_load(file)
+
+        # Ensure we always return a dictionary, even if the YAML file is empty
+        if input_data is None:
+            return {}
+
         return input_data
 
 

@@ -2,7 +2,8 @@ import asyncio
 import yaml
 from logging import Logger, basicConfig, getLogger
 from app.scheduler import schedule_task
-from core.analysis.keyword_monitor import async_refresh_political_keywords
+
+# from core.analysis.keyword_monitor import async_refresh_political_keywords
 from core.plugins.engine import PluginEngine
 from core.plugins.util import LogUtil
 
@@ -42,9 +43,11 @@ class Main:
         self._plugin_engine.start()
 
         # Schedule the keyword refresh task to run every hour
-        await schedule_task(async_refresh_political_keywords, interval=3600)
+        # await schedule_task(async_refresh_political_keywords, interval=3600)
 
 
 if __name__ == "__main__":
+    app = Main()
+    asyncio.run(app.main())
     app = Main()
     asyncio.run(app.main())
