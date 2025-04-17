@@ -20,5 +20,5 @@ Repository = "https://github.com/lachlanharrisdev/PROJECT-EIDOLON.git"
 Issues = "https://github.com/lachlanharrisdev/PROJECT-EIDOLON/issues"
 
 [tool.setuptools]
-packages = ["core", "modules", "settings"]
+packages = ["core", "settings"]
 package-dir = {"" = "src"}
