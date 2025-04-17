@@ -2,40 +2,58 @@
 
 ![Banner](/.github/images/Banner_2x1.jpg)
 
----
 <div align='center'>
     
 ![PYTHON](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue) ![DOCKER](https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white) ![GPL-2.0](https://img.shields.io/badge/GPL--2.0-red?style=for-the-badge)
 
 </div>
 
-Project Eidolon is a decentralised suite of OSINT tools built to analyze the evolution of political disinformation on social media. Eidolon uses clever keyword rotation to scrape popular social media networks (primarily Twitter/X) 
+<br/>
+
+Project Eidolon is a decentralised suite of OSINT tools built to analyze the evolution of political disinformation on social media. 
+
+In it's default configuration, Eidolon uses clever keyword rotation to scrape popular social media networks (primarily Twitter/X) 
 for posts about major political entities, identifies opinionated posts coming from potential bot accounts, and tracks these accounts towards botnets to identify organisations running unethical political propaganda schemes. 
 
-We believe Project Eidolon isn't just a toolset. It's a **philosophy**:  
+<br/>
 
-> That the internet should prioritize **human rights over profit**, **truth over traction**, and **transparency over trickery**
-
-If you believe the web should be a safe place for people to connect, not a tool for political propaganda, then you're already one of us.
+> ### **EIDOLON**
+> #### *Noun* ● /ʌɪˈdəʊlɒn/
+> In ancient Greek literature, an eidolon is a spirit-image of a living or dead person; a shade or phantom 'look-alike' of the human form.
+> <br/>
 
 <br/>
 
 # // OVERVIEW
 
-Eidolon passively scans public online chatter surrounding political topics and cultural flashpoints based off of current trending news articles. Keywords are extracted using NLP, which are fed into scrapers for popular social media platforms. These scrapers track posts from low-standing accounts, and using some experimental detection methods, identifies whether these accounts are parts of larger botnets.
+Eidolon is completely module-based, meaning all of the actual functionality is easily modifiable, removable & distributable, without causing any errors. The suite comes pre-loaded with modules that cover all of the functionality that most people would need, but for those who need maximum extensibility or connections with other applications, then this has been built for you.
+
+<br/>
 
 ## // FEATURES
 
-- Cross-platform social media monitoring (Twitter/X, Reddit)
-- Dynamic keyword rotation based on customiseable RSS feeds
-- Fully-fledged module system extensible on ANY module
-- Modular bot detection algorithms
-- Disinformation pattern analysis
-- Data persistence and querying
-- CLI + API interfaces for full control
-- Built as Python modules for clean integration
-- Docker-ready
-- Cross-platform capable
+- **ENTIRELY MODULE-BASED**
+    - Default modules are verified based on a key-pair-based signed hash generator
+    - Modules communicate via a universal message bus
+    - Modules specify any number of inputs & outputs, and automatically subscribe to matching outputs from other modules
+    - Modules each have their own `.yaml` file for configuration
+    - All core functionality (beyond module management, security & logging) is stored in modules, making it easy to remove unnecessary functionality
+- **DYNAMIC KEYWORD GENERATION** *\[via keyword_monitor module\]*
+    - Keywords are updated regularly in real-time based on trending political news articles
+    - Political entities are identified & classified via NLP
+    - Keywords are transmitted on the message bus for any module to subscribe to
+- **PRODUCTION-READY LOGGING**
+    - Console logging has been standardised across modules
+    - Logging has a fully customisable format, including colours, text decoration & variables
+    - All logs are saved into a persistent `.logs/` folder
+ 
+<br/>
+
+## // DEFAULT MODULES
+
+| Module | Description |
+| --- | --- |
+| Keyword Monitor | Scrapes RSS feeds for popular political news articles, then uses NLP to identify political entities |
 
 <br/>
 
