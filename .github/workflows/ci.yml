@@ -14,22 +14,33 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.12.10'
 
-    - name: Install dependencies
+    - name: Install dependencies and application
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install build
+        python -m build
+        pip install dist/*.tar.gz
         pip install pytest-asyncio pytest-mock
         python -m spacy download en_core_web_sm
-    
+
+    - name: Set PYTHONPATH
+      run: |
+        echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src" >> $GITHUB_ENV
+
+    - name: Verify CLI functionality
+      run: |
+        eidolon --help
+
     - name: Run Tests
       run: |
-        pytest 
-
+        pytest
+    
     - name: Generate Signed Module Hashes
       env:
         PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
