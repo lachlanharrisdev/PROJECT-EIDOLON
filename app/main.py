@@ -45,5 +45,3 @@ class Main:
 if __name__ == "__main__":
     app = Main()
     asyncio.run(app.main())
-    app = Main()
-    asyncio.run(app.main())

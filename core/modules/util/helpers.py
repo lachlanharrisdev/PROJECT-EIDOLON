@@ -36,7 +36,7 @@ class FileSystem:
         with open(os.path.join(config_directory, name)) as file:
             input_data = yaml.safe_load(file)
 
-        # Ensure we always return a dictionary, even if the YAML file is empty
+        # Dictionary should always be returned, including empty
         if input_data is None:
             return {}
 
