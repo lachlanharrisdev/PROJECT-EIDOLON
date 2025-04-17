@@ -89,8 +89,12 @@ class ModuleEngine:
 
     def __reload_modules(self):
         public_key_path = "core/security/public_key.pem"  # Updated path
-        with open(public_key_path, "rb") as f:
-            public_key = serialization.load_pem_public_key(f.read())
+        try:
+            with open(public_key_path, "rb") as f:
+                public_key = serialization.load_pem_public_key(f.read())
+        except (FileNotFoundError, OSError) as e:
+            self._logger.error(f"Failed to load public key from {public_key_path}: {e}")
+            return
 
         self.use_case.discover_modules(True)
         for module in self.use_case.modules:
