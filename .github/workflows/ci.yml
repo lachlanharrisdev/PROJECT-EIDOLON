@@ -45,7 +45,7 @@ jobs:
       env:
         PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
       run: |
-        python core/security/generate_module_hashes.py
+        python src/core/security/generate_module_hashes.py
     
     - name: Upload Verified Modules
       if: always()
