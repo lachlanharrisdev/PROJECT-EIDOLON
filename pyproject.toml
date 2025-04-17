@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eidolon"
+description = "A decentralised, fully modular OSINT tool monitoring political disinformation emergent from botnets "
+authors = [{name="Project Eidolon"}]
+dependencies = ["requests", "PyYAML", "cryptography", "dacite", "spacy", "Requests"]
+readme = ".github/README.md"
+license = "GPL-3.0-or-later"
+keywords = ["osint", "bot", "botnets", "politics", "data", "social media", "social"]
+dynamic = ["version"]
+
+[project.scripts]
+eidolon = "core.cli.commands:main"
+
+[project.urls]
+Repository = "https://github.com/lachlanharrisdev/PROJECT-EIDOLON.git"
+Issues = "https://github.com/lachlanharrisdev/PROJECT-EIDOLON/issues"
+
+[tool.setuptools]
+packages = ["core"]
+package-dir = {"" = "src"}

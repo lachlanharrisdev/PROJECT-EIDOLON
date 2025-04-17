@@ -67,3 +67,10 @@ class ModuleCore(object, metaclass=IModuleRegistry):
     def run(self, message_bus: MessageBus):
         """Run the module's main logic."""
         pass
+
+    async def shutdown(self):
+        """
+        Define the shutdown logic for the module.
+        This method must be implemented by all modules inheriting from ModuleCore.
+        """
+        pass

@@ -9,8 +9,8 @@ from cryptography.hazmat.primitives import hashes, serialization
 
 logger = logging.getLogger(__name__)
 
-MODULES_DIR = "modules"
-OUTPUT_FILE = "settings/verified_modules.json"
+MODULES_DIR = "src/modules"
+OUTPUT_FILE = "src/settings/verified_modules.json"
 PRIVATE_KEY_ENV = (
     "PRIVATE_KEY"  # The private key will be passed as an environment variable
 )

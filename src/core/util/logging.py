@@ -39,7 +39,7 @@ class ColorFormatter(logging.Formatter):
 
 
 def configure_logging(
-    config_path: str = "settings/configuration.yaml",
+    config_path: str = "src/settings/configuration.yaml", log_level: str = None
 ) -> logging.Logger:
     """
     Configure logging based on the settings in the configuration file.
@@ -48,7 +48,8 @@ def configure_logging(
         config = yaml.safe_load(f)
 
     log_config = config.get("logging", {})
-    log_level = log_config.get("level", "INFO").upper()
+    if log_level is None:
+        log_level = log_config.get("level", "INFO").upper()
     log_format = log_config.get(
         "format",
         "%(asctime)s: %(levelname)s from %(name)s - %(message)s [%(filename)s:%(lineno)d]",

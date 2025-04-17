@@ -1,6 +1,8 @@
 import asyncio
+import sys
 import yaml
-from logging import Logger, basicConfig, getLogger
+from logging import Logger, StreamHandler, getLogger
+
 
 from core.modules.engine import ModuleEngine
 from core.util.logging import configure_logging
@@ -21,7 +23,7 @@ class Main:
         self._logger = logger
 
         # Load configuration
-        config = load_configuration("settings/configuration.yaml")
+        config = load_configuration("src/settings/configuration.yaml")
         log_level = config["logging"]["level"]
 
         # Initialize the ModuleEngine with the correct log level
@@ -43,9 +45,19 @@ def main():
     # Configure logging
     logger = configure_logging()
 
-    # Initialize the application
-    app = Main(logger)
-    asyncio.run(app.main())
+    # Ensure all log messages are sent to stderr
+    for handler in logger.handlers:
+        if isinstance(handler, StreamHandler):
+            handler.stream = sys.stderr
+
+    try:
+        # Initialize the application
+        app = Main(logger)
+        asyncio.run(app.main())
+        sys.exit(0)  # Exit with zero exit code on success
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {e}")
+        sys.exit(1)  # Exit with non-zero exit code on failure
 
 
 if __name__ == "__main__":
