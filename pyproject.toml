@@ -6,11 +6,10 @@ build-backend = "setuptools.build_meta"
 name = "eidolon"
 description = "A decentralised, fully modular OSINT tool monitoring political disinformation emergent from botnets "
 authors = [{name="Project Eidolon"}]
-dependencies = ["requests"]
 readme = ".github/README.md"
 license = "GPL-3.0-or-later"
 keywords = ["osint", "bot", "botnets", "politics", "data", "social media", "social"]
-dynamic = ["version"]
+dynamic = ["version", "dependencies]
 
 [project.scripts]
 eidolon = "core.cli.commands:main"
@@ -22,3 +21,6 @@ Issues = "https://github.com/lachlanharrisdev/PROJECT-EIDOLON/issues"
 [tool.setuptools]
 packages = ["core"]
 package-dir = {"" = "src"}
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
