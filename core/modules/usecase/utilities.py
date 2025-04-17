@@ -102,7 +102,9 @@ class ModuleUtility:
             WrongTypeError,
             MissingValueError,
         ) as e:
-            self._logger.error("Unable to parse module configuration to data class", e)
+            self._logger.error(
+                f"Unable to parse module configuration to data class: {e}"
+            )
         return None
 
     def setup_module_configuration(self, package_name, module_name) -> Optional[str]:

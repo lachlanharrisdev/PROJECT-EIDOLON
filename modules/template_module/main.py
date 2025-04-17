@@ -1,13 +1,28 @@
 from logging import Logger
 
 from core.modules.engine import ModuleCore
-from core.modules.models import Device
+from core.modules.models import Device, Meta
 
 
-class SampleModule(ModuleCore):
+class TemplateModule(ModuleCore):
 
     def __init__(self, logger: Logger) -> None:
         super().__init__(logger)
+
+        try:
+            module_data = self.get_config()
+            self.meta = Meta(
+                name=module_data["name"],
+                description=module_data["description"],
+                version=module_data["version"],
+            )
+        except FileNotFoundError:
+            self.meta = Meta(
+                name="Template Module",
+                description="This is a fallback description",
+                version="0.1.0",
+            )
+            self._logger.error("module.yaml file not found. Using default values.")
 
     @staticmethod
     def __create_device() -> Device:

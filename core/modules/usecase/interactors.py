@@ -59,10 +59,11 @@ class ModuleUseCase:
             )
             if entry_point is not None:
                 module_name, module_ext = os.path.splitext(entry_point)
-                # Importing the module will cause IModuleRegistry to invoke it's __init__ fun
                 import_target_module = f".{directory}.{module_name}"
                 module = import_module(import_target_module, package_name)
                 self.__check_loaded_module_state(module)
+                # Pass module alias for verification
+                module.alias = directory
             else:
                 self._logger.debug(f"No valid module found in {package_name}")
 

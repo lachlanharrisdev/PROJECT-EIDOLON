@@ -12,6 +12,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -23,11 +25,20 @@ jobs:
         pip install -r requirements.txt
         pip install pytest-asyncio pytest-mock
         python -m spacy download en_core_web_sm
-
-    - name: Run Core Tests
-      run: |
-        pytest tests/ --log-cli-level=INFO
     
-    - name: Run Module Tests
+    - name: Run Tests
       run: |
-        pytest modules/ --log-cli-level=INFO --tb=short --disable-warnings -p no:warnings
+        pytest 
+
+    - name: Generate Signed Module Hashes
+      env:
+        PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+      run: |
+        python core/security/generate_module_hashes.py
+    
+    - name: Upload Verified Modules
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: verified-module-hashes
+        path: settings/verified_modules.json
