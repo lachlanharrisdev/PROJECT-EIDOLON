@@ -9,10 +9,9 @@
 
 </div>
 
-<br/>
 Project Eidolon is a decentralised suite of OSINT tools built to analyze the evolution of political disinformation on social media. Eidolon uses clever keyword rotation to scrape popular social media networks (primarily Twitter/X) 
 for posts about major political entities, identifies opinionated posts coming from potential bot accounts, and tracks these accounts towards botnets to identify organisations running unethical political propaganda schemes. 
-<br/>
+
 We believe Project Eidolon isn't just a toolset. It's a **philosophy**:  
 
 > That the internet should prioritize **human rights over profit**, **truth over traction**, and **transparency over trickery**
@@ -41,6 +40,8 @@ Eidolon passively scans public online chatter surrounding political topics and c
 <br/>
 
 # // GETTING STARTED
+
+To get started with contributing, please read [contributing.md](/CONTRIBUTING.md) & the [code of conduct](/.github/CODE_OF_CONDUCT.md).
 
 ## REQUIREMENTS
 - Python 3.12 (specifically tested on `3.12.10`)
@@ -131,7 +132,7 @@ API launches at http://localhost:8000 with:
 
     GET /health → System health check
 
-# // DEVELOPMENT
+# // DEVELOPMENT && CONTRIBUTING
 
 To see more about how to contribute, please refer to [contributing.md](/CONTRIBUTING.md). We welcome more than just developers - documentation writers, researchers / journalists, funders, bug hunters etc.
 
@@ -172,6 +173,7 @@ For more info, refer to the [pytest documentation](https://docs.pytest.org/en/st
 
 # // THE MISSION
 
-This is just the beginning. Eidolon will evolve — as propaganda does. The methods will change. The truth will stay the same.
+This is just the beginning. Eidolon will evolve — as propaganda does. The methods will change, but our values will stay the same.
 
-Help us build a system that resists the commodification of reality. Contribute code. Fork the project. Share the mission. Start discussions. Name and shame bots.
+Help us build a system that resists the spread of disinformation. Contribute code. Fork the project. Share the mission. Start discussions.
+

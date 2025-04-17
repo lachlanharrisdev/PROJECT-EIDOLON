@@ -42,7 +42,7 @@ class ModuleUtility:
                 ModuleUtility.__filter_unwanted_directories, os.listdir(modules_package)
             )
         )
-        logger.debug(f"Filtered module paths: {paths}")  # Debug logging
+        print(f"Filtered module paths: {paths}")  # Debug logging
         return paths
 
     @staticmethod
