@@ -35,8 +35,7 @@ class KeywordPrinterModule(ModuleCore):
         Handle input data and print it to the console.
         :param data: The input data to handle.
         """
-        self._logger.info(f"I'm a keyword printer! I'm printing: {data}")
-        print(data)
+        self._logger.info(f"\nI'm a keyword printer! I'm printing: \n{data}\n")
 
     @staticmethod
     def __create_device() -> Device:

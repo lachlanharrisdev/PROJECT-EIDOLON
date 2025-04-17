@@ -12,7 +12,6 @@ from pathlib import Path
 from core.modules.engine import ModuleCore
 from core.modules.models import Meta, Device
 from core.modules.util.messagebus import MessageBus
-import core.keywords as keywords
 
 # Check for spaCy
 try:
@@ -35,24 +34,61 @@ class KeywordMonitor:
         rss_url: str = "https://news.google.com/rss/search?q=politics",
         max_age_days: int = 30,
         min_mentions: int = 1,
+        keywords_file: str = "keywords.json",
     ):
         self._logger = logger
         self.rss_url = rss_url
         self.max_age_days = max_age_days
         self.min_mentions = min_mentions
+        self.keywords_file = Path(keywords_file)
 
         # Initialize spaCy NLP model
         self.nlp = None
         if NLP_AVAILABLE:
             try:
                 self.nlp = spacy.load("en_core_web_sm")
-                self._logger.info("Loaded spaCy NLP model")
+                self._logger.debug("Loaded spaCy NLP model")
             except Exception as e:
                 self._logger.error(f"Failed to load spaCy model: {e}")
 
         # Track extracted entities internally
         self.entities = {}
         self.last_updated = datetime.datetime.now().isoformat()
+
+        # Load existing keywords from file
+        self.keywords = self._load_keywords()
+
+    def _load_keywords(self) -> List[str]:
+        """Load keywords from the JSON file or return an empty list if the file doesn't exist."""
+        if self.keywords_file.exists():
+            try:
+                with open(self.keywords_file, "r", encoding="utf-8") as f:
+                    keywords = json.load(f)
+                    self._logger.debug(f"Loaded {len(keywords)} keywords from file")
+                    return keywords
+            except Exception as e:
+                self._logger.error(f"Error loading keywords: {e}")
+        return []
+
+    def _save_keywords(self) -> None:
+        """Save keywords to the JSON file."""
+        try:
+            with open(self.keywords_file, "w", encoding="utf-8") as f:
+                json.dump(self.keywords, f, indent=2)
+            self._logger.debug(f"Saved {len(self.keywords)} keywords to file")
+        except Exception as e:
+            self._logger.error(f"Error saving keywords: {e}")
+
+    def add_keyword(self, keyword: str) -> None:
+        """Add a new keyword to the list if it doesn't already exist."""
+        if keyword not in self.keywords:
+            self.keywords.append(keyword)
+            self._save_keywords()
+            self._logger.debug(f"Added new keyword: {keyword}")
+
+    def get_keywords(self) -> List[str]:
+        """Get the current list of keywords."""
+        return self.keywords
 
     def fetch_headlines(self) -> List[str]:
         """Fetch headlines from RSS feed."""
@@ -144,10 +180,10 @@ class KeywordMonitor:
                 }
 
         # Update the global keywords list with our entities
-        current_keywords = set(keywords.get_keywords())
+        current_keywords = set(self.get_keywords())
         for entity in self.entities.keys():
             if entity not in current_keywords:
-                keywords.add_keyword(entity)
+                self.add_keyword(entity)
 
     def prune_stale_entities(self):
         """Remove entities that haven't been mentioned recently or have few mentions."""
@@ -180,11 +216,15 @@ class KeywordMonitor:
 
             # Prune stale entities
             self.prune_stale_entities()
+
+            # Add new entities to the keyword list
+            for entity in self.entities.keys():
+                self.add_keyword(entity)
         else:
             self._logger.warning("No headlines fetched. Using existing keywords.")
 
-        # Return current keywords from the central system
-        return keywords.get_keywords()
+        # Return the current list of keywords
+        return self.get_keywords()
 
     def get_entities(self) -> Dict[str, Dict[str, Any]]:
         """Get the current tracked entities."""
@@ -220,15 +260,10 @@ class KeywordMonitorModule(ModuleCore):
         # Initialize the keyword monitor
         self.keyword_monitor = KeywordMonitor(logger=logger)
 
-        # Register as a keyword provider
-        keywords.register_provider("keyword-monitor", self.get_keywords, True)
-        self._logger.info("Registered as keyword provider")
-
     def run(self, message_bus: MessageBus) -> None:
-        self.refresh_keywords()
+        self.keyword_monitor.refresh()
         keywords = self.get_keywords()
         message_bus.publish("keywords", keywords)
-        self._logger.info(f"Publishing keywords")
 
     def get_keywords(self) -> List[str]:
         """Get the current list of keywords from entities."""
@@ -236,7 +271,7 @@ class KeywordMonitorModule(ModuleCore):
 
     def refresh_keywords(self) -> List[str]:
         """Refresh keywords from news sources."""
-        self._logger.info("Refreshing keywords from news sources")
+        self._logger.debug("Refreshing keywords from news sources")
         return self.keyword_monitor.refresh()
 
     @staticmethod
@@ -255,7 +290,7 @@ class KeywordMonitorModule(ModuleCore):
         # 'R' for refresh keywords
         if command == "R":
             keywords = self.refresh_keywords()
-            self._logger.info(f"Refreshed {len(keywords)} keywords")
+            self._logger.debug(f"Refreshed {len(keywords)} keywords")
 
         device = self.__create_device()
         return device

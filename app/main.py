@@ -4,7 +4,7 @@ from logging import Logger, basicConfig, getLogger
 from app.scheduler import schedule_task
 
 from core.modules.engine import ModuleEngine
-from core.modules.util import LogUtil
+from core.util.logging import configure_logging
 
 
 def load_configuration(config_path: str) -> dict:
@@ -18,14 +18,12 @@ def load_configuration(config_path: str) -> dict:
 class Main:
     _logger: Logger
 
-    def __init__(self, **args) -> None:
+    def __init__(self, logger: Logger, **args) -> None:
+        self._logger = logger
+
         # Load configuration
         config = load_configuration("settings/configuration.yaml")
         log_level = config["logging"]["level"]
-
-        # Set up logging
-        basicConfig(level=log_level)
-        self._logger = getLogger(__name__)
 
         # Initialize the ModuleEngine with the correct log level
         self._module_engine = ModuleEngine(options={"log_level": log_level})
@@ -42,6 +40,14 @@ class Main:
         self._module_engine.start()
 
 
-if __name__ == "__main__":
-    app = Main()
+def main():
+    # Configure logging
+    logger = configure_logging()
+
+    # Initialize the application
+    app = Main(logger)
     asyncio.run(app.main())
+
+
+if __name__ == "__main__":
+    main()
