@@ -1,0 +1,16 @@
+name: 'Keyword Printer'
+alias: 'keyword-printer'
+creator: 'John Doe'
+runtime:
+  main: 'main.py'
+  tests: 
+    - 'tests/test_keyword_printer.py'
+repository: 'https://github.com/lachlanharrisdev/PROJECT-EIDOLON'
+description: 'This is a sample module description'
+version: '0.1.0'
+requirements:
+  - name: 'PyYAML'
+    version: '6.0.2'
+inputs:
+  - name: "keywords"
+outputs: []

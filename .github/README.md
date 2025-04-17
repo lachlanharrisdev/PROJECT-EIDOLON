@@ -9,9 +9,10 @@
 
 </div>
 
-Project Eidolon is a decentralised suite of OSINT tools built to analyze political disinformation on social media. Eidolon uses clever keyword rotation to scrape popular social media networks for posts about political entities, identifies opinionated posts coming from potential bot accounts, and tracks these accounts towards botnets to identify organisations running unethical political propaganda schemes. 
+Project Eidolon is a decentralised suite of OSINT tools built to analyze the evolution of political disinformation on social media. Eidolon uses clever keyword rotation to scrape popular social media networks (primarily Twitter/X) 
+for posts about major political entities, identifies opinionated posts coming from potential bot accounts, and tracks these accounts towards botnets to identify organisations running unethical political propaganda schemes. 
 
-We believe Project Eidolon isn't just a tool. It's a **philosophy**:  
+We believe Project Eidolon isn't just a toolset. It's a **philosophy**:  
 
 > That the internet should prioritize **human rights over profit**, **truth over traction**, and **transparency over trickery**
 
@@ -172,6 +173,7 @@ For more info, refer to the [pytest documentation](https://docs.pytest.org/en/st
 
 # // THE MISSION
 
-This is just the beginning. Eidolon will evolve — as propaganda does. The methods will change. The truth will stay the same.
+This is just the beginning. Eidolon will evolve — as propaganda does. The methods will change, but our values will stay the same.
 
-Help us build a system that resists the commodification of reality. Contribute code. Fork the project. Share the mission. Start discussions. Name and shame bots.
+Help us build a system that resists the spread of disinformation. Contribute code. Fork the project. Share the mission. Start discussions.
+

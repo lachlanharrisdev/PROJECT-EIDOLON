@@ -13,3 +13,6 @@ requirements:
     version: '2.28.1'
   - name: 'spacy'
     version: '3.4.0'
+inputs: []
+outputs:
+  - name: "keywords"

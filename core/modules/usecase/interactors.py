@@ -19,20 +19,33 @@ class ModuleUseCase:
         self.modules = list()
 
     def __check_loaded_module_state(self, module_module: Any):
+        """
+        Check the state of the loaded module and instantiate it.
+        """
         if len(IModuleRegistry.module_registries) > 0:
             latest_module = IModuleRegistry.module_registries[-1]
             latest_module_name = latest_module.__module__
             current_module_name = module_module.__name__
+
             if current_module_name == latest_module_name:
                 self._logger.debug(
                     f"Successfully imported module `{current_module_name}`"
                 )
-                self.modules.append(latest_module)
+
+                # Instantiate the module and add it to the list
+                try:
+                    module_instance = latest_module(self._logger)
+                    self.modules.append(module_instance)
+                except TypeError as e:
+                    self._logger.error(
+                        f"Failed to instantiate module `{current_module_name}`: {e}"
+                    )
             else:
                 self._logger.error(
                     f"Expected to import -> `{current_module_name}` but got -> `{latest_module_name}`"
                 )
-            # clear modules from the registry when we're done with them
+
+            # Clear modules from the registry when we're done with them
             IModuleRegistry.module_registries.clear()
         else:
             self._logger.error(

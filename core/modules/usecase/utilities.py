@@ -6,7 +6,7 @@ from logging import Logger
 from subprocess import CalledProcessError
 from typing import List, Dict, Optional
 
-import pkg_resources
+from importlib.metadata import distributions, PackageNotFoundError  # Updated import
 from dacite import (
     from_dict,
     ForwardReferenceError,
@@ -14,7 +14,6 @@ from dacite import (
     WrongTypeError,
     MissingValueError,
 )
-from pkg_resources import Distribution
 
 from core.modules.models import ModuleConfig, DependencyModule
 from core.modules.util import FileSystem
@@ -38,28 +37,29 @@ class ModuleUtility:
         :param modules_package:
         :return: list of directories
         """
-        return list(
+        paths = list(
             filter(
                 ModuleUtility.__filter_unwanted_directories, os.listdir(modules_package)
             )
         )
+        print(f"Filtered module paths: {paths}")  # Debug logging
+        return paths
 
     @staticmethod
     def __get_missing_packages(
-        installed: List[Distribution], required: Optional[List[DependencyModule]]
+        installed: List[str], required: Optional[List[DependencyModule]]
     ) -> List[DependencyModule]:
         missing = list()
         if required is not None:
-            installed_packages: List[str] = [pkg.project_name for pkg in installed]
             for required_pkg in required:
-                if not installed_packages.__contains__(required_pkg.name):
+                if required_pkg.name not in installed:
                     missing.append(required_pkg)
         return missing
 
     def __manage_requirements(self, package_name: str, module_config: ModuleConfig):
-        installed_packages: List[Distribution] = list(
-            filter(lambda pkg: isinstance(pkg, Distribution), pkg_resources.working_set)
-        )
+        installed_packages: List[str] = [
+            dist.metadata["Name"] for dist in distributions()
+        ]
         missing_packages = self.__get_missing_packages(
             installed_packages, module_config.requirements
         )
@@ -112,6 +112,7 @@ class ModuleUtility:
         :param module_name: module of the potential module
         :return: a module name to import
         """
+        self._logger.debug(f"Setting up module configuration for {module_name}")
         # if the item has not folder we will assume that it is a directory
         module_path = os.path.join(FileSystem.get_modules_directory(), module_name)
         if os.path.isdir(module_path):

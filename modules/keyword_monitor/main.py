@@ -11,6 +11,7 @@ from pathlib import Path
 
 from core.modules.engine import ModuleCore
 from core.modules.models import Meta, Device
+from core.modules.util.messagebus import MessageBus
 import core.keywords as keywords
 
 # Check for spaCy
@@ -196,16 +197,11 @@ class KeywordMonitorModule(ModuleCore):
     Automatically updates the system's keyword list with found entities.
     """
 
-    def __read_module_yaml(self) -> dict:
-        with open("module.yaml", "r") as file:
-            data = yaml.safe_load(file)
-        return data
-
     def __init__(self, logger: Logger) -> None:
         super().__init__(logger)
 
         try:
-            module_data = self.__read_module_yaml()
+            module_data = self.get_config()
             self.meta = Meta(
                 name=module_data["name"],
                 description=module_data["description"],
@@ -228,8 +224,11 @@ class KeywordMonitorModule(ModuleCore):
         keywords.register_provider("keyword-monitor", self.get_keywords, True)
         self._logger.info("Registered as keyword provider")
 
-        # Initial refresh of keywords
+    def run(self, message_bus: MessageBus) -> None:
         self.refresh_keywords()
+        keywords = self.get_keywords()
+        message_bus.publish("keywords", keywords)
+        self._logger.info(f"Publishing keywords")
 
     def get_keywords(self) -> List[str]:
         """Get the current list of keywords from entities."""

@@ -94,7 +94,6 @@ def _save_keywords():
     try:
         with open(_data_file, "w", encoding="utf-8") as f:
             json.dump(_keywords, f, indent=2)
-        logger.debug(f"Saved {len(_keywords)} keywords to {_data_file}")
     except Exception as e:
         logger.error(f"Error saving keywords: {e}")
 
