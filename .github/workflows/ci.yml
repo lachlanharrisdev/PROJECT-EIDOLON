@@ -26,10 +26,9 @@ jobs:
         pip install pytest-asyncio pytest-mock
         python -m spacy download en_core_web_sm
     
-    - name: \[Debug\] List modules directory
+    - name: Run Tests
       run: |
-        ls -R modules/
-        cat modules/*/module.yaml || echo "No module.yaml found"
+        pytest 
 
     - name: Generate Signed Module Hashes
       env:
@@ -38,14 +37,21 @@ jobs:
         python core/security/generate_module_hashes.py
     
     - name: Checkout branch
+      if: github.event_name == 'push'
       run: |
         git fetch origin +refs/heads/${{ github.ref_name }}:refs/remotes/origin/${{ github.ref_name }}
         git checkout ${{ github.ref_name }}
-      
+  
+    - name: Checkout pull request merge ref
+      if: github.event_name == 'pull_request'
+      run: |
+        git fetch origin +refs/pull/${{ github.event.pull_request.number }}/merge
+        git checkout FETCH_HEAD
+
     - name: Commit Verified Modules
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git add settings/verified_modules.json
         git commit -m "ci: update verified module hashes" || echo "No changes to commit"
-        git push origin ${{ github.ref_name }}
+        git push origin HEAD:${{ github.ref_name }}
