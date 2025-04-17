@@ -1,8 +1,9 @@
-from logging import Logger
+import logging
 
 import json
 import hashlib
 import os
+import re
 
 from core.modules.usecase import ModuleUseCase
 from core.modules.util import LogUtil, FileSystem
@@ -14,25 +15,26 @@ from cryptography.hazmat.primitives import hashes, serialization
 
 class ModuleEngine:
     def __init__(self, **args):
-        self._logger = LogUtil.create(args["options"]["log_level"])
+        self.verified_modules = {}
+        self._logger = logging.getLogger("__name__")
         self.use_case = ModuleUseCase(
             {
                 "log_level": args["options"]["log_level"],
                 "directory": FileSystem.get_modules_directory(),
             }
         )
-        self.verified_modules = self.__load_verified_modules()
+        self._load_verified_modules()
         self.message_bus = MessageBus()
 
-    def __load_verified_modules(self):
+    def _load_verified_modules(self):
+        """Load the verified modules from the JSON file."""
         try:
             with open("settings/verified_modules.json", "r") as f:
-                return json.load(f)["modules"]
-        except (FileNotFoundError, KeyError):
-            self._logger.warning(
-                "verified_modules.json not found or invalid. All modules will be treated as unverified."
-            )
-            return {}
+                self.verified_modules = json.load(f).get("modules", {})
+                self._logger.info(f"Verified modules loaded: {self.verified_modules}")
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            self._logger.error(f"Failed to load verified modules: {e}")
+            self.verified_modules = {}
 
     def __verify_signature(self, module_name, module_hash, signature, public_key):
         try:
@@ -48,32 +50,48 @@ class ModuleEngine:
             return False
 
     def __verify_module(self, module_path, public_key):
+        """Verify a module using its hash and signature."""
+        # Get the actual directory name of the module
         module_name = os.path.basename(module_path)
+        self._logger.debug(f"Verifying module: {module_name}")
+
+        # Check if the directory name exists in the verified modules
         if module_name not in self.verified_modules:
-            self._logger.warning(f"Module {module_name} is NOT verified.")
+            self._logger.warning(
+                f"\x1b[1;31mModule {module_name} UNVERIFIED \033[0m(directory name not found in self.verified_modules)"
+            )
             return False
 
         module_info = self.verified_modules[module_name]
         computed_hash = self._compute_module_hash(module_path)
         if not computed_hash:
+            self._logger.warning(
+                f"\x1b[1;31mModule {module_name} UNVERIFIED \033[0m(hash not computed)"
+            )
             return False
 
         if computed_hash != module_info["hash"]:
-            self._logger.warning(f"Hash mismatch for module {module_name}.")
+            self._logger.warning(
+                f"\x1b[1;31mModule {module_name} UNVERIFIED \033[0m(hash mismatch)"
+            )
             return False
 
         if not self.__verify_signature(
             module_name, computed_hash, module_info["signature"], public_key
         ):
+            self._logger.warning(
+                f"\x1b[1;31mModule {module_name} UNVERIFIED \033[0m(incorrect signature)"
+            )
             return False
 
-        self._logger.info(f"Module {module_name} is verified.")
+        self._logger.info(f"\033[96mModule {module_name} VERIFIED\033[0m")
         return True
 
     def _compute_module_hash(self, module_path):
         sha256 = hashlib.sha256()
         try:
             config_path = os.path.join(module_path, "module.yaml")
+            self._logger.debug(f"Computing hash for {config_path}")
             with open(config_path, "rb") as f:
                 while chunk := f.read(8192):
                     sha256.update(chunk)
@@ -88,7 +106,8 @@ class ModuleEngine:
         self.__invoke_on_modules()
 
     def __reload_modules(self):
-        public_key_path = "core/security/public_key.pem"  # Updated path
+        self.use_case.discover_modules(True)
+        public_key_path = "core/security/public_key.pem"
         try:
             with open(public_key_path, "rb") as f:
                 public_key = serialization.load_pem_public_key(f.read())
@@ -96,12 +115,17 @@ class ModuleEngine:
             self._logger.error(f"Failed to load public key from {public_key_path}: {e}")
             return
 
-        self.use_case.discover_modules(True)
-        for module in self.use_case.modules:
-            module_path = os.path.join(
-                FileSystem.get_modules_directory(), module.meta.name
-            )
-            self.__verify_module(module_path, public_key)
+        modules_directory = FileSystem.get_modules_directory()
+
+        # Dynamically iterate through all directories in the modules folder
+        for module_name in os.listdir(modules_directory):
+            module_path = os.path.join(modules_directory, module_name)
+
+            # Ensure it's a directory before attempting verification
+            if os.path.isdir(module_path):
+                self.__verify_module(module_path, public_key)
+            else:
+                self._logger.debug(f"Skipping non-directory item: {module_path}")
 
     def __connect_modules(self):
         """Connect modules based on their inputs and outputs."""

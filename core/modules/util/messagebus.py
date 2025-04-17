@@ -1,11 +1,14 @@
 from collections import defaultdict
 from typing import Dict, List, Any
 
+import logging
+
 
 class MessageBus:
     def __init__(self):
         self.subscribers: Dict[str, List] = defaultdict(list)
         self.output_types: Dict[str, type] = {}  # Track expected types for outputs
+        self._logger = logging.getLogger(__name__)
 
     def publish(self, topic: str, data: Any):
         """Publish data to a topic."""
@@ -22,7 +25,7 @@ class MessageBus:
 
         # Warn if data is empty
         if data is None or (isinstance(data, (list, dict, str)) and len(data) == 0):
-            print(f"Warning: Empty data published to topic '{topic}'")
+            self._logger.warning(f"Warning: Empty data published to topic '{topic}'")
 
         for subscriber in self.subscribers[topic]:
             subscriber(data)
@@ -30,7 +33,6 @@ class MessageBus:
     def subscribe(self, topic: str, callback, expected_type: type = None):
         """Subscribe a callback to a topic."""
         self.subscribers[topic].append(callback)
-        print("Subscribed to topic:", topic)
         if expected_type:
             if topic in self.output_types and self.output_types[topic] != expected_type:
                 raise ValueError(

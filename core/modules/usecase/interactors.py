@@ -1,6 +1,6 @@
 import os
 from importlib import import_module
-from logging import Logger
+import logging
 from typing import List, Any, Dict
 
 from core.modules.engine import IModuleRegistry, ModuleCore
@@ -9,11 +9,10 @@ from .utilities import ModuleUtility
 
 
 class ModuleUseCase:
-    _logger: Logger
     modules: List[type]
 
     def __init__(self, options: Dict) -> None:
-        self._logger = LogUtil.create(options["log_level"])
+        self._logger = logging.getLogger(__name__)
         self.modules_package: str = options["directory"]
         self.module_util = ModuleUtility(self._logger)
         self.modules = list()
@@ -83,7 +82,7 @@ class ModuleUseCase:
             self.__search_for_modules_in(modules_path, package_name)
 
     @staticmethod
-    def register_module(module: type, logger: Logger) -> ModuleCore:
+    def register_module(module: type, logger: logging.Logger) -> ModuleCore:
         """
         Create a module instance from the given module
         :param module: module to initialize

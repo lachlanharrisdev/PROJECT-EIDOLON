@@ -4,9 +4,8 @@ registry:
   repository: ''
   tag: 'latest'
 logging:
-  # Setting the log level: CRITICAL, ERROR, WARNING, INFO, DEBUG
-  level: 'INFO'
-modules:
-  directory: 'modules'
-  log_level: 'INFO'
+  level: 'DEBUG'
+  format: '%(asctime)s: %(levelname)s from %(name)s - %(message)s [%(filename)s:%(lineno)d]'
+  file_level: 'DEBUG'
+  console_level: 'DEBUG'
 

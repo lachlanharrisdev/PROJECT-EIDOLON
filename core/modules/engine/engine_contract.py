@@ -16,7 +16,6 @@ class IModuleRegistry(type):
         super().__init__(name, bases, attrs)
         if name != "ModuleCore":
             IModuleRegistry.module_registries.append(cls)
-            print(f"Registered module: {name}")  # Debug logging
 
 
 class ModuleCore(object, metaclass=IModuleRegistry):
