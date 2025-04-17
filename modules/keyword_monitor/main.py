@@ -34,13 +34,15 @@ class KeywordMonitor:
         rss_url: str = "https://news.google.com/rss/search?q=politics",
         max_age_days: int = 30,
         min_mentions: int = 1,
-        keywords_file: str = "keywords.json",
     ):
         self._logger = logger
         self.rss_url = rss_url
         self.max_age_days = max_age_days
         self.min_mentions = min_mentions
-        self.keywords_file = Path(keywords_file)
+
+        # Determine the module directory dynamically
+        module_dir = Path(__file__).parent
+        self.keywords_file = module_dir / ".keywords.json"
 
         # Initialize spaCy NLP model
         self.nlp = None

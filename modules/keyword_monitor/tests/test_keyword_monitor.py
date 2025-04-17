@@ -5,8 +5,6 @@ from unittest.mock import Mock
 from core.modules.util import LogUtil
 from modules.keyword_monitor.main import KeywordMonitor
 
-from app.scheduler import schedule_task
-
 
 @pytest.fixture
 def keyword_monitor():

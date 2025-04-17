@@ -119,13 +119,13 @@ docker build -f docker/full_build.Dockerfile -t eidolon .
 2.1 To run in CLI mode:
 
 ```bash
-docker run -it --env-file .env eidolon python -m app.main
+docker run -it --env-file .env eidolon python main.py
 ```
 
 2.2 To run in API mode:
 
 ```bash
-docker run -p 8000:8000 --env-file .env eidolon python -m app.main --mode api
+docker run -p 8000:8000 --env-file .env eidolon python main.py --mode api
 ```
 
 <br/>
@@ -135,13 +135,13 @@ docker run -p 8000:8000 --env-file .env eidolon python -m app.main --mode api
 ## CLI MODE
 
 ```bash
-python -m app.main
+python main.py
 ```
 
 ## API MODE
 
 ```bash
-python -m app.main --mode api
+python main.py --mode api
 ```
 
 API launches at http://localhost:8000 with:
