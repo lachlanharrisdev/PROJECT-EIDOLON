@@ -30,6 +30,7 @@ def compute_hash(module_path):
     except Exception as e:
         logger.error(f"Error reading 'module.yaml' in module {module_path}: {e}")
 
+
 def sign_hash(hash_value, private_key):
     """Sign a hash using the private key."""
     if isinstance(hash_value, str):
@@ -54,10 +55,14 @@ def generate_signed_hashes(private_key):
                 config_path = os.path.join(module_path, "module.yaml")
                 try:
                     with open(config_path, "r") as f:
+                        if os.stat(config_path).st_size == 0:
+                            raise ValueError("module.yaml is empty")
                         module_config = json.load(f)
-                except json.JSONDecodeError as e:
-                    print(f"Error parsing 'module.yaml' in module {module_path}: {e}")
-                    continue
+                except (json.JSONDecodeError, ValueError) as e:
+                    logger.error(
+                        f"Error parsing 'module.yaml' in module {module_path}: {e}"
+                    )
+                    raise RuntimeError(f"Invalid module.yaml in {module_path}") from e
 
                 version = module_config.get("version", "unknown")
                 repo = module_config.get("repository", "unknown")

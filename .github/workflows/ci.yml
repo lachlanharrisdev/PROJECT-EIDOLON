@@ -12,6 +12,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -23,6 +25,11 @@ jobs:
         pip install -r requirements.txt
         pip install pytest-asyncio pytest-mock
         python -m spacy download en_core_web_sm
+    
+    - name: \[Debug\] List modules directory
+      run: |
+        ls -R modules/
+        cat modules/*/module.yaml || echo "No module.yaml found"
 
     - name: Generate Signed Module Hashes
       env:
@@ -30,10 +37,15 @@ jobs:
       run: |
         python core/security/generate_module_hashes.py
     
+    - name: Checkout branch
+      run: |
+        git fetch origin +refs/heads/${{ github.ref_name }}:refs/remotes/origin/${{ github.ref_name }}
+        git checkout ${{ github.ref_name }}
+      
     - name: Commit Verified Modules
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git add settings/verified_modules.json
         git commit -m "ci: update verified module hashes" || echo "No changes to commit"
-        git push
+        git push origin ${{ github.ref_name }}
