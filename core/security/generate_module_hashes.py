@@ -28,9 +28,7 @@ def compute_hash(module_path):
                 sha256.update(chunk)
         return sha256.hexdigest()
     except Exception as e:
-        print(f"Error reading 'module.yaml' in module {module_path}: {e}")
-        return None
-
+        logger.error(f"Error reading 'module.yaml' in module {module_path}: {e}")
 
 def sign_hash(hash_value, private_key):
     """Sign a hash using the private key."""

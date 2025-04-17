@@ -22,6 +22,7 @@ class ModuleEngine:
             }
         )
         self.verified_modules = self.__load_verified_modules()
+        self.message_bus = MessageBus()
 
     def __load_verified_modules(self):
         try:
@@ -83,11 +84,17 @@ class ModuleEngine:
 
     def start(self):
         self.__reload_modules()
+        self.__connect_modules()
+        self.__invoke_on_modules()
 
     def __reload_modules(self):
         public_key_path = "core/security/public_key.pem"  # Updated path
-        with open(public_key_path, "rb") as f:
-            public_key = serialization.load_pem_public_key(f.read())
+        try:
+            with open(public_key_path, "rb") as f:
+                public_key = serialization.load_pem_public_key(f.read())
+        except (FileNotFoundError, OSError) as e:
+            self._logger.error(f"Failed to load public key from {public_key_path}: {e}")
+            return
 
         self.use_case.discover_modules(True)
         for module in self.use_case.modules:
@@ -95,3 +102,37 @@ class ModuleEngine:
                 FileSystem.get_modules_directory(), module.meta.name
             )
             self.__verify_module(module_path, public_key)
+
+    def __connect_modules(self):
+        """Connect modules based on their inputs and outputs."""
+        for module in self.use_case.modules:
+            self._logger.debug(f"Connecting module: {module} (type: {type(module)})")
+
+            # Correctly call get_config() on the module instance
+            config = module.get_config()
+
+            outputs = config.get("outputs", [])
+            inputs = config.get("inputs", [])
+
+            # Publish outputs to the message bus
+            for output in outputs:
+                topic = output["name"]  # Extract the name of the output
+                if topic in self.message_bus.subscribers:
+                    self._logger.warning(
+                        f"Multiple modules are providing the same output: {topic}"
+                    )
+                self._logger.info(f'{module} set to PUBLISH topic: "{topic}"')
+
+            # Subscribe inputs with types
+            for input_item in inputs:
+                topic = input_item["name"]  # Extract the name of the input
+                self.message_bus.subscribe(topic, module.handle_input)
+                self._logger.info(f'{module} subscribed to INPUT topic: "{topic}"')
+
+    def __invoke_on_modules(self):
+        """Invoke all modules."""
+        for module in self.use_case.modules:
+            try:
+                module.run(self.message_bus)
+            except Exception as e:
+                self._logger.error(f"Error running module {module}: {e}")
