@@ -21,6 +21,8 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        pip install pytest-asyncio pytest-mock
+        python -m spacy download en_core_web_sm
 
     - name: Generate Signed Module Hashes
       env:
