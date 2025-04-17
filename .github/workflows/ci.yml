@@ -41,4 +41,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: verified-module-hashes
-        path: settings/verified_modules.json
+        path: src/settings/verified_modules.json

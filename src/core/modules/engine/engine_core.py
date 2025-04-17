@@ -29,7 +29,7 @@ class ModuleEngine:
     def _load_verified_modules(self):
         """Load the verified modules from the JSON file."""
         try:
-            with open("settings/verified_modules.json", "r") as f:
+            with open("src/settings/verified_modules.json", "r") as f:
                 self.verified_modules = json.load(f).get("modules", {})
                 self._logger.debug(f"Verified modules loaded")
         except (FileNotFoundError, json.JSONDecodeError) as e:
@@ -100,14 +100,36 @@ class ModuleEngine:
             self._logger.error(f"Critical file missing in module {module_path}: {e}")
             return None
 
+    def start_from_head(self, module_name):
+        """
+        Start the system by loading a specific module and its dependencies based on its directory name.
+        """
+        self._logger.debug(f"Starting system from module: {module_name}")
+        self.use_case.discover_module(module_name)
+
+        loaded_modules = set()
+        self.use_case.load_module(module_name, loaded_modules, True)
+
+        # Reload, connect, and invoke only the necessary modules
+        self.__reload_modules(loaded_modules)
+        self.__connect_modules()
+        self.__invoke_on_modules()
+
     def start(self):
         self.__reload_modules()
         self.__connect_modules()
         self.__invoke_on_modules()
 
-    def __reload_modules(self):
-        self.use_case.discover_modules(True)
-        public_key_path = "core/security/public_key.pem"
+    def __reload_modules(self, modules=None):
+        """
+        Reload the specified modules or all modules if none are specified.
+        """
+        if modules:
+            self._logger.debug(f"Reloading specific modules: {modules}")
+        else:
+            self.use_case.discover_modules(True)
+
+        public_key_path = "src/core/security/public_key.pem"
         try:
             with open(public_key_path, "rb") as f:
                 public_key = serialization.load_pem_public_key(f.read())
@@ -117,15 +139,19 @@ class ModuleEngine:
 
         modules_directory = FileSystem.get_modules_directory()
 
-        # Dynamically iterate through all directories in the modules folder
         for module_name in os.listdir(modules_directory):
             module_path = os.path.join(modules_directory, module_name)
 
-            # Ensure it's a directory before attempting verification
-            if os.path.isdir(module_path):
-                self.__verify_module(module_path, public_key)
-            else:
-                self._logger.debug(f"Skipping non-directory item: {module_path}")
+            # Skip non-directory items and non-specified modules
+            if not os.path.isdir(module_path) or (
+                modules and module_name not in modules
+            ):
+                self._logger.debug(
+                    f"Skipping non-directory or non-specified item: {module_path}"
+                )
+                continue
+
+            self.__verify_module(module_path, public_key)
 
     def __connect_modules(self):
         """Connect modules based on their inputs and outputs."""

@@ -2,6 +2,7 @@ from logging import Logger
 
 from core.modules.engine import ModuleCore
 from core.modules.models import Device, Meta
+from core.modules.util.messagebus import MessageBus
 
 
 class TemplateModule(ModuleCore):
@@ -23,6 +24,9 @@ class TemplateModule(ModuleCore):
                 version="0.1.0",
             )
             self._logger.error("module.yaml file not found. Using default values.")
+
+    def run(self, messagebus: MessageBus) -> None:
+        self._logger.info(f"Running {self.meta.name} module...")
 
     @staticmethod
     def __create_device() -> Device:

@@ -7,5 +7,5 @@ logging:
   level: 'DEBUG'
   format: '%(asctime)s: %(levelname)s from %(name)s - %(message)s [%(filename)s:%(lineno)d]'
   file_level: 'DEBUG'
-  console_level: 'INFO'
+  console_level: 'DEBUG'
 
