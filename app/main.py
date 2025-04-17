@@ -1,7 +1,6 @@
 import asyncio
 import yaml
 from logging import Logger, basicConfig, getLogger
-from app.scheduler import schedule_task
 
 from core.modules.engine import ModuleEngine
 from core.util.logging import configure_logging

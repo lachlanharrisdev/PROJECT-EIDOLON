@@ -31,7 +31,7 @@ class ModuleEngine:
         try:
             with open("settings/verified_modules.json", "r") as f:
                 self.verified_modules = json.load(f).get("modules", {})
-                self._logger.info(f"Verified modules loaded: {self.verified_modules}")
+                self._logger.debug(f"Verified modules loaded")
         except (FileNotFoundError, json.JSONDecodeError) as e:
             self._logger.error(f"Failed to load verified modules: {e}")
             self.verified_modules = {}
