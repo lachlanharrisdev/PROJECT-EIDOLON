@@ -2,6 +2,7 @@ import os
 import hashlib
 import json
 import logging
+import yaml
 
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import hashes, serialization
@@ -57,8 +58,8 @@ def generate_signed_hashes(private_key):
                     with open(config_path, "r") as f:
                         if os.stat(config_path).st_size == 0:
                             raise ValueError("module.yaml is empty")
-                        module_config = json.load(f)
-                except (json.JSONDecodeError, ValueError) as e:
+                        module_config = yaml.safe_load(f)
+                except (yaml.YAMLError, ValueError) as e:
                     logger.error(
                         f"Error parsing 'module.yaml' in module {module_path}: {e}"
                     )
