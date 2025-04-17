@@ -1,5 +1,5 @@
-name: 'Sample Module'
-alias: 'sample-module'
+name: 'Template Module'
+alias: 'template-module'
 creator: 'John Doe'
 runtime:
   main: 'main.py'
