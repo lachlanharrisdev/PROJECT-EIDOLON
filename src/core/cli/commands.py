@@ -81,7 +81,7 @@ def version_command():
 
 
 def main():
-    from docopt import docopt
+    from .docopt import docopt
 
     # Parse arguments using docopt
     args = docopt(USAGE, version="Eidolon CLI Tool v1.0.0")
