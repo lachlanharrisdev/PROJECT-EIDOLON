@@ -4,4 +4,10 @@ modules:
   - name: keyword_printer
     depends_on:
       - keyword_monitor
+    input_mappings:
+      keywords: keywords  # Map keyword_printer's "keywords" input to keyword_monitor's "keywords" output
   - name: template_module
+    depends_on:
+      - keyword_monitor
+    input_mappings:
+      keywords: keywords  # Map template_module's "keywords" input to keyword_monitor's "keywords" output

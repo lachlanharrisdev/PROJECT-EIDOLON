@@ -1,9 +1,11 @@
 from logging import Logger
+from typing import List, Any
 
 import yaml
 
 from core.modules.engine import ModuleCore
 from core.modules.models import Meta, Device
+from core.modules.util.messagebus import MessageBus
 
 
 class KeywordPrinterModule(ModuleCore):
@@ -30,12 +32,28 @@ class KeywordPrinterModule(ModuleCore):
 
         self.keywords = []
 
-    def handle_input(self, data):
+    def handle_input(self, data: Any):
         """
         Handle input data and print it to the console.
-        :param data: The input data to handle.
+        Type checking will be performed by the MessageBus before this method is called.
+
+        Args:
+            data: The input data, expected to be a List[str] of keywords
         """
-        self._logger.info(f"\nI'm a keyword printer! I'm printing: \n{data}\n")
+        if isinstance(data, list):
+            self.keywords = data
+            self._logger.info(
+                f"\nI'm a keyword printer! I'm printing {len(data)} keywords: \n{data}\n"
+            )
+        else:
+            self._logger.error(
+                f"Received data of unexpected type: {type(data).__name__}"
+            )
+
+    def run(self, message_bus: MessageBus) -> None:
+        """Run the module's main logic."""
+        if self.keywords:
+            self._logger.info(f"Currently tracking {len(self.keywords)} keywords")
 
     @staticmethod
     def __create_device() -> Device:

@@ -11,3 +11,11 @@ version: '0.0.1'
 requirements:
   - name: 'PyYAML'
     version: '6.0.2'
+inputs:
+  - name: "keywords"
+    type: "List[str]"
+    description: "List of keywords to process"
+outputs:
+  - name: "processed_keywords"
+    type: "Dict[str, int]"
+    description: "Dictionary of keywords with their priority scores"

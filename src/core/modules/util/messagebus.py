@@ -1,42 +1,149 @@
 from collections import defaultdict
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Type, Callable, Optional, get_origin, get_args
 
 import logging
+from core.modules.models import ModuleInput, ModuleOutput
 
 
 class MessageBus:
     def __init__(self):
-        self.subscribers: Dict[str, List] = defaultdict(list)
-        self.output_types: Dict[str, type] = {}  # Track expected types for outputs
+        self.subscribers: Dict[str, List[Callable]] = defaultdict(list)
+        self.output_types: Dict[str, Type] = {}  # Track expected types for outputs
+        self.topic_sources: Dict[str, str] = (
+            {}
+        )  # Track which module provides each topic
         self._logger = logging.getLogger(__name__)
 
-    def publish(self, topic: str, data: Any):
-        """Publish data to a topic."""
+    def register_output(
+        self, topic: str, output_def: ModuleOutput, source_module: str
+    ) -> None:
+        """
+        Register an output topic with its expected type and source module.
+
+        Args:
+            topic: The topic name
+            output_def: The ModuleOutput definition
+            source_module: The name of the module providing this output
+        """
+        if topic in self.output_types:
+            existing_source = self.topic_sources.get(topic, "unknown")
+            if existing_source != source_module:
+                self._logger.warning(
+                    f"Topic '{topic}' already registered by module '{existing_source}', "
+                    f"but is also provided by '{source_module}'"
+                )
+
+        python_type = output_def.get_python_type()
+        self.output_types[topic] = python_type
+        self.topic_sources[topic] = source_module
+        self._logger.debug(
+            f"Registered output topic '{topic}' with type '{output_def.type_name}' from module '{source_module}'"
+        )
+
+    def register_input(
+        self, topic: str, input_def: ModuleInput, target_module: str
+    ) -> None:
+        """
+        Register a module's interest in an input topic with type validation.
+
+        Args:
+            topic: The topic to subscribe to
+            input_def: The ModuleInput definition
+            target_module: The name of the module requiring this input
+        """
+        if topic in self.output_types:
+            expected_type = input_def.get_python_type()
+            registered_type = self.output_types[topic]
+
+            # Check for type compatibility
+            if (
+                expected_type != Any
+                and registered_type != Any
+                and expected_type != registered_type
+            ):
+                self._logger.warning(
+                    f"Type mismatch for topic '{topic}': Module '{target_module}' expects "
+                    f"'{input_def.type_name}' but topic provides '{registered_type.__name__}'"
+                )
+        else:
+            self._logger.warning(
+                f"Module '{target_module}' subscribes to topic '{topic}' that has not been registered as an output"
+            )
+
+    def _is_instance_of_type(self, data: Any, expected_type: Type) -> bool:
+        """
+        Safely check if data is an instance of the expected type,
+        handling special types like Any, List[X], Dict[X, Y], etc.
+
+        Args:
+            data: The data to check
+            expected_type: The expected type
+
+        Returns:
+            bool: True if data is of the expected type, False otherwise
+        """
+        if expected_type is Any:
+            return True
+
+        # Handle generic types like List[X], Dict[X, Y]
+        origin = get_origin(expected_type)
+        if origin is not None:
+            # It's a generic type like List[str], Dict[str, int]
+            if isinstance(data, origin):
+                # For now, we don't validate the inner types
+                return True
+            return False
+
+        # Regular type check
+        return isinstance(data, expected_type)
+
+    def publish(self, topic: str, data: Any) -> None:
+        """Publish data to a topic with type validation."""
         if topic not in self.subscribers:
-            raise ValueError(f"No subscribers for topic: {topic}")
+            self._logger.warning(f"Publishing to topic '{topic}' with no subscribers")
+            return
 
         # Validate data type if expected type is defined
         expected_type = self.output_types.get(topic)
-        if expected_type and not isinstance(data, expected_type):
-            raise TypeError(
-                f"Data published to topic '{topic}' is of type {type(data).__name__}, "
-                f"expected {expected_type.__name__}"
-            )
+        if expected_type:
+            try:
+                if not self._is_instance_of_type(data, expected_type):
+                    self._logger.error(
+                        f"Type validation failed: Data published to topic '{topic}' is of type {type(data).__name__}, "
+                        f"expected {getattr(expected_type, '__name__', str(expected_type))}"
+                    )
+                    # Don't raise to avoid crashing the system, but log the error
+                    return
+            except Exception as e:
+                self._logger.error(
+                    f"Error during type validation for topic '{topic}': {e}"
+                )
+                # Continue with publishing despite validation error
 
         # Warn if data is empty
         if data is None or (isinstance(data, (list, dict, str)) and len(data) == 0):
             self._logger.warning(f"Warning: Empty data published to topic '{topic}'")
 
         for subscriber in self.subscribers[topic]:
-            subscriber(data)
+            try:
+                subscriber(data)
+            except Exception as e:
+                self._logger.error(f"Error in subscriber for topic '{topic}': {e}")
 
-    def subscribe(self, topic: str, callback, expected_type: type = None):
-        """Subscribe a callback to a topic."""
+    def subscribe(
+        self, topic: str, callback: Callable, expected_type: Optional[Type] = None
+    ) -> None:
+        """Subscribe a callback to a topic with optional type validation."""
         self.subscribers[topic].append(callback)
+
+        # Add or validate type information
         if expected_type:
             if topic in self.output_types and self.output_types[topic] != expected_type:
-                raise ValueError(
-                    f"Conflicting types for topic '{topic}': "
-                    f"{self.output_types[topic].__name__} vs {expected_type.__name__}"
-                )
-            self.output_types[topic] = expected_type
+                if self.output_types[topic] != Any and expected_type != Any:
+                    self._logger.warning(
+                        f"Type mismatch for topic '{topic}': Subscriber expects "
+                        f"{getattr(expected_type, '__name__', str(expected_type))} but topic was registered with "
+                        f"{getattr(self.output_types[topic], '__name__', str(self.output_types[topic]))}"
+                    )
+            else:
+                self.output_types[topic] = expected_type
