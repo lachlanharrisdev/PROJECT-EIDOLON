@@ -90,6 +90,25 @@ class ModuleUtility:
                 self._logger.error("Empty or invalid module configuration file")
                 return None
 
+            # Pre-process inputs and outputs to ensure they have the required fields
+            if "inputs" in module_config_data and module_config_data["inputs"]:
+                for input_item in module_config_data["inputs"]:
+                    if "type" not in input_item:
+                        input_item["type"] = "Any"  # Default type
+                    if "type_name" not in input_item:
+                        input_item["type_name"] = input_item[
+                            "type"
+                        ]  # Copy from type field
+
+            if "outputs" in module_config_data and module_config_data["outputs"]:
+                for output_item in module_config_data["outputs"]:
+                    if "type" not in output_item:
+                        output_item["type"] = "Any"  # Default type
+                    if "type_name" not in output_item:
+                        output_item["type_name"] = output_item[
+                            "type"
+                        ]  # Copy from type field
+
             module_config = from_dict(data_class=ModuleConfig, data=module_config_data)
             return module_config
         except FileNotFoundError as e:

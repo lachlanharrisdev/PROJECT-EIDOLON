@@ -16,3 +16,5 @@ requirements:
 inputs: []
 outputs:
   - name: "keywords"
+    type: "List[str]"
+    description: "List of political keywords extracted from news sources"

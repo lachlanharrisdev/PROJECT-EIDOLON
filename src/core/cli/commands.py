@@ -1,6 +1,6 @@
 import sys
 import signal
-from core.modules.engine import ModuleEngine
+from core.modules.engine.engine_core import ModuleEngine
 from core.util.logging import configure_logging
 
 

@@ -1,21 +1,14 @@
-from core.modules.models.models import (
-    Meta,
-    Device,
-    ModuleConfig,
-    DependencyModule,
-    ModuleRunTimeOption,
-    Pipeline,
-    PipelineModule,
-    PipelineModuleDependency,
-)
+from core.modules.models.models import *
 
 __all__ = [
-    "Meta",
-    "Device",
-    "ModuleConfig",
-    "DependencyModule",
-    "ModuleRunTimeOption",
-    "Pipeline",
-    "PipelineModule",
-    "PipelineModuleDependency",
+    ModuleConfig,
+    Meta,
+    Device,
+    PipelineModuleDependency,
+    PipelineModule,
+    Pipeline,
+    ModuleInput,
+    ModuleOutput,
+    ModuleRunTimeOption,
+    DependencyModule,
 ]
