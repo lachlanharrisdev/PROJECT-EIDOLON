@@ -61,7 +61,7 @@ class ModuleUseCase:
     ):
         for directory in modules_path:
             # Skip directories not in allowed_modules if specified
-            if allowed_modules is not None and directory not in allowed_modules:
+            if allowed_modules is not None and directory.lower() not in {mod.lower() for mod in allowed_modules}:
                 self._logger.debug(
                     f"Skipping module {directory} as it's not in the pipeline"
                 )
