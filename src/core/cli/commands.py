@@ -24,7 +24,7 @@ USAGE = """
 Eidolon CLI Tool - A modular OSINT suite for analyzing disinformation.
 
 Usage:
-  eidolon run [<module>] [--log-level=<level> | --verbose] [--output-format=<format>]
+  eidolon run [<pipeline>] [--log-level=<level> | --verbose] [--output-format=<format>]
   eidolon version
   eidolon (-h | --help)
 
@@ -36,25 +36,30 @@ Options:
   --output-format=<format>  Set the output format [default: text].
                             Options: text, json.
 
+Arguments:
+  <pipeline>                Name of pipeline to run [default: default].
+                            This is the name of a YAML file in src/pipelines/ (with or without the .yaml extension).
+
 Commands:
-  run       Run the main application or a specific module.
-            If <module> is not specified, all modules will be run.
+  run       Run the application with modules specified in the pipeline.
   version   Show the version of the CLI.
 
 Examples:
+  eidolon run                      # Run the default pipeline
+  eidolon run custom_pipeline      # Run a specific pipeline
   eidolon run --log-level=DEBUG
-  eidolon run my_module --output-format=json --verbose
+  eidolon run custom.yaml --output-format=json --verbose
   eidolon version
   eidolon -h
 """
 
 
 def run_command(args):
-    """Run the main application or specific modules."""
+    """Run the main application with modules from the specified pipeline."""
     log_level = args["--log-level"].upper()
     verbose = args["--verbose"]
     output_format = args["--output-format"]
-    module = args["<module>"]
+    pipeline = args["<pipeline>"] or "default"
 
     if verbose:
         logger = configure_logging(log_level="DEBUG")
@@ -62,17 +67,19 @@ def run_command(args):
         logger = configure_logging(log_level=log_level)
     else:
         logger = configure_logging(log_level="INFO")
-    engine = ModuleEngine(options={"log_level": log_level})
 
-    if module:
-        logger.info(f"Running module: {module}")
-        engine.start_from_head(module)
-    else:
-        logger.info("Running all modules...")
-        engine.start()
+    logger.info(f"Starting Eidolon with pipeline: {pipeline}")
+    engine = ModuleEngine(options={"log_level": log_level}, pipeline=pipeline)
+
+    logger.info("Running modules...")
+    if not engine.start():
+        logger.error(f"Failed to start engine with pipeline '{pipeline}'")
+        return False
 
     if output_format == "json":
         logger.info("Output format set to JSON (not yet implemented).")
+
+    return True
 
 
 def version_command():
@@ -96,8 +103,11 @@ def main():
     signal.signal(signal.SIGINT, handle_sigint)
 
     # Dispatch commands
+    success = True
     if args["run"]:
-        run_command(args)
+        success = run_command(args)
+        if not success:
+            sys.exit(1)
     elif args["version"]:
         version_command()
     elif args["--help"]:

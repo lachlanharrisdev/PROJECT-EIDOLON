@@ -6,6 +6,7 @@ import os
 import re
 
 from core.modules.usecase import ModuleUseCase
+from core.modules.usecase.pipeline_loader import PipelineLoader
 from core.modules.util import LogUtil, FileSystem
 from core.modules.util.messagebus import MessageBus
 
@@ -17,12 +18,14 @@ class ModuleEngine:
     def __init__(self, **args):
         self.verified_modules = {}
         self._logger = logging.getLogger("__name__")
+        self.pipeline_name = args.get("pipeline", "default")
         self.use_case = ModuleUseCase(
             {
                 "log_level": args["options"]["log_level"],
                 "directory": FileSystem.get_modules_directory(),
             }
         )
+        self.pipeline_loader = PipelineLoader(self._logger)
         self._load_verified_modules()
         self.message_bus = MessageBus()
 
@@ -100,35 +103,43 @@ class ModuleEngine:
             self._logger.error(f"Critical file missing in module {module_path}: {e}")
             return None
 
-    def start_from_head(self, module_name):
-        """
-        Start the system by loading a specific module and its dependencies based on its directory name.
-        """
-        self._logger.debug(f"Starting system from module: {module_name}")
-        self.use_case.discover_module(module_name)
-
-        loaded_modules = set()
-        self.use_case.load_module(module_name, loaded_modules, True)
-
-        # Reload, connect, and invoke only the necessary modules
-        self.__reload_modules(loaded_modules)
-        self.__connect_modules()
-        self.__invoke_on_modules()
-
     def start(self):
-        self.__reload_modules()
+        """Start the engine by loading modules from the specified pipeline and connecting them."""
+        # Load the pipeline configuration
+        pipeline = self.pipeline_loader.load_pipeline(self.pipeline_name)
+        if not pipeline:
+            self._logger.error(
+                f"Failed to load pipeline '{self.pipeline_name}'. Cannot start the engine."
+            )
+            return False
+
+        # Load modules based on the pipeline configuration
+        self._logger.info(f"Loading modules from pipeline '{pipeline.name}'")
+        self.__reload_modules(pipeline=pipeline)
+
+        # Connect and invoke modules
         self.__connect_modules()
         self.__invoke_on_modules()
+        return True
 
-    def __reload_modules(self, modules=None):
+    def __reload_modules(self, modules=None, pipeline=None):
         """
-        Reload the specified modules or all modules if none are specified.
+        Reload the specified modules or modules from a pipeline.
+
+        :param modules: List of specific module names to reload
+        :param pipeline: Pipeline configuration containing modules to load
         """
         if modules:
             self._logger.debug(f"Reloading specific modules: {modules}")
+        elif pipeline:
+            self._logger.debug(f"Loading modules from pipeline: {pipeline.name}")
         else:
-            self.use_case.discover_modules(True)
+            self._logger.debug("Loading all available modules")
 
+        # Discover and load modules
+        self.use_case.discover_modules(True, pipeline)
+
+        # Verify the loaded modules
         public_key_path = "src/core/security/public_key.pem"
         try:
             with open(public_key_path, "rb") as f:
@@ -139,18 +150,29 @@ class ModuleEngine:
 
         modules_directory = FileSystem.get_modules_directory()
 
-        for module_name in os.listdir(modules_directory):
-            module_path = os.path.join(modules_directory, module_name)
+        # If specific modules are specified, only check those
+        module_dirs_to_check = []
+        if modules:
+            module_dirs_to_check = [
+                os.path.join(modules_directory, m)
+                for m in modules
+                if os.path.isdir(os.path.join(modules_directory, m))
+            ]
+        elif pipeline:
+            module_dirs_to_check = [
+                os.path.join(modules_directory, m.name)
+                for m in pipeline.modules
+                if os.path.isdir(os.path.join(modules_directory, m.name))
+            ]
+        else:
+            # Check all directories in the modules directory
+            module_dirs_to_check = [
+                os.path.join(modules_directory, d)
+                for d in os.listdir(modules_directory)
+                if os.path.isdir(os.path.join(modules_directory, d))
+            ]
 
-            # Skip non-directory items and non-specified modules
-            if not os.path.isdir(module_path) or (
-                modules and module_name not in modules
-            ):
-                self._logger.debug(
-                    f"Skipping non-directory or non-specified item: {module_path}"
-                )
-                continue
-
+        for module_path in module_dirs_to_check:
             self.__verify_module(module_path, public_key)
 
     def __connect_modules(self):
