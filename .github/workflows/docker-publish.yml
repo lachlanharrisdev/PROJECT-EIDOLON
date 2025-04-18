@@ -56,4 +56,11 @@ jobs:
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
-        run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+        run: |
+          set -e
+          for tag in ${TAGS}; do
+            if ! cosign sign --yes "${tag}@${DIGEST}"; then
+              echo "Error: Failed to sign ${tag}@${DIGEST}" >&2
+              exit 1
+            fi
+          done
