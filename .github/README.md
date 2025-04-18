@@ -4,11 +4,32 @@
 
 <div align='center'>
     
-![PYTHON](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue) ![DOCKER](https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white) ![GPL-2.0](https://img.shields.io/badge/GPL--2.0-red?style=for-the-badge)
+![PYTHON](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue) 
+<a href="https://github.com/lachlanharrisdev/PROJECT-EIDOLON/packages"><img alt="Docker" src="https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white"/></a>⠀
+<a href="/LICENSE"><img alt="GPL-2.0" src="https://img.shields.io/badge/GPL--2.0-red?style=for-the-badge"/></a>⠀
+<a href="https://discord.gg/wDcxk4pCs5"><img alt="Discord" src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white"/></a>
+<a href="https://github.com/lachlanharrisdev/PROJECT-EIDOLON/sponsor"><img alt="Sponsor" src="https://img.shields.io/badge/sponsor-30363D?style=for-the-badge&logo=GitHub-Sponsors&logoColor=#white"/></a>
 
 </div>
 
 <br/>
+
+## TABLE OF CONTENTS
+* [Overview](#-overview)
+* [Features](#-features)
+    * [Default Modules](#-default-modules)
+* [Getting Started](#-getting-started)
+    * [Installation](#-installation)
+    * [Docker](#-docker)
+* [Usage](#-usage)
+* [Development & contributing](#-development--contributing)
+    * [Modules](#-modules)
+    * [Testing](#-testing)
+ * [Mission](#-mission)
+
+<br/>
+
+# // OVERVIEW
 
 Project Eidolon is a decentralised suite of OSINT tools built to analyze the evolution of political disinformation on social media. 
 
@@ -24,13 +45,7 @@ for posts about major political entities, identifies opinionated posts coming fr
 
 <br/>
 
-# // OVERVIEW
-
-Eidolon is completely module-based, meaning all of the actual functionality is easily modifiable, removable & distributable, without causing any errors. The suite comes pre-loaded with modules that cover all of the functionality that most people would need, but for those who need maximum extensibility or connections with other applications, then this has been built for you.
-
-<br/>
-
-## // FEATURES
+# // FEATURES
 
 - **ENTIRELY MODULE-BASED**
     - Default modules are verified based on a key-pair-based signed hash generator
@@ -101,13 +116,21 @@ source .venv/bin/activate
 
 ## // DOCKER
 
-1. Build the full Docker image
+**For a quick setup,** navigate to [packages](https://github.com/lachlanharrisdev/PROJECT-EIDOLON/packages) and download / install the desired docker container
+
+1. Clone the repo
+```bash
+git clone https://github.com/lachlanharrisdev/project-eidolon.git
+cd project-eidolon
+```
+
+2. Build the full Docker image
 
 ```bash
 docker build -f .Dockerfile -t eidolon .
 ```
 
-2. Run the container
+3. Run the container
 
 ```bash
 docker run -it eidolon
@@ -181,7 +204,7 @@ For more information on module security, please read [security.md](/.github/SECU
 
 <br/>
 
-## // RUNNING TESTS
+## // TESTING
 
 This project uses `pytest` for testing. Major modules & every individual module uses tests to ensure code quality. All test files begin with the prefix `test_`, as per the [pytest documentation](https://docs.pytest.org/en/stable/getting-started.html).
 
@@ -203,7 +226,7 @@ For more info, refer to the [pytest documentation](https://docs.pytest.org/en/st
 
 <br/>
 
-# // THE MISSION
+# // MISSION
 
 This is just the beginning. Eidolon will evolve — as propaganda does. The methods will change, but our values will stay the same.
 
