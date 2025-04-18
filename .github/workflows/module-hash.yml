@@ -1,4 +1,4 @@
-name: Generate and Commit Verified Module Hashes
+name: Module Hash Verification
 
 on:
   push:
@@ -27,8 +27,9 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install build
+         python -m pip install --upgrade pip
+         pip install build
+         pip install PyYAML
 
       - name: Generate Verified Module Hashes
         env:
