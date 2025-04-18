@@ -20,10 +20,17 @@ class FileSystem:
         base_dir = FileSystem.__get_base_dir()
         return os.path.join(base_dir, "settings")
 
+    @staticmethod
     def get_modules_directory() -> str:
         """Get the absolute path to the modules directory in the project root."""
         base_dir = FileSystem.__get_base_dir()
         return os.path.join(base_dir, "modules")
+
+    @staticmethod
+    def get_pipelines_directory() -> str:
+        """Get the absolute path to the pipelines directory in the project root."""
+        base_dir = FileSystem.__get_base_dir()
+        return os.path.join(base_dir, "pipelines")
 
     # TODO: make getting these directories more dynamic (especially base dir)
 

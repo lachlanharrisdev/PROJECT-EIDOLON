@@ -45,3 +45,20 @@ class Device:
     firmware: int
     protocol: str
     errors: List[int]
+
+
+@dataclass
+class PipelineModuleDependency:
+    name: str
+
+
+@dataclass
+class PipelineModule:
+    name: str
+    depends_on: Optional[List[str]] = None
+
+
+@dataclass
+class Pipeline:
+    name: str
+    modules: List[PipelineModule]

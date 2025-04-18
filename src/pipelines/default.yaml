@@ -1,0 +1,7 @@
+name: default
+modules:
+  - name: keyword_monitor
+  - name: keyword_printer
+    depends_on:
+      - keyword_monitor
+  - name: template_module
