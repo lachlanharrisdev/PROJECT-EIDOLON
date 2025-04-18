@@ -1,0 +1,45 @@
+name: Generate and Commit Verified Module Hashes
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/modules/**'
+
+permissions:
+  contents: write
+
+jobs:
+  generate-and-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+
+      - name: Generate Verified Module Hashes
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+        run: |
+          python src/core/security/generate_module_hashes.py
+
+      - name: Commit and Push Changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/settings/verified_modules.json
+          git commit -m "Update verified_modules.json [skip ci]" || echo "No changes to commit"
+          git push
