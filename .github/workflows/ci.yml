@@ -13,8 +13,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        # os: [ubuntu-latest, windows-latest, macos-latest] # Save GitHub Actions minutes (5 minutes total when running OSs + Versions!)
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
     - uses: actions/checkout@v4
@@ -47,16 +47,3 @@ jobs:
     - name: Run Tests
       run: |
         pytest
-    
-    - name: Generate Signed Module Hashes
-      env:
-        PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-      run: |
-        python src/core/security/generate_module_hashes.py
-    
-    - name: Upload Verified Modules
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: verified-module-hashes
-        path: src/settings/verified_modules.json
