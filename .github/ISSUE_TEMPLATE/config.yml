@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: COMMUNITY DISCUSSIONS
+    url: https://github.com/lachlanharrisdev/PROJECT-EIDOLON/discussions
+    about: Please ask (and answer) questions here
+  - name: COMMUNITY DISCORD
+    url: https://discord.gg/wDcxk4pCs5
+    about: Please report security vulnerabilities here (in the \#ticket-tool channel), and engage in less formal discussion
