@@ -37,10 +37,12 @@ jobs:
         run: |
           python src/core/security/generate_module_hashes.py
 
-      - name: Commit and Push Changes
+      - name: Commit and Create Pull Request
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b update-verified-modules
           git add src/settings/verified_modules.json
           git commit -m "Update verified_modules.json [skip ci]" || echo "No changes to commit"
-          git push
+          git push origin update-verified-modules || echo "Branch already exists"
+          gh pr create --title "Update verified_modules.json" --body "Automated update of verified module hashes" --head update-verified-modules --base main
