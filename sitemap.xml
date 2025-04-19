@@ -1,7 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://lachlanharrisdev.github.io/PROJECT-EIDOLON/</loc>
-         <lastmod>2025-04-18</lastmod>
+         <loc>https://lachlanharrisdev.github.io/PROJECT-EIDOLON/index.html</loc>
+         <lastmod>2025-04-19</lastmod>
+    </url>
+    <url>
+         <loc>https://lachlanharrisdev.github.io/PROJECT-EIDOLON/modules/1-overview.html</loc>
+         <lastmod>2025-04-19</lastmod>
+    </url>
+    <url>
+         <loc>https://lachlanharrisdev.github.io/PROJECT-EIDOLON/modules/2-creating-a-module.html</loc>
+         <lastmod>2025-04-19</lastmod>
+    </url>
+    <url>
+         <loc>https://lachlanharrisdev.github.io/PROJECT-EIDOLON/modules/config.html</loc>
+         <lastmod>2025-04-19</lastmod>
+    </url>
+    <url>
+         <loc>https://lachlanharrisdev.github.io/PROJECT-EIDOLON/modules/methods.html</loc>
+         <lastmod>2025-04-19</lastmod>
+    </url>
+    <url>
+         <loc>https://lachlanharrisdev.github.io/PROJECT-EIDOLON/modules/tests.html</loc>
+         <lastmod>2025-04-19</lastmod>
+    </url>
+    <url>
+         <loc>https://lachlanharrisdev.github.io/PROJECT-EIDOLON/modules/verification.html</loc>
+         <lastmod>2025-04-19</lastmod>
+    </url>
+    <url>
+         <loc>https://lachlanharrisdev.github.io/PROJECT-EIDOLON/pipelines/1-overview.html</loc>
+         <lastmod>2025-04-19</lastmod>
+    </url>
+    <url>
+         <loc>https://lachlanharrisdev.github.io/PROJECT-EIDOLON/pipelines/creating-a-pipeline.html</loc>
+         <lastmod>2025-04-19</lastmod>
     </url>
 </urlset>
