@@ -1,96 +1,94 @@
 from logging import Logger
 from typing import List, Dict, Any
+import asyncio
 
 from core.modules.engine import ModuleCore
-from core.modules.models import Device, Meta
+from core.modules.models import Device
 from core.modules.util.messagebus import MessageBus
 
 
 class TemplateModule(ModuleCore):
+    """
+    Template module that demonstrates the use of the enhanced ModuleCore functionality.
+    This module processes input data and publishes results to the message bus.
+    """
 
-    def __init__(self, logger: Logger) -> None:
-        super().__init__(logger)
-
-        try:
-            module_data = self.get_config()
-            self.meta = Meta(
-                name=module_data["name"],
-                description=module_data["description"],
-                version=module_data["version"],
-            )
-        except FileNotFoundError:
-            self.meta = Meta(
-                name="Template Module",
-                description="This is a fallback description",
-                version="0.1.0",
-            )
-            self._logger.error("module.yaml file not found. Using default values.")
-
-        # Initialize storage for keywords
+    def _initialize_module(self) -> None:
+        """
+        Initialize module-specific components.
+        Called after the base ModuleCore initialization.
+        """
         self.keywords: List[str] = []
         self.processed_keywords: Dict[str, int] = {}
 
-    def handle_input(self, data: Any) -> None:
+    async def _before_run(self, message_bus: MessageBus) -> None:
         """
-        Handle input data from subscribed topics.
+        Execute setup code before the main module loop starts.
+        """
+        self._logger.info(f"Setting up {self.meta.name} module...")
+        # Any pre-run setup can go here
 
-        Args:
-            data: Input data (expected to be List[str] of keywords)
+    async def _run_iteration(self, message_bus: MessageBus) -> None:
         """
-        if isinstance(data, list):
-            self.keywords = data
-            self._logger.info(f"Received {len(data)} keywords for processing")
-            # Process keywords and assign priority scores
+        A single iteration of the module's main logic.
+        This is called periodically by the ModuleCore's run method.
+        """
+        if self.keywords:
             self._process_keywords()
-        else:
-            self._logger.error(
-                f"Received data of unexpected type: {type(data).__name__}"
-            )
+
+            if self.processed_keywords:
+                self._logger.info(
+                    f"Publishing {len(self.processed_keywords)} processed keywords"
+                )
+                await message_bus.publish("processed_keywords", self.processed_keywords)
 
     def _process_keywords(self) -> None:
-        """Process the keywords and assign priority scores."""
+        """
+        Process the keywords and assign priority scores.
+        This is an example of module-specific business logic.
+        """
         self.processed_keywords = {}
 
-        for i, keyword in enumerate(self.keywords):
-            # Simple algorithm: assign priority based on keyword length and position
-            priority = len(keyword) + (len(self.keywords) - i)
-            self.processed_keywords[keyword] = priority
+        for keyword in self.keywords:
+            # Simple example: score is based on length
+            score = len(keyword)
+            self.processed_keywords[keyword] = score
 
-        self._logger.debug(
-            f"Processed {len(self.processed_keywords)} keywords with priorities"
-        )
+        self._logger.debug(f"Processed {len(self.keywords)} keywords")
 
-    def run(self, messagebus: MessageBus) -> None:
+    def _process_input(self, data: Any) -> None:
         """
-        Run the module's main logic and publish processed keywords if available.
-
-        Args:
-            messagebus: The message bus for inter-module communication
+        Process input data from the message bus.
+        Override of the ModuleCore _process_input method.
         """
-        self._logger.info(f"Running {self.meta.name} module...")
+        if isinstance(data, list) and all(isinstance(item, str) for item in data):
+            self.keywords = data
+            self._logger.info(f"Received {len(data)} keywords")
+        else:
+            self._logger.warning(f"Received data of unexpected type: {type(data)}")
 
-        if self.processed_keywords:
-            self._logger.info(
-                f"Publishing {len(self.processed_keywords)} processed keywords"
+    def _get_cycle_time(self) -> float:
+        """
+        Get the time between execution cycles.
+        """
+        return 10.0  # Run every 10 seconds
+
+    def _get_default_output_topic(self) -> str:
+        """
+        Get the default output topic for this module.
+        """
+        return "processed_keywords"
+
+    def _handle_custom_command(self, command: chr) -> Device:
+        """
+        Handle custom module commands.
+        """
+        if command == "C":
+            # Example custom command to clear keywords
+            self.keywords = []
+            self._logger.info("Keywords cleared")
+            return Device(
+                name=self.meta.name, firmware=0xB0000, protocol="CUSTOM", errors=[]
             )
-            messagebus.publish("processed_keywords", self.processed_keywords)
 
-    @staticmethod
-    def __create_device() -> Device:
-        return Device(
-            name="Sample Device", firmware=0xA2C3F, protocol="SAMPLE", errors=[0x0000]
-        )
-
-    def invoke(self, command: chr) -> Device:
-        """Handle commands from the module engine."""
-        self._logger.debug(f"Command: {command} -> {self.meta}")
-
-        # 'P' for process keywords
-        if command == "P" and self.keywords:
-            self._process_keywords()
-            self._logger.info(
-                f"Processed {len(self.processed_keywords)} keywords on demand"
-            )
-
-        device = self.__create_device()
-        return device
+        return super()._handle_custom_command(command)

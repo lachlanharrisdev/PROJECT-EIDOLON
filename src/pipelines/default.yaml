@@ -1,13 +1,13 @@
 name: default
 modules:
   - name: keyword_monitor
-  - name: keyword_printer
-    depends_on:
-      - keyword_monitor
-    input_mappings:
-      keywords: keywords  # Map keyword_printer's "keywords" input to keyword_monitor's "keywords" output
   - name: template_module
     depends_on:
       - keyword_monitor
     input_mappings:
-      keywords: keywords  # Map template_module's "keywords" input to keyword_monitor's "keywords" output
+      keywords: keywords
+  - name: keyword_printer
+    depends_on:
+      - template_module
+    input_mappings:
+      keywords: processed_keywords

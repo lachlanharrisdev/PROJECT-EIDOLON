@@ -77,6 +77,8 @@ Examples:
 
 def run_command(args):
     """Run the main application with modules from the specified pipeline."""
+    import asyncio
+    
     log_level = args["--log-level"].upper()
     pipeline = args["<pipeline>"] or "default"
 
@@ -94,12 +96,27 @@ def run_command(args):
     logger.info(f"Starting Eidolon with pipeline: {pipeline}")
     engine = ModuleEngine(options={"log_level": log_level}, pipeline=pipeline)
 
-    logger.info("Running modules...")
-    if not engine.start():
-        logger.error(f"Failed to start engine with pipeline '{pipeline}'")
-        return False
+    logger.info("Running modules asynchronously...")
+    
+    # Create an async function to run the engine
+    async def run_engine():
+        try:
+            result = await engine.start()
+            return result
+        except Exception as e:
+            logger.error(f"Error running engine: {e}")
+            return False
 
-    return True
+    # Run the async function using asyncio.run
+    try:
+        result = asyncio.run(run_engine())
+        if not result:
+            logger.error(f"Failed to start engine with pipeline '{pipeline}'")
+            return False
+        return True
+    except KeyboardInterrupt:
+        logger.info("Keyboard interrupt received, shutting down...")
+        return True
 
 
 def list_command(args):

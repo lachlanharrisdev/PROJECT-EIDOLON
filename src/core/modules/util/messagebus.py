@@ -1,13 +1,27 @@
 from collections import defaultdict
-from typing import Dict, List, Any, Type, Callable, Optional, get_origin, get_args
-
+from typing import (
+    Dict,
+    List,
+    Any,
+    Type,
+    Callable,
+    Optional,
+    get_origin,
+    get_args,
+    Union,
+    Awaitable,
+)
+import asyncio
+import inspect
 import logging
 from core.modules.models import ModuleInput, ModuleOutput
 
 
 class MessageBus:
     def __init__(self):
-        self.subscribers: Dict[str, List[Callable]] = defaultdict(list)
+        self.subscribers: Dict[str, List[Union[Callable, Awaitable]]] = defaultdict(
+            list
+        )
         self.output_types: Dict[str, Type] = {}  # Track expected types for outputs
         self.topic_sources: Dict[str, str] = (
             {}
@@ -97,8 +111,8 @@ class MessageBus:
         # Regular type check
         return isinstance(data, expected_type)
 
-    def publish(self, topic: str, data: Any) -> None:
-        """Publish data to a topic with type validation."""
+    async def publish(self, topic: str, data: Any) -> None:
+        """Publish data to a topic with type validation asynchronously."""
         if topic not in self.subscribers:
             self._logger.warning(f"Publishing to topic '{topic}' with no subscribers")
             return
@@ -124,14 +138,30 @@ class MessageBus:
         if data is None or (isinstance(data, (list, dict, str)) and len(data) == 0):
             self._logger.warning(f"Warning: Empty data published to topic '{topic}'")
 
+        # Create a list to collect coroutines for awaiting
+        tasks = []
+
         for subscriber in self.subscribers[topic]:
             try:
-                subscriber(data)
+                # Check if the subscriber is a coroutine function
+                if inspect.iscoroutinefunction(subscriber):
+                    # Add coroutine to tasks list
+                    tasks.append(subscriber(data))
+                else:
+                    # Handle synchronous subscribers immediately
+                    subscriber(data)
             except Exception as e:
                 self._logger.error(f"Error in subscriber for topic '{topic}': {e}")
 
+        # Wait for all async subscriber tasks to complete
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+
     def subscribe(
-        self, topic: str, callback: Callable, expected_type: Optional[Type] = None
+        self,
+        topic: str,
+        callback: Union[Callable, Awaitable],
+        expected_type: Optional[Type] = None,
     ) -> None:
         """Subscribe a callback to a topic with optional type validation."""
         self.subscribers[topic].append(callback)

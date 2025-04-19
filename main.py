@@ -36,9 +36,11 @@ class Main:
         """
         self._logger.info("Starting Project Eidolon...")
 
-        # Load modules
-        self._logger.info("Loading modules...")
-        self._module_engine.start()
+        # Load and run modules asynchronously
+        self._logger.info("Loading and starting modules asynchronously...")
+        await self._module_engine.start()
+
+        self._logger.info("Project Eidolon shutdown complete.")
 
 
 def main():
@@ -55,6 +57,9 @@ def main():
         app = Main(logger)
         asyncio.run(app.main())
         sys.exit(0)  # Exit with zero exit code on success
+    except KeyboardInterrupt:
+        logger.info("Keyboard interrupt received, shutting down...")
+        sys.exit(0)  # Clean exit on keyboard interrupt
     except Exception as e:
         logger.error(f"An unexpected error occurred: {e}")
         sys.exit(1)  # Exit with non-zero exit code on failure

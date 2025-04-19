@@ -1,14 +1,15 @@
 import logging
-
 import os
+import asyncio
 
-from typing import Dict, Optional, List, Any
+from typing import Dict, Optional, List, Any, Set
 
 from core.modules.usecase import ModuleUseCase
 from core.modules.usecase.pipeline_loader import PipelineLoader
 from core.modules.models import ModuleInput, ModuleOutput, PipelineModule
 from core.modules.util import LogUtil, FileSystem
 from core.modules.util.messagebus import MessageBus
+from core.util.shutdown_coordinator import ShutdownCoordinator
 
 from cryptography.hazmat.primitives import serialization
 from core.security.utils import (
@@ -31,14 +32,18 @@ class ModuleEngine:
         )
         self.pipeline_loader = PipelineLoader(self._logger)
         self.message_bus = MessageBus()
+        self.shutdown_coordinator = ShutdownCoordinator(self._logger)
+
+        # For managing running module tasks
+        self.module_tasks = []
 
         # Track input_mappings from pipeline config
         self.input_mappings: Dict[str, Dict[str, str]] = (
             {}
         )  # module_name -> {input_name -> source}
 
-    def start(self):
-        """Start the engine by loading modules from the specified pipeline and connecting them."""
+    async def start(self):
+        """Start the engine by loading modules from the specified pipeline and connecting them asynchronously."""
         # Load the pipeline configuration
         pipeline = self.pipeline_loader.load_pipeline(self.pipeline_name)
         if not pipeline:
@@ -54,9 +59,23 @@ class ModuleEngine:
         self._logger.info(f"Loading modules from pipeline '{pipeline.name}'")
         self.__reload_modules(pipeline=pipeline)
 
-        # Connect and invoke modules
+        # Connect modules
         self.__connect_modules()
-        self.__invoke_on_modules()
+
+        # Register shutdown handler
+        self.shutdown_coordinator.register_signal_handlers(self.use_case.modules)
+
+        # Start modules asynchronously
+        await self.__invoke_modules()
+
+        # Wait for shutdown signal
+        await self.shutdown_coordinator.wait_for_shutdown()
+
+        # Wait for all module tasks to complete during shutdown
+        if self.module_tasks:
+            self._logger.info("Waiting for module tasks to complete...")
+            await asyncio.gather(*self.module_tasks, return_exceptions=True)
+
         return True
 
     def __reload_modules(self, modules=None, pipeline=None):
@@ -130,19 +149,9 @@ class ModuleEngine:
                 self._logger.debug(
                     f"Added input mappings for {module.name}: {module.input_mappings}"
                 )
-
-    def __build_input_mappings(self, pipeline_modules: List[PipelineModule]) -> None:
-        """
-        Build input mappings from pipeline configuration.
-
-        Args:
-            pipeline_modules: List of PipelineModule objects from pipeline config
-        """
-        for module in pipeline_modules:
-            if module.input_mappings:
-                self.input_mappings[module.name] = module.input_mappings
+            else:
                 self._logger.debug(
-                    f"Added input mappings for {module.name}: {module.input_mappings}"
+                    f"No input mappings found for {module.name} in pipeline. Skipping."
                 )
 
     def __connect_modules(self):
@@ -201,8 +210,16 @@ class ModuleEngine:
                             input_def.name
                         )
 
-                    # Use the explicit source or just the input name as the topic
-                    topic = explicit_source if explicit_source else input_def.name
+                    # Use the explicit source from input_mapping or default to input name
+                    if explicit_source:
+                        # This is the topic we'll subscribe to (from another module's output)
+                        topic = explicit_source
+                        self._logger.debug(
+                            f"Using mapped topic '{topic}' for input '{input_def.name}' in module '{module_name}'"
+                        )
+                    else:
+                        # No explicit mapping, use the default (same name for input and topic)
+                        topic = input_def.name
 
                     # Register the input with the message bus for type validation
                     self.message_bus.register_input(topic, input_def, module_name)
@@ -213,14 +230,47 @@ class ModuleEngine:
                         topic, module.handle_input, expected_type
                     )
 
-                    self._logger.info(
-                        f"Module '{module_name}' subscribed to INPUT topic: '{topic}' with type '{input_def.type_name}'"
-                    )
+                    # Log with clear indication of mapping, if applicable
+                    if explicit_source and explicit_source != input_def.name:
+                        self._logger.info(
+                            f"Module '{module_name}' subscribed to MAPPED INPUT: '{input_def.name}' → topic: '{topic}' with type '{input_def.type_name}'"
+                        )
+                    else:
+                        self._logger.info(
+                            f"Module '{module_name}' subscribed to INPUT topic: '{topic}' with type '{input_def.type_name}'"
+                        )
 
-    def __invoke_on_modules(self):
-        """Invoke all modules."""
+    async def __invoke_modules(self):
+        """Invoke all modules asynchronously."""
+        self.module_tasks = []
+
         for module in self.use_case.modules:
+            module_name = (
+                module.meta.name
+                if hasattr(module, "meta") and module.meta
+                else str(module)
+            )
             try:
-                module.run(self.message_bus)
+                # Create and store the task
+                self._logger.info(f"Starting module: {module_name}")
+                task = asyncio.create_task(
+                    module.run(self.message_bus), name=f"module_{module_name}"
+                )
+                self.module_tasks.append(task)
+
+                # Add a callback to handle task completion
+                task.add_done_callback(
+                    lambda t, m=module_name: (
+                        self._logger.info(f"Module {m} task completed")
+                        if not t.cancelled()
+                        else self._logger.warning(f"Module {m} task was cancelled")
+                    )
+                )
+
             except Exception as e:
-                self._logger.error(f"Error running module {module}: {e}")
+                self._logger.error(f"Error starting module {module_name}: {e}")
+
+    @staticmethod
+    def create_engine(**args):
+        """Static factory method to create a module engine with the given args."""
+        return ModuleEngine(**args)

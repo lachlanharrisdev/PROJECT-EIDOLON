@@ -13,6 +13,6 @@ requirements:
     version: '6.0.2'
 inputs:
   - name: "keywords"
-    type: "List[str]"
+    type: "Dict"
     description: "List of keywords to print"
 outputs: []

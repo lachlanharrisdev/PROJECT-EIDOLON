@@ -6,18 +6,20 @@ from core.modules.models import ModuleInput, ModuleOutput
 from core.modules.engine.engine_contract import ModuleCore
 
 
-def test_message_bus_unsubscribed_topic():
+@pytest.mark.asyncio
+async def test_message_bus_unsubscribed_topic():
     bus = MessageBus()
 
     # Now MessageBus logs a warning instead of raising an exception for unsubscribed topics
     with patch.object(bus._logger, "warning") as mock_warning:
-        bus.publish("unsubscribed_topic", "No subscribers here")
+        await bus.publish("unsubscribed_topic", "No subscribers here")
         mock_warning.assert_called_once()
         # Verify the warning message contains the topic name
         assert "unsubscribed_topic" in mock_warning.call_args[0][0]
 
 
-def test_message_bus_duplicate_subscriptions():
+@pytest.mark.asyncio
+async def test_message_bus_duplicate_subscriptions():
     bus = MessageBus()
 
     # Mock subscribers
@@ -30,13 +32,14 @@ def test_message_bus_duplicate_subscriptions():
     bus.subscribe("test_topic", subscriber, expected_type=str)
     bus.subscribe("test_topic", subscriber, expected_type=str)
 
-    bus.publish("test_topic", "Hello, World!")
+    await bus.publish("test_topic", "Hello, World!")
 
     # Ensure the subscriber is called twice
     assert results == ["Hello, World!", "Hello, World!"]
 
 
-def test_message_bus_no_expected_type():
+@pytest.mark.asyncio
+async def test_message_bus_no_expected_type():
     bus = MessageBus()
 
     # Mock subscribers
@@ -49,13 +52,14 @@ def test_message_bus_no_expected_type():
     bus.subscribe("test_topic", subscriber)
 
     # Publish data of any type
-    bus.publish("test_topic", 123)
-    bus.publish("test_topic", "Hello")
+    await bus.publish("test_topic", 123)
+    await bus.publish("test_topic", "Hello")
 
     assert results == [123, "Hello"]
 
 
-def test_message_bus_type_validation():
+@pytest.mark.asyncio
+async def test_message_bus_type_validation():
     bus = MessageBus()
 
     # Mock subscribers
@@ -68,11 +72,13 @@ def test_message_bus_type_validation():
     bus.subscribe("typed_topic", subscriber, expected_type=str)
 
     # Test valid type
-    bus.publish("typed_topic", "Valid string")
+    await bus.publish("typed_topic", "Valid string")
 
     # Test invalid type with patched logger to capture error
     with patch.object(bus._logger, "error") as mock_error:
-        bus.publish("typed_topic", 123)  # Should log error and not call subscriber
+        await bus.publish(
+            "typed_topic", 123
+        )  # Should log error and not call subscriber
         mock_error.assert_called_once()
 
     # Only the valid message should be in results
@@ -110,12 +116,12 @@ def test_message_bus_register_input_output():
         assert "Type mismatch" in warning_msg
 
 
-# Move ModuleUseCase tests to a separate test file to avoid circular imports
+# Create a simplified MockModule for testing that works with the enhanced ModuleCore
 class MockModule(ModuleCore):
     def __init__(self, logger):
         super().__init__(logger)
 
-    def run(self, message_bus):
+    async def _run_iteration(self, message_bus):
         pass
 
 
@@ -126,3 +132,5 @@ def test_module_core():
 
     # Test that the module can be initialized
     assert isinstance(module, ModuleCore)
+    assert hasattr(module, "meta")
+    assert hasattr(module, "_shutdown_event")
