@@ -65,11 +65,20 @@ class PipelineLoader:
         """
         try:
             with open(pipeline_path, "r") as file:
-                pipeline_data = yaml.safe_load(file)
+                raw_data = yaml.safe_load(file)
 
-            if not pipeline_data:
+            if not raw_data:
                 self._logger.error(f"Empty or invalid pipeline file: {pipeline_path}")
                 return None
+
+            # Extract pipeline data from the wrapping pipeline object
+            if "pipeline" not in raw_data:
+                self._logger.error(
+                    f"Pipeline file missing required 'pipeline' wrapper: {pipeline_path}"
+                )
+                return None
+
+            pipeline_data = raw_data["pipeline"]
 
             # Ensure pipeline_data has required fields
             if "name" not in pipeline_data:
@@ -86,9 +95,18 @@ class PipelineLoader:
                 )
                 return None
 
-            # Fix potential YAML parsing issues with the depends_on field
-            # The issue in the provided default.yaml has a misplaced hyphen: -depends_on
-            self._fix_module_depends_on(pipeline_data)
+            # Process modules to normalize field formats
+            self._normalize_pipeline_modules(pipeline_data)
+
+            # Normalize execution configuration if present
+            if "execution" in pipeline_data and isinstance(
+                pipeline_data["execution"], dict
+            ):
+                if "timeout" in pipeline_data["execution"] and isinstance(
+                    pipeline_data["execution"]["timeout"], str
+                ):
+                    timeout = pipeline_data["execution"]["timeout"]
+                    self._logger.debug(f"Processing execution timeout: {timeout}")
 
             # Convert to Pipeline object
             pipeline = from_dict(data_class=Pipeline, data=pipeline_data)
@@ -119,23 +137,86 @@ class PipelineLoader:
 
         return None
 
-    def _fix_module_depends_on(self, pipeline_data: Dict) -> None:
+    def _normalize_pipeline_modules(self, pipeline_data: Dict) -> None:
         """
-        Fix potential YAML parsing issues with the depends_on field.
-        Sometimes the YAML parser might interpret '-depends_on' as a field name instead of a list item.
+        Process pipeline modules to normalize their structure for the Pipeline dataclass.
 
-        :param pipeline_data: The parsed pipeline data to fix
+        This method handles the conversion of the new format fields like id, module, input, outputs
+        to the format needed by the Pipeline dataclass.
+
+        :param pipeline_data: The parsed pipeline data to normalize
         """
-        if "modules" not in pipeline_data:
+        if "modules" not in pipeline_data or not isinstance(
+            pipeline_data["modules"], list
+        ):
             return
 
         for module in pipeline_data["modules"]:
-            if isinstance(module, dict):
-                # Check for the error case: -depends_on instead of depends_on
-                for key in list(module.keys()):
-                    if key.startswith("-"):
-                        correct_key = key[1:]  # Remove the leading dash
-                        self._logger.warning(
-                            f"Found incorrectly formatted key '{key}' in pipeline, fixing to '{correct_key}'"
+            if not isinstance(module, dict):
+                continue
+
+            # Ensure module has a name field (copy from module field if needed)
+            if "module" in module:
+                module["name"] = module["module"]
+
+            # Log module ID mapping
+            if "id" in module:
+                self._logger.debug(
+                    f"Module with ID '{module['id']}' mapped to name '{module['name']}'"
+                )
+
+            # Handle 'input' field and convert to input_mappings with qualified names
+            if "input" in module and isinstance(module["input"], dict):
+                # Create input_mappings if not present
+                if "input_mappings" not in module:
+                    module["input_mappings"] = {}
+
+                # Process inputs format: input_name: module_id.output_name
+                for input_name, input_source in module["input"].items():
+                    if "." in input_source:
+                        # This is the new qualified format with module_id.output_name
+                        # Split into module_id and output_name parts
+                        source_parts = input_source.split(".", 1)
+                        module_id = source_parts[0]
+                        output_name = source_parts[1]
+
+                        # Store in input_mappings for proper connection later
+                        module["input_mappings"][input_name] = output_name
+
+                        # Store the source module ID for dependency resolution
+                        if "depends_on" not in module:
+                            module["depends_on"] = []
+
+                        # Add the module_id to depends_on if not already there
+                        if module_id not in module["depends_on"]:
+                            module["depends_on"].append(module_id)
+
+                        self._logger.debug(
+                            f"Mapped input '{input_name}' to '{input_source}' "
+                            + f"(added dependency on '{module_id}')"
                         )
-                        module[correct_key] = module.pop(key)
+                    else:
+                        # Simple name format, just copy to input_mappings
+                        module["input_mappings"][input_name] = input_source
+
+                # Remove the original 'input' field since we've processed it
+                del module["input"]
+
+            # Normalize outputs format
+            if "outputs" in module and isinstance(module["outputs"], list):
+                processed_outputs = []
+                for output_item in module["outputs"]:
+                    if isinstance(output_item, str):
+                        # Simple string output
+                        processed_outputs.append({"name": output_item})
+                    elif isinstance(output_item, dict):
+                        # Dict format {key: value} for output mapping
+                        for output_name, mapped_name in output_item.items():
+                            processed_outputs.append(
+                                {"name": output_name, "mapped": mapped_name}
+                            )
+                    else:
+                        # Already in correct format or unrecognized
+                        processed_outputs.append(output_item)
+
+                module["outputs"] = processed_outputs

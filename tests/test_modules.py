@@ -216,11 +216,11 @@ def test_module_engine_build_input_mappings():
     """Test that ModuleEngine correctly builds input mappings from pipeline configuration."""
     # Create a pipeline with input mappings
     modules = [
-        PipelineModule(name="source_module"),
+        PipelineModule(name="source_module", id="source"),
         PipelineModule(
             name="target_module",
-            depends_on=["source_module"],
-            input_mappings={"target_input": "source_output"},
+            id="target",
+            input_mappings={"target_input": "source.source_output"},
         ),
     ]
 
@@ -234,4 +234,6 @@ def test_module_engine_build_input_mappings():
 
     # Verify the input mappings were built correctly
     assert "target_module" in engine.input_mappings
-    assert engine.input_mappings["target_module"] == {"target_input": "source_output"}
+    assert engine.input_mappings["target_module"] == {
+        "target_input": "source.source_output"
+    }

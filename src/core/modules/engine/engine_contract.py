@@ -130,7 +130,7 @@ class ModuleCore(object, metaclass=IModuleRegistry):
                 return self._get_status()
             elif command == "R":
                 # Reset command
-                self._logger.info(f"Resetting {self.meta.name}")
+                self.log(f"Resetting {self.meta.name}")
                 return self._reset_state()
             elif command == "P":
                 # Process command
@@ -214,8 +214,8 @@ class ModuleCore(object, metaclass=IModuleRegistry):
         try:
             self._process_input(data)
         except Exception as e:
-            self._logger.error(f"Error handling input in {self.meta.name}: {e}")
-            self._logger.debug(traceback.format_exc())
+            self.log(f"Error handling input: {e}", log_level="error")
+            self.log(traceback.format_exc(), log_level="debug")
 
     def _process_input(self, data: Any) -> None:
         """
@@ -228,7 +228,7 @@ class ModuleCore(object, metaclass=IModuleRegistry):
         if isinstance(data, dict):
             self.input_data = data
         else:
-            self._logger.warning(f"Received unexpected data type: {type(data)}")
+            self.logg(f"Received unexpected data type: {type(data)}", log_level="error")
 
     async def run(self, message_bus: MessageBus) -> None:
         """
@@ -239,7 +239,6 @@ class ModuleCore(object, metaclass=IModuleRegistry):
             message_bus: The message bus for inter-module communication
         """
         self._running = True
-        self._logger.info(f"Starting {self.meta.name} module...")
 
         try:
             # Initialize module run state
@@ -261,7 +260,7 @@ class ModuleCore(object, metaclass=IModuleRegistry):
                         # This is the normal case - timeout just means continue to next iteration
                         pass
                 except asyncio.CancelledError:
-                    self._logger.info(f"{self.meta.name} task was cancelled")
+                    self.log(f"{self.meta.name} task was cancelled", log_level="debug")
                     break
                 except Exception as e:
                     self._logger.error(
@@ -274,15 +273,13 @@ class ModuleCore(object, metaclass=IModuleRegistry):
             await self._after_run(message_bus)
 
         except asyncio.CancelledError:
-            self._logger.info(
-                f"{self.meta.name} task was cancelled during startup/shutdown"
-            )
+            self.log(f"{self.meta.name} task was cancelled during startup/shutdown")
         except Exception as e:
             self._logger.error(f"Fatal error in {self.meta.name} module: {e}")
             self._logger.debug(traceback.format_exc())
         finally:
             self._running = False
-            self._logger.info(f"{self.meta.name} module stopped")
+            self.log(f"{self.meta.name} module stopped", log_level="info")
 
     async def _before_run(self, message_bus: MessageBus) -> None:
         """
@@ -364,7 +361,7 @@ class ModuleCore(object, metaclass=IModuleRegistry):
         This method signals the module to stop running and performs cleanup.
         """
         if self._running:
-            self._logger.info(f"Initiating shutdown of {self.meta.name} module...")
+            self.log(f"Initiating shutdown of {self.meta.name}...", log_level="info")
             self._shutdown_event.set()
 
             # Perform custom shutdown logic
@@ -374,10 +371,7 @@ class ModuleCore(object, metaclass=IModuleRegistry):
                 self._logger.error(
                     f"Error during {self.meta.name} custom shutdown: {e}"
                 )
-
-            # Give the module a moment to finish any pending work
-            await asyncio.sleep(0.5)
-            self._logger.info(f"{self.meta.name} shutdown initiated")
+            self.log(f"{self.meta.name} shutdown complete.", log_level="debug")
 
     async def _on_shutdown(self):
         """
@@ -395,8 +389,8 @@ class ModuleCore(object, metaclass=IModuleRegistry):
             log_level: The log level (e.g., 'info', 'debug', 'warning', 'error', 'critical')
         """
         if hasattr(self._logger, log_level):
-            getattr(self._logger, log_level)(f"{self.meta.name}: {message}")
+            getattr(self._logger, log_level)(f"{message} [{self.meta.name}]")
         else:
-            self._logger.error(
+            self._logger.debug(
                 f"Invalid log level '{log_level}' specified for {self.meta.name} module"
             )

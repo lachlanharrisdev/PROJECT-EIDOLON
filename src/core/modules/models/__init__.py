@@ -4,7 +4,6 @@ __all__ = [
     ModuleConfig,
     Meta,
     Device,
-    PipelineModuleDependency,
     PipelineModule,
     Pipeline,
     ModuleInput,
