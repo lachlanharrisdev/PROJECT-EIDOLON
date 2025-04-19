@@ -5,9 +5,10 @@ pipeline:
     Monitors sources, processes keywords, then prints results.
 
   execution:
-    timeout: 300s # the maximum time given before calling a shutdown
-    retries: 2 # if the app encounters a critical error, this is the amount of retries it will be given
+    timeout: 300s
+    retries: 2 
     error_policy: halt  # or continue, isolate, log_only
+    max_threads: 4 
 
   modules:
     - id: monitor # how this module is identified within the pipeline

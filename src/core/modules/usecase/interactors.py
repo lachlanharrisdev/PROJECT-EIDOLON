@@ -17,6 +17,7 @@ class ModuleUseCase:
         self.modules_package: str = options["directory"]
         self.module_util = ModuleUtility(self._logger)
         self.modules = list()
+        self.thread_pool = options.get("thread_pool", None)
 
     def __check_loaded_module_state(self, module: Any):
         """
@@ -34,7 +35,7 @@ class ModuleUseCase:
 
                 # Instantiate the module and add it to the list
                 try:
-                    module_instance = latest_module(self._logger)
+                    module_instance = latest_module(self._logger, self.thread_pool)
                     self.modules.append(module_instance)
                     self._logger.debug(
                         f"Module `{current_module_name}` registered successfully"
@@ -61,7 +62,9 @@ class ModuleUseCase:
     ):
         for directory in modules_path:
             # Skip directories not in allowed_modules if specified
-            if allowed_modules is not None and directory.lower() not in {mod.lower() for mod in allowed_modules}:
+            if allowed_modules is not None and directory.lower() not in {
+                mod.lower() for mod in allowed_modules
+            }:
                 self._logger.debug(
                     f"Skipping module {directory} as it's not in the pipeline"
                 )
@@ -89,14 +92,21 @@ class ModuleUseCase:
             else:
                 self._logger.debug(f"No valid module found in {directory}")
 
-    def discover_modules(self, reload: bool, pipeline: Optional[Pipeline] = None):
+    def discover_modules(
+        self, reload: bool, pipeline: Optional[Pipeline] = None, thread_pool=None
+    ):
         """
         Discover the module classes contained in Python files, given a
         list of directory names to scan.
 
         :param reload: Whether to reload modules or use cached versions
         :param pipeline: Optional pipeline configuration to filter modules
+        :param thread_pool: Optional thread pool to pass to modules
         """
+        # Update thread_pool if provided
+        if thread_pool is not None:
+            self.thread_pool = thread_pool
+
         if reload:
             self.clear_modules()
             self._logger.debug(

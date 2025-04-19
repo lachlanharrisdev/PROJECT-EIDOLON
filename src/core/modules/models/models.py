@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any, Type
 
 
@@ -102,11 +102,9 @@ class Device:
 
 @dataclass
 class PipelineExecution:
-    """Execution configuration for a pipeline"""
-
-    timeout: Optional[str] = None  # e.g., "300s"
-    retries: Optional[int] = 0
-    error_policy: Optional[str] = "halt"  # halt, continue, isolate, log_only
+    """Configuration for pipeline execution"""
+    timeout: Optional[str] = None
+    max_threads: int = 4
 
 
 @dataclass
@@ -131,9 +129,12 @@ class PipelineModule:
 
 @dataclass
 class Pipeline:
-    """Overall pipeline configuration"""
-
+    """
+    Represents a pipeline configuration.
+    A pipeline contains modules with specific execution order, input/output mappings,
+    and execution settings.
+    """
     name: str
-    modules: List[PipelineModule]
-    description: Optional[str] = None
-    execution: Optional[PipelineExecution] = None
+    description: Optional[str] = field(default=None)
+    modules: List[PipelineModule] = field(default_factory=list)
+    execution: PipelineExecution = field(default_factory=PipelineExecution)

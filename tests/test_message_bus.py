@@ -118,8 +118,8 @@ def test_message_bus_register_input_output():
 
 # Create a simplified MockModule for testing that works with the enhanced ModuleCore
 class MockModule(ModuleCore):
-    def __init__(self, logger):
-        super().__init__(logger)
+    def __init__(self, logger, thread_pool):
+        super().__init__(logger, thread_pool)
 
     async def _run_iteration(self, message_bus):
         pass
@@ -127,8 +127,9 @@ class MockModule(ModuleCore):
 
 def test_module_core():
     """Test basic ModuleCore functionality"""
+    thread_pool = None
     logger = Mock()
-    module = MockModule(logger)
+    module = MockModule(logger, thread_pool)
 
     # Test that the module can be initialized
     assert isinstance(module, ModuleCore)
