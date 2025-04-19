@@ -87,7 +87,7 @@ If you prefer to use the registry image directly without tagging, you can use th
 docker run ghcr.io/lachlanharrisdev/project-eidolon run custom_pipeline
 ```
 
-### Using Docker Compose:
+### Running Commands with Docker Compose:
 
 ```bash
 # Run a specific command using docker-compose
