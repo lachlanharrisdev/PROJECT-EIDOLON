@@ -1,0 +1,10 @@
+version: '3.8'
+
+# This file is a convenience wrapper around the main docker-compose.yaml
+# located in the docker/ directory
+
+services:
+  eidolon:
+    extends:
+      file: ./docker/docker-compose.yaml
+      service: eidolon
