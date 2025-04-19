@@ -108,6 +108,14 @@ class PipelineLoader:
                     timeout = pipeline_data["execution"]["timeout"]
                     self._logger.debug(f"Processing execution timeout: {timeout}")
 
+                if "max_threads" in pipeline_data["execution"] and isinstance(
+                    pipeline_data["execution"]["max_threads"], int
+                ):
+                    max_threads = pipeline_data["execution"]["max_threads"]
+                    self._logger.debug(
+                        f"Processing execution max_threads: {max_threads}"
+                    )
+
             # Convert to Pipeline object
             pipeline = from_dict(data_class=Pipeline, data=pipeline_data)
             self._logger.info(

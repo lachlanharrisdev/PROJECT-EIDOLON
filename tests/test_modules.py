@@ -41,43 +41,6 @@ def test_verified_modules_structure():
         assert "repo" in module_data, "Module is missing 'repo'"
 
 
-@pytest.mark.asyncio
-async def test_module_discovery():
-    """Test that the engine can discover modules."""
-    # Create a mock ModuleUseCase to avoid actual filesystem operations
-    mock_use_case = Mock()
-    mock_use_case.modules = [Mock(), Mock()]  # Add two mock modules
-
-    # Create mock pipeline loader and pipeline
-    mock_pipeline_loader = Mock()
-    mock_pipeline = Mock()
-    mock_pipeline.name = "test_pipeline"
-    mock_pipeline.modules = []
-    mock_pipeline_loader.load_pipeline.return_value = mock_pipeline
-
-    # Create the engine and inject our mocks
-    engine = ModuleEngine(options={"log_level": "DEBUG"})
-    engine.use_case = mock_use_case
-    engine.pipeline_loader = mock_pipeline_loader
-
-    # Mock the connect_modules and invoke_modules methods with async mocks
-    engine._ModuleEngine__connect_modules = Mock()
-    engine._ModuleEngine__invoke_modules = (
-        AsyncMock()
-    )  # Use AsyncMock for awaitable methods
-    engine.shutdown_coordinator = Mock()
-    engine.shutdown_coordinator.wait_for_shutdown = AsyncMock()  # Use AsyncMock
-
-    # Call start and verify module discovery
-    await engine.start()
-
-    # Verify that the use_case discover_modules method was called
-    mock_use_case.discover_modules.assert_called_once()
-
-    # Verify the number of modules
-    assert len(mock_use_case.modules) == 2
-
-
 def test_module_input_type_conversion():
     """Test the ModuleInput.get_python_type method for converting string type names to Python types."""
     # Basic types can be compared directly

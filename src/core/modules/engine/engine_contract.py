@@ -30,7 +30,7 @@ class ModuleCore(object, metaclass=IModuleRegistry):
 
     meta: Optional[Meta]
 
-    def __init__(self, logger: Logger) -> None:
+    def __init__(self, logger: Logger, thread_pool) -> None:
         """
         Initialize the module with common setup functionality.
 
@@ -46,6 +46,8 @@ class ModuleCore(object, metaclass=IModuleRegistry):
         )
         self._subscribers = set()
         self.input_data = {}
+
+        self.thread_pool = thread_pool
 
         # Automatically load meta data from config
         try:
@@ -394,3 +396,18 @@ class ModuleCore(object, metaclass=IModuleRegistry):
             self._logger.debug(
                 f"Invalid log level '{log_level}' specified for {self.meta.name} module"
             )
+
+    async def run_blocking(self, function, *args, **kwargs) -> Any:
+        """
+        Run a blocking function in the thread pool.
+
+        Args:
+            function: The blocking function to run
+            *args: Positional arguments for the function
+            **kwargs: Keyword arguments for the function
+
+        Returns:
+            The result of the blocking function
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(self.thread_pool, function, *args, **kwargs)

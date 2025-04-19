@@ -179,6 +179,31 @@ The message bus performs automatic type validation to ensure data integrity. For
 
 ## Advanced Patterns
 
+## Multithreading
+
+Multithreading can be as complex as you require it to be. `ModuleCore` provides a threadpool by default, where you can add tasks to it with the following:
+
+``` py
+result = await self.run_blocking(example_function, args...)
+```
+
+``` py
+async def run_blocking(self, function, *args, **kwargs) -> Any:
+    """
+    Run a blocking function in the thread pool.
+
+    Args:
+        function: The blocking function to run
+        *args: Positional arguments for the function
+        **kwargs: Keyword arguments for the function
+
+    Returns:
+        The result of the blocking function
+    """
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(self.thread_pool, function, *args, **kwargs)
+```
+
 ### Request-Response Pattern
 
 While the message bus handles the majority of communication between modules, some more advanced communication patterns are possible.

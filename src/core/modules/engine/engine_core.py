@@ -3,6 +3,7 @@ import os
 import asyncio
 
 from typing import Dict, Optional, List, Any, Set
+from concurrent.futures import ThreadPoolExecutor
 
 from core.modules.usecase import ModuleUseCase
 from core.modules.usecase.pipeline_loader import PipelineLoader
@@ -24,11 +25,13 @@ class ModuleEngine:
         self.verified_modules = {}
         self._logger = logging.getLogger("__name__")
         self.pipeline_name = args.get("pipeline", "default")
+        self.thread_pool = None
         self.use_case = ModuleUseCase(
             {
                 "log_level": args["options"]["log_level"],
                 "directory": FileSystem.get_modules_directory(),
-            }
+                "thread_pool": self.thread_pool,  # Initial None value, will be updated after thread pool creation
+            },
         )
         self.pipeline_loader = PipelineLoader(self._logger)
         self.message_bus = MessageBus()
@@ -52,6 +55,19 @@ class ModuleEngine:
             )
             return False
 
+        # Get max threads from pipeline configuration
+        max_threads = (
+            pipeline.execution.max_threads
+            if hasattr(pipeline, "execution")
+            and hasattr(pipeline.execution, "max_threads")
+            else 4
+        )
+        self._logger.info(f"Initializing thread pool with {max_threads} workers")
+        self.thread_pool = ThreadPoolExecutor(max_workers=max_threads)
+
+        # Update the thread_pool in use_case
+        self.use_case.thread_pool = self.thread_pool
+
         # Extract input mappings from the pipeline configuration
         self.__build_input_mappings(pipeline.modules)
 
@@ -68,22 +84,35 @@ class ModuleEngine:
         # Start modules asynchronously
         await self.__invoke_modules()
 
-        # Wait for shutdown signal
-        await self.shutdown_coordinator.wait_for_shutdown()
+        try:
+            # Wait for shutdown signal
+            await self.shutdown_coordinator.wait_for_shutdown()
 
-        # Wait for all module tasks to complete during shutdown
-        if self.module_tasks:
-            self._logger.info("Waiting for module tasks to complete...")
-            try:
-                await asyncio.wait_for(
-                    asyncio.gather(*self.module_tasks, return_exceptions=True),
-                    timeout=30  # Timeout in seconds
-                )
-            except asyncio.TimeoutError:
-                self._logger.warning(
-                    "Timeout while waiting for module tasks to complete. Some tasks may not have finished."
-                )
-        return True
+            # Perform shutdown process using coordinator
+            await self.shutdown_coordinator.shutdown_application()
+
+            # Wait for all module tasks to complete during shutdown
+            if self.module_tasks:
+                self._logger.info("Waiting for module tasks to complete...")
+                try:
+                    await asyncio.wait_for(
+                        asyncio.gather(*self.module_tasks, return_exceptions=True),
+                        timeout=30,  # Timeout in seconds
+                    )
+                except asyncio.TimeoutError:
+                    self._logger.warning(
+                        "Timeout while waiting for module tasks to complete. Some tasks may not have finished."
+                    )
+
+            # Shutdown the thread pool
+            if self.thread_pool:
+                self._logger.info("Shutting down thread pool")
+                self.thread_pool.shutdown()
+
+            return True
+        except Exception as e:
+            self._logger.error(f"Error during engine shutdown: {e}")
+            return False
 
     def __reload_modules(self, modules=None, pipeline=None):
         """
@@ -100,7 +129,7 @@ class ModuleEngine:
             self._logger.debug("Loading all available modules")
 
         # Discover and load modules
-        self.use_case.discover_modules(True, pipeline)
+        self.use_case.discover_modules(True, pipeline, self.thread_pool)
 
         # Verify the loaded modules
         public_key = get_public_key()

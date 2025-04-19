@@ -31,7 +31,8 @@ class ShutdownCoordinator:
         else:
             self._logger.info("Shutdown initiated. Press Ctrl+C again to force quit.")
             self._shutdown_event.set()
-            asyncio.create_task(self.shutdown_application(self._modules))
+            # We don't need to create a separate task here, just set the shutdown event
+            # The main event loop will handle the shutdown process
 
     def trigger_shutdown(self):
         """
@@ -45,23 +46,29 @@ class ShutdownCoordinator:
         """
         await self._shutdown_event.wait()
 
-    async def shutdown_modules(self, modules):
+    async def shutdown_modules(self):
         """
         Gracefully shut down all running modules.
         """
+        if not self._modules:
+            self._logger.warning("No modules registered for shutdown")
+            return
+            
         self._logger.info("Shutting down modules...")
-        for module in modules:
+        for module in self._modules:
             try:
                 self._logger.info(f"Shutting down module: {module}")
                 await module.shutdown()
             except Exception as e:
                 self._logger.error(f"Error shutting down module {module}: {e}")
 
-    async def shutdown_application(self, modules):
+    async def shutdown_application(self):
         """
         Perform the full application shutdown process.
+        This method should be awaited from the main application to ensure proper shutdown.
         """
         self._logger.info("Application shutdown initiated.")
-        await self.shutdown_modules(modules)
+        await self.shutdown_modules()
         self._logger.info("Application shutdown complete.")
-        sys.exit(0)  # Exit with zero exit code after graceful shutdown
+        # We won't call sys.exit() or loop.stop() here
+        # Let the caller handle the termination of the application
