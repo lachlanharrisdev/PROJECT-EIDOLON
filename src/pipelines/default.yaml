@@ -5,7 +5,6 @@ pipeline:
     Monitors sources, processes keywords, then prints results.
 
   execution:
-    strategy: parallel  # or sequential, or async-graph
     timeout: 300s # the maximum time given before calling a shutdown
     retries: 2 # if the app encounters a critical error, this is the amount of retries it will be given
     error_policy: halt  # or continue, isolate, log_only

@@ -104,7 +104,6 @@ class Device:
 class PipelineExecution:
     """Execution configuration for a pipeline"""
 
-    strategy: Optional[str] = "sequential"  # sequential, parallel, async-graph
     timeout: Optional[str] = None  # e.g., "300s"
     retries: Optional[int] = 0
     error_policy: Optional[str] = "halt"  # halt, continue, isolate, log_only
