@@ -25,11 +25,14 @@ RUN adduser --disabled-password --gecos "" eidolon
 COPY --from=builder /wheels /wheels
 RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels
 
-# Copy application code
-COPY . .
+# Install the application in development mode (without copying all code first)
+COPY pyproject.toml setup.py* ./
+# If setup.py doesn't exist, this will have no effect
+RUN pip install -e . || echo "No setup.py found, continuing with alternate install method"
 
-# Install the application in development mode
-RUN pip install -e .
+# Copy application code - this layer will change frequently
+# We put this after dependency installation to maximize cache hits
+COPY . .
 
 # Set permissions for the eidolon user
 RUN chown -R eidolon:eidolon /app

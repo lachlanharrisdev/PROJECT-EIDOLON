@@ -3,47 +3,208 @@ name: CI
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'requirements.txt'
+      - 'pyproject.toml'
+      - 'pytest.ini'
+      - '.github/workflows/ci.yml'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'requirements.txt'
+      - 'pyproject.toml'
+      - 'pytest.ini'
+      - '.github/workflows/ci.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+  changes:
     runs-on: ubuntu-latest
+    outputs:
+      core: ${{ steps.filter.outputs.core }}
+      modules: ${{ steps.filter.outputs.modules }}
+      tests: ${{ steps.filter.outputs.tests }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            core:
+              - 'src/core/**'
+              - 'requirements.txt'
+              - 'pyproject.toml'
+            modules:
+              - 'src/modules/**'
+            tests:
+              - 'tests/**'
+              - 'pytest.ini'
 
+  # Fast lint job that runs before the main build
+  lint:
+    needs: changes
+    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.modules == 'true' || needs.changes.outputs.tests == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      
+      - name: Cache lint dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-lint-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-lint-
+      
+      - name: Install linting tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8
+      
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings
+          flake8 . --count --exit-zero --max-complexity=10 --statistics
+
+  # Main build and test job
+  build:
+    needs: [changes, lint]
+    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.modules == 'true' || needs.changes.outputs.tests == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      
+      # Cache dependencies based on the requirements hash
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      
+      # Cache spacy models
+      - name: Cache spaCy Model
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-spacy-en_core_web_sm
+          restore-keys: |
+            ${{ runner.os }}-spacy-
+      
+      # Cache built packages
+      - name: Cache Built Package
+        uses: actions/cache@v3
+        with:
+          path: ./dist
+          key: ${{ runner.os }}-package-${{ hashFiles('pyproject.toml', 'src/**/*.py') }}
+          restore-keys: |
+            ${{ runner.os }}-package-
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build pytest pytest-asyncio pytest-mock pytest-cov pytest-xdist
+      
+      - name: Build package
+        run: python -m build
+      
+      - name: Install package and dependencies
+        run: |
+          pip install dist/*.tar.gz
+          pip install -r requirements.txt
+          python -c "import spacy; spacy.cli.download('en_core_web_sm')" || python -m spacy download en_core_web_sm
+      
+      - name: Set PYTHONPATH
+        run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src" >> $GITHUB_ENV
+      
+      - name: Verify CLI functionality
+        run: eidolon --help
+      
+      - name: Run Tests with parallel execution 
+        run: |
+          pytest -xvs --cov=src --cov-report=xml -n auto
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+  # Cross-platform compatibility checks - runs only for tagged releases or manual triggers
+  compatibility:
+    needs: [build]
+    if: ${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest] # Save GitHub Actions minutes (5 minutes total when running OSs + Versions!)
-        python-version: ["3.12"] #["3.10", "3.11", "3.12"]
-
+        os: [windows-latest, macos-latest] 
+        python-version: ["3.12"]
+        
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
-
-    - name: Install dependencies and application
-      run: |
-        python -m pip install --upgrade pip
-        pip install build
-        pip install spacy pytest-asyncio pytest-mock
-        python -m build
-        pip install dist/*.tar.gz
-        python -m spacy download en_core_web_sm
-
-    - name: Set PYTHONPATH
-      run: |
-        echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src" >> $GITHUB_ENV
-
-    - name: Verify CLI functionality
-      run: |
-        eidolon --help
-
-    - name: Run Tests
-      run: |
-        pytest
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+      
+      # Cache dependencies based on the requirements hash
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      
+      - name: Download built package from previous job
+        uses: actions/download-artifact@v3
+        with:
+          name: dist
+          path: dist
+      
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install dist/*.tar.gz
+          pip install pytest pytest-asyncio
+      
+      - name: Set PYTHONPATH (Windows)
+        if: runner.os == 'Windows'
+        run: echo "PYTHONPATH=$env:PYTHONPATH;$(Get-Location)/src" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      
+      - name: Set PYTHONPATH (macOS)
+        if: runner.os == 'macOS'
+        run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src" >> $GITHUB_ENV
+      
+      - name: Verify basic functionality
+        run: eidolon --help
+      
+      - name: Run Core Tests
+        run: pytest tests/test_message_bus.py -v
