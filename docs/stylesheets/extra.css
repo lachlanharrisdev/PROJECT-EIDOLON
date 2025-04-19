@@ -1,0 +1,93 @@
+/* Custom color scheme optimizations */
+
+/* Customize the slate (dark) scheme */
+[data-md-color-scheme="slate"] {
+  --md-hue: 230; 
+  --md-default-bg-color: #0d1117;             /* GitHub-like dark background */
+  --md-default-fg-color: hsla(var(--md-hue), 15%, 90%, 1);
+  --md-default-fg-color--light: hsla(var(--md-hue), 15%, 80%, 0.87);
+  --md-default-fg-color--lighter: hsla(var(--md-hue), 15%, 80%, 0.54);
+  --md-typeset-color: hsla(var(--md-hue), 15%, 95%, 1);
+  --md-typeset-a-color: #ff5252;              /* Professional red for links */
+  
+  /* Enhance code blocks for better readability */
+  --md-code-bg-color: hsla(var(--md-hue), 15%, 10%, 1);
+  --md-code-fg-color: hsla(var(--md-hue), 15%, 95%, 1);
+}
+
+/* Customize the default (light) scheme */
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: #d32f2f;             /* Professional red for light theme */
+  --md-primary-fg-color--light: #ff5252;
+  --md-primary-fg-color--dark: #b71c1c;
+  --md-accent-fg-color: #d32f2f;
+}
+
+/* Font optimizations */
+:root {
+  --md-text-font: "Inter";                    /* Modern, readable font */
+  --md-code-font: "JetBrains Mono";           /* Clean monospace font for code */
+}
+
+/* Enhance code block styling */
+.md-typeset pre {
+  font-size: 0.9em;
+  border-radius: 4px;
+}
+
+.md-typeset code {
+  font-size: 0.9em;
+  border-radius: 3px;
+  padding: 0.15em 0.3em;
+}
+
+/* Make headers more prominent and modern */
+.md-typeset h1, .md-typeset h2 {
+  font-weight: 600;
+  color: var(--md-typeset-a-color);
+}
+
+/* Improve navigation sidebar styling */
+.md-nav__item .md-nav__link--active {
+  color: #ff5252;
+  font-weight: bold;
+}
+
+/* Button styling */
+.md-button {
+  border-radius: 4px;
+}
+
+.md-button--primary {
+  background-color: #d32f2f;
+  border-color: #d32f2f;
+}
+
+/* Improve table styling */
+.md-typeset table:not([class]) {
+  font-size: 0.9em;
+}
+
+.md-typeset table:not([class]) th {
+  background-color: hsla(var(--md-hue), 15%, 12%, 1);
+  color: var(--md-typeset-a-color);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsla(var(--md-hue), 15%, 15%, 1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsla(var(--md-hue), 15%, 35%, 1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--md-typeset-a-color);
+}

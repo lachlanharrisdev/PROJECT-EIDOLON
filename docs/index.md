@@ -1,4 +1,4 @@
-# PROJECT EIDOLON
+# Overview
 
 Project Eidolon is a decentralised suite of OSINT tools built to analyze the evolution of political disinformation on social media. 
 
@@ -14,7 +14,7 @@ for posts about major political entities, identifies opinionated posts coming fr
 <br/>
 
 
-## FEATURES
+## Features
 
 - **ENTIRELY MODULE-BASED**
     - Default modules are verified based on a key-pair-based signed hash generator
@@ -33,7 +33,7 @@ for posts about major political entities, identifies opinionated posts coming fr
  
 <br/>
 
-## DEFAULT MODULES
+## Default Modules
 
 | Module | Description |
 | --- | --- |
