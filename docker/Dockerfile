@@ -34,6 +34,7 @@ RUN pip install -e . || echo "No setup.py found, continuing with alternate insta
 # We put this after dependency installation to maximize cache hits
 COPY . .
 
+
 # Set permissions for the eidolon user
 RUN chown -R eidolon:eidolon /app
 
