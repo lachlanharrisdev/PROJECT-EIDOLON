@@ -13,8 +13,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # os: [ubuntu-latest, windows-latest, macos-latest] # Save GitHub Actions minutes (5 minutes total when running OSs + Versions!)
-        python-version: ["3.10", "3.11", "3.12"]
+        os: [ubuntu-latest, windows-latest, macos-latest] # Save GitHub Actions minutes (5 minutes total when running OSs + Versions!)
+        python-version: ["3.12"] #["3.10", "3.11", "3.12"]
 
     steps:
     - uses: actions/checkout@v4
