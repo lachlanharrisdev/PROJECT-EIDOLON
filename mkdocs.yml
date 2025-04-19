@@ -1,4 +1,53 @@
 site_name: Project Eidolon
 site_url: https://lachlanharrisdev.github.io/PROJECT-EIDOLON
+repo_url: https://github.com/lachlanharrisdev/PROJECT-EIDOLON
+repo_name: PROJECT EIDOLON
+
+edit_uri: edit/main/docs/
+
 theme:
   name: material
+  palette:
+    # Use dark theme (slate) by default
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: red
+      accent: red
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    # Light theme option
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: red
+      accent: red
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - content.code.copy
+    - content.action.edit
+    - navigation.instant
+    - navigation.instant.progress
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - offline
+  - git-revision-date-localized:
+      enable_creation_date: true
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+extra_css:
+  - stylesheets/extra.css

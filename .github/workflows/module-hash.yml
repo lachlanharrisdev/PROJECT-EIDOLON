@@ -29,7 +29,7 @@ jobs:
         run: |
          python -m pip install --upgrade pip
          pip install build
-         pip install PyYAML
+         pip install PyYAML cryptography
 
       - name: Generate Verified Module Hashes
         env:

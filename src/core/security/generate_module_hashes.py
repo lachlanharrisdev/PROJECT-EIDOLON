@@ -4,7 +4,7 @@ import json
 import logging
 import yaml
 
-from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes, serialization
 
 logger = logging.getLogger(__name__)

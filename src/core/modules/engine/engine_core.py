@@ -1,9 +1,7 @@
 import logging
 
-import json
-import hashlib
 import os
-import re
+
 from typing import Dict, Optional, List, Any
 
 from core.modules.usecase import ModuleUseCase
@@ -12,8 +10,12 @@ from core.modules.models import ModuleInput, ModuleOutput, PipelineModule
 from core.modules.util import LogUtil, FileSystem
 from core.modules.util.messagebus import MessageBus
 
-from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives import serialization
+from core.security.utils import (
+    verify_module,
+    get_public_key,
+    get_module_verification_status,
+)
 
 
 class ModuleEngine:
@@ -28,87 +30,12 @@ class ModuleEngine:
             }
         )
         self.pipeline_loader = PipelineLoader(self._logger)
-        self._load_verified_modules()
         self.message_bus = MessageBus()
 
         # Track input_mappings from pipeline config
         self.input_mappings: Dict[str, Dict[str, str]] = (
             {}
         )  # module_name -> {input_name -> source}
-
-    def _load_verified_modules(self):
-        """Load the verified modules from the JSON file."""
-        try:
-            with open("src/settings/verified_modules.json", "r") as f:
-                self.verified_modules = json.load(f).get("modules", {})
-                self._logger.debug(f"Verified modules loaded")
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            self._logger.error(f"Failed to load verified modules: {e}")
-            self.verified_modules = {}
-
-    def __verify_signature(self, module_name, module_hash, signature, public_key):
-        try:
-            public_key.verify(
-                bytes.fromhex(signature),
-                module_hash.encode("utf-8"),
-                padding.PKCS1v15(),
-                hashes.SHA256(),
-            )
-            return True
-        except Exception as e:
-            self._logger.error(f"Signature verification failed for {module_name}: {e}")
-            return False
-
-    def __verify_module(self, module_path, public_key):
-        """Verify a module using its hash and signature."""
-        # Get the actual directory name of the module
-        module_name = os.path.basename(module_path)
-        self._logger.debug(f"Verifying module: {module_name}")
-
-        # Check if the directory name exists in the verified modules
-        if module_name not in self.verified_modules:
-            self._logger.warning(
-                f"\x1b[1;31mModule {module_name} UNVERIFIED \033[0m(directory name not found in self.verified_modules)"
-            )
-            return False
-
-        module_info = self.verified_modules[module_name]
-        computed_hash = self._compute_module_hash(module_path)
-        if not computed_hash:
-            self._logger.warning(
-                f"\x1b[1;31mModule {module_name} UNVERIFIED \033[0m(hash not computed)"
-            )
-            return False
-
-        if computed_hash != module_info["hash"]:
-            self._logger.warning(
-                f"\x1b[1;31mModule {module_name} UNVERIFIED \033[0m(hash mismatch)"
-            )
-            return False
-
-        if not self.__verify_signature(
-            module_name, computed_hash, module_info["signature"], public_key
-        ):
-            self._logger.warning(
-                f"\x1b[1;31mModule {module_name} UNVERIFIED \033[0m(incorrect signature)"
-            )
-            return False
-
-        self._logger.info(f"\033[96mModule {module_name} VERIFIED\033[0m")
-        return True
-
-    def _compute_module_hash(self, module_path):
-        sha256 = hashlib.sha256()
-        try:
-            config_path = os.path.join(module_path, "module.yaml")
-            self._logger.debug(f"Computing hash for {config_path}")
-            with open(config_path, "rb") as f:
-                while chunk := f.read(8192):
-                    sha256.update(chunk)
-            return sha256.hexdigest()
-        except FileNotFoundError as e:
-            self._logger.error(f"Critical file missing in module {module_path}: {e}")
-            return None
 
     def start(self):
         """Start the engine by loading modules from the specified pipeline and connecting them."""
@@ -150,12 +77,9 @@ class ModuleEngine:
         self.use_case.discover_modules(True, pipeline)
 
         # Verify the loaded modules
-        public_key_path = "src/core/security/public_key.pem"
-        try:
-            with open(public_key_path, "rb") as f:
-                public_key = serialization.load_pem_public_key(f.read())
-        except (FileNotFoundError, OSError) as e:
-            self._logger.error(f"Failed to load public key from {public_key_path}: {e}")
+        public_key = get_public_key()
+        if not public_key:
+            self._logger.error("Failed to load public key for module verification")
             return
 
         modules_directory = FileSystem.get_modules_directory()
@@ -183,7 +107,29 @@ class ModuleEngine:
             ]
 
         for module_path in module_dirs_to_check:
-            self.__verify_module(module_path, public_key)
+            module_name = os.path.basename(module_path)
+            is_verified = verify_module(module_path, public_key)
+
+            if is_verified:
+                self._logger.info(f"\033[96mModule {module_name} VERIFIED\033[0m")
+            else:
+                self._logger.warning(
+                    f"\x1b[1;31mModule {module_name} UNVERIFIED\033[0m"
+                )
+
+    def __build_input_mappings(self, pipeline_modules: List[PipelineModule]) -> None:
+        """
+        Build input mappings from pipeline configuration.
+
+        Args:
+            pipeline_modules: List of PipelineModule objects from pipeline config
+        """
+        for module in pipeline_modules:
+            if module.input_mappings:
+                self.input_mappings[module.name] = module.input_mappings
+                self._logger.debug(
+                    f"Added input mappings for {module.name}: {module.input_mappings}"
+                )
 
     def __build_input_mappings(self, pipeline_modules: List[PipelineModule]) -> None:
         """
