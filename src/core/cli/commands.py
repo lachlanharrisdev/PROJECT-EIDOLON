@@ -2,7 +2,6 @@ import sys
 import signal
 import os
 import yaml
-import json
 import pytest
 from pathlib import Path
 

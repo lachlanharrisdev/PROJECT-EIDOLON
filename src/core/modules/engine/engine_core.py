@@ -1,6 +1,7 @@
 import logging
 
 import os
+
 from typing import Dict, Optional, List, Any
 
 from core.modules.usecase import ModuleUseCase
@@ -114,6 +115,20 @@ class ModuleEngine:
             else:
                 self._logger.warning(
                     f"\x1b[1;31mModule {module_name} UNVERIFIED\033[0m"
+                )
+
+    def __build_input_mappings(self, pipeline_modules: List[PipelineModule]) -> None:
+        """
+        Build input mappings from pipeline configuration.
+
+        Args:
+            pipeline_modules: List of PipelineModule objects from pipeline config
+        """
+        for module in pipeline_modules:
+            if module.input_mappings:
+                self.input_mappings[module.name] = module.input_mappings
+                self._logger.debug(
+                    f"Added input mappings for {module.name}: {module.input_mappings}"
                 )
 
     def __build_input_mappings(self, pipeline_modules: List[PipelineModule]) -> None:
