@@ -1,13 +1,35 @@
-name: default
-modules:
-  - name: keyword_monitor
-  - name: keyword_printer
-    depends_on:
-      - keyword_monitor
-    input_mappings:
-      keywords: keywords  # Map keyword_printer's "keywords" input to keyword_monitor's "keywords" output
-  - name: template_module
-    depends_on:
-      - keyword_monitor
-    input_mappings:
-      keywords: keywords  # Map template_module's "keywords" input to keyword_monitor's "keywords" output
+pipeline:
+  name: default 
+  description: >
+    Basic keyword monitoring pipeline.
+    Monitors sources, processes keywords, then prints results.
+
+  execution:
+    timeout: 300s # the maximum time given before calling a shutdown
+    retries: 2 # if the app encounters a critical error, this is the amount of retries it will be given
+    error_policy: halt  # or continue, isolate, log_only
+
+  modules:
+    - id: monitor # how this module is identified within the pipeline
+      module: keyword_monitor # the name of the actual module used
+      config: # custom configuration that could be given to the module
+        polling_interval: 5s
+      outputs: # map the name of the outputs located in the module's `module.yaml` file to an output usable by other modules in the pipeline
+        - keywords: "keywords"
+      run_mode: loop  # or once, on_trigger
+
+    - id: processor
+      module: template_module
+      depends_on: [monitor]
+      input:
+        keywords: monitor.keywords
+      outputs:
+        - processed_keywords: "processed_keywords"
+      run_mode: reactive  # runs on new data
+
+    - id: printer
+      module: keyword_printer
+      depends_on: [processor]
+      input:
+        keywords: processor.processed_keywords
+      run_mode: once

@@ -239,33 +239,25 @@ class KeywordMonitorModule(ModuleCore):
     Automatically updates the system's keyword list with found entities.
     """
 
-    def __init__(self, logger: Logger) -> None:
-        super().__init__(logger)
-
-        try:
-            module_data = self.get_config()
-            self.meta = Meta(
-                name=module_data["name"],
-                description=module_data["description"],
-                version=module_data["version"],
-            )
-        except FileNotFoundError:
-            self.meta = Meta(
-                name="Keyword Monitor Module",
-                description="Extracts political keywords from news headlines.",
-                version="0.1.0",
-            )
-            self._logger.error("module.yaml file not found. Using default values.")
-
-        self._logger.debug(f"Module meta: {self.meta}")
-
+    def _initialize_module(self) -> None:
+        """
+        Initialize module-specific components.
+        """
         # Initialize the keyword monitor
-        self.keyword_monitor = KeywordMonitor(logger=logger)
+        self.keyword_monitor = KeywordMonitor(logger=self._logger)
 
-    def run(self, message_bus: MessageBus) -> None:
+    async def _run_iteration(self, message_bus: MessageBus) -> None:
+        """
+        A single iteration of the module's main logic.
+        """
         self.keyword_monitor.refresh()
         keywords = self.get_keywords()
-        message_bus.publish("keywords", keywords)
+        
+        if keywords:
+            self._logger.info(f"Publishing {len(keywords)} keywords")
+            await message_bus.publish("keywords", keywords)
+        else:
+            self._logger.warning("No keywords to publish")
 
     def get_keywords(self) -> List[str]:
         """Get the current list of keywords from entities."""
@@ -276,23 +268,37 @@ class KeywordMonitorModule(ModuleCore):
         self._logger.debug("Refreshing keywords from news sources")
         return self.keyword_monitor.refresh()
 
-    @staticmethod
-    def __create_device() -> Device:
+    def _get_status(self) -> Device:
+        """
+        Get the current status of the module.
+        """
         return Device(
-            name="Keyword Monitor",
+            name=self.meta.name,
             firmware=0xB4C1D,
             protocol="MONITOR",
             errors=[0x0000],
         )
 
-    def invoke(self, command: chr) -> Device:
-        """Handle commands from the module engine."""
-        self._logger.debug(f"Command: {command} -> {self.meta}")
-
+    def _handle_custom_command(self, command: chr) -> Device:
+        """
+        Handle custom module commands.
+        """
         # 'R' for refresh keywords
         if command == "R":
             keywords = self.refresh_keywords()
             self._logger.debug(f"Refreshed {len(keywords)} keywords")
-
-        device = self.__create_device()
-        return device
+            return self._get_status()
+            
+        return super()._handle_custom_command(command)
+        
+    def _get_cycle_time(self) -> float:
+        """
+        Get the time between execution cycles.
+        """
+        return 60.0  # Run every 60 seconds
+        
+    def _get_default_output_topic(self) -> str:
+        """
+        Get the default output topic for this module.
+        """
+        return "keywords"

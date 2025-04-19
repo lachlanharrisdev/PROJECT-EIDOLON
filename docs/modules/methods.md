@@ -1,6 +1,6 @@
 # Message Bus and Module Methods
 
-This document explains the message bus system in Project Eidolon and the key methods that modules must implement to communicate effectively with each other.
+This document explains the message bus system in Project Eidolon and the key methods that modules can implement to communicate effectively with each other.
 
 ## Message Bus Overview
 
@@ -29,88 +29,148 @@ The Eidolon message bus is a publish-subscribe system that enables modules to ex
 3. The message bus delivers the data to all modules subscribed to that topic
 4. Each subscriber processes the data according to its own logic
 
-## Required Module Methods
+## ModuleCore Architecture
 
-Every module must implement the following methods to interact with the message bus system. For a complete implementation example, see [Creating a Module](2-creating-a-module.md).
+The ModuleCore class provides common functionality for all modules, greatly reducing the amount of boilerplate code needed when creating a new module:
 
-### `handle_input(self, data)`
+- **Automatic Meta Initialization**: Loads metadata from module.yaml
+- **Standard Lifecycle Management**: Handles loop management, errors, and graceful cancellation
+- **Error Handling**: Built-in error boundaries and recovery
+- **Input Processing**: Standard input handling with validation
+- **Command Processing**: Standard command handlers with extensibility
+- **Shutdown Coordination**: Proper resource cleanup
 
-This method is called when data is delivered to your module from a topic it has subscribed to.
+## Module Hook Methods
+
+When implementing a module, you typically only need to override a handful of hook methods to customize behavior. Here are the key hook methods you can override:
+
+### `_initialize_module(self) -> None`
+
+Override this method to initialize module-specific state. This is called after the base ModuleCore initialization.
 
 ```python
-def handle_input(self, data: Any) -> None:
+def _initialize_module(self) -> None:
+    self.keywords = []
+    self.processed_results = {}
+    self.custom_settings = {}
+```
+
+### `_process_input(self, data: Any) -> None`
+
+Override this method to handle data delivered to your module from subscribed topics.
+
+```python
+def _process_input(self, data: Any) -> None:
     if isinstance(data, list) and all(isinstance(item, str) for item in data):
-        self._process_keywords(data)
+        self.keywords = data
+        self._logger.info(f"Received {len(data)} keywords")
     elif isinstance(data, dict) and "config" in data:
-        self._update_config(data["config"])
+        self.custom_settings.update(data["config"])
     else:
         self._logger.warning(f"Received unrecognized data: {type(data)}")
 ```
 
-### `run(self, messagebus: MessageBus) -> None`
+### `async _run_iteration(self, message_bus: MessageBus) -> None`
 
-This method is called by the module engine to execute the module's main logic and publish results.
+Override this method to define the main logic that runs in each execution cycle.
 
 ```python
-def run(self, messagebus: MessageBus) -> None:
-    self._logger.info(f"Running {self.meta.name}")
-    
-    if self.input_data:
-        results = self._analyze_data(self.input_data)
-        
+async def _run_iteration(self, message_bus: MessageBus) -> None:
+    if self.keywords:
+        results = self._process_keywords()
         if results:
-            messagebus.publish("analysis_results", results)
+            await message_bus.publish("processed_keywords", results)
 ```
 
-### `invoke(self, command: chr) -> Device`
+### `_process_data(self) -> Any`
 
-This method handles commands sent from the module engine and returns a Device object with status information.
+Override this method to define how your module processes its current input data.
 
 ```python
-def invoke(self, command: chr) -> Device:
-    if command == "S":
-        self._logger.info("Status check")
-    elif command == "R":
-        self.input_data = None
-        self.results = []
-    elif command == "P":
-        self._process_data()
-    
-    return Device(
-        name=self.meta.name,
-        firmware=0x10001,
-        protocol="STATUS", 
-        errors=[]
-    )
+def _process_data(self) -> Dict[str, Any]:
+    results = {}
+    for keyword in self.keywords:
+        # Process each keyword
+        score = self._calculate_score(keyword)
+        results[keyword] = score
+    return results
 ```
 
-### `shutdown(self) -> None`
+### `_get_cycle_time(self) -> float`
 
-This method is called when the module is being shut down and should clean up any resources.
+Override this method to customize how frequently your module's run iteration executes.
 
 ```python
-async def shutdown(self):
-    self._logger.info(f"Shutting down {self.meta.name}")
-    
-    if hasattr(self, "connection") and self.connection:
-        await self.connection.close()
+def _get_cycle_time(self) -> float:
+    return 30.0  # Run every 30 seconds
 ```
+
+### `_get_default_output_topic(self) -> Optional[str]`
+
+Override this method to specify the default output topic for your module.
+
+```python
+def _get_default_output_topic(self) -> str:
+    return "processed_results"
+```
+
+### `_handle_custom_command(self, command: chr) -> Device`
+
+Override this method to implement custom command handling beyond the standard commands.
+
+```python
+def _handle_custom_command(self, command: chr) -> Device:
+    if command == "C":
+        self._clear_cache()
+        return Device(name=self.meta.name, protocol="CACHE_CLEARED", errors=[])
+    return super()._handle_custom_command(command)
+```
+
+### Asynchronous Lifecycle Hooks
+
+ModuleCore provides additional asynchronous lifecycle hooks:
+
+```python
+async def _before_run(self, message_bus: MessageBus) -> None:
+    """Setup code that runs once before the main module loop"""
+    await self._connect_to_database()
+
+async def _after_run(self, message_bus: MessageBus) -> None:
+    """Cleanup code that runs once after the main module loop"""
+    await self._close_connections()
+
+async def _custom_shutdown(self):
+    """Custom resource cleanup during shutdown"""
+    await self._release_resources()
+```
+
+## Standard Module Commands
+
+ModuleCore implements standard command handling with the following commands:
+
+| Command | Description | Implementation |
+|---------|-------------|----------------|
+| `S` | Status | Returns the module's current status |
+| `R` | Reset | Resets the module's state |
+| `P` | Process | Process any pending data |
+
+You can add custom commands by overriding `_handle_custom_command()`.
 
 ## Publishing Data
 
-To publish data to the message bus, use the `publish` method of the MessageBus object:
+To publish data to the message bus from your module:
 
 ```python
-def run(self, messagebus: MessageBus) -> None:
+async def _run_iteration(self, message_bus: MessageBus) -> None:
     keywords = ["democracy", "election", "politician"]
-    messagebus.publish("keywords", keywords)
+    await message_bus.publish("keywords", keywords)
     
     stats = {
         "processed": 120,
         "filtered": 45,
         "keywords_found": len(keywords)
     }
-    messagebus.publish("statistics", stats)
+    await message_bus.publish("statistics", stats)
 ```
 
 ## Type Validation
@@ -127,7 +187,7 @@ For scenarios where modules need to request data from other modules (rather than
 
 ```python
 # Module A: Makes a request
-def run(self, messagebus: MessageBus) -> None:
+async def _run_iteration(self, message_bus: MessageBus) -> None:
     request_id = str(uuid.uuid4())
     request = {
         "id": request_id,
@@ -136,10 +196,10 @@ def run(self, messagebus: MessageBus) -> None:
     }
     
     self.pending_requests.add(request_id)
-    messagebus.publish("data_requests", request)
+    await message_bus.publish("data_requests", request)
 
 # Module A: Handle the response
-def handle_input(self, data: Any) -> None:
+def _process_input(self, data: Any) -> None:
     if isinstance(data, dict) and "response_to" in data:
         request_id = data["response_to"]
         if request_id in self.pending_requests:
@@ -149,7 +209,7 @@ def handle_input(self, data: Any) -> None:
 
 ```python
 # Module B: Responds to requests
-def handle_input(self, data: Any) -> None:
+def _process_input(self, data: Any) -> None:
     if isinstance(data, dict) and data.get("type") == "data_request":
         request_id = data["id"]
         content = self._get_requested_data(data["parameters"])
@@ -158,9 +218,9 @@ def handle_input(self, data: Any) -> None:
             "content": content
         })
 
-def run(self, messagebus: MessageBus) -> None:
+async def _run_iteration(self, message_bus: MessageBus) -> None:
     for response in self.pending_responses:
-        messagebus.publish("data_responses", response)
+        await message_bus.publish("data_responses", response)
     
     self.pending_responses = []
 ```
@@ -171,7 +231,7 @@ For system-wide events that many modules might be interested in:
 
 ```python
 # Broadcasting an event
-def run(self, messagebus: MessageBus) -> None:
+async def _run_iteration(self, message_bus: MessageBus) -> None:
     event = {
         "type": "system_event",
         "name": "configuration_changed",
@@ -179,12 +239,12 @@ def run(self, messagebus: MessageBus) -> None:
         "details": {"changed_parameters": ["api_key"]}
     }
     
-    messagebus.publish("system_events", event)
+    await message_bus.publish("system_events", event)
 ```
 
 ```python
 # Handling events
-def handle_input(self, data: Any) -> None:
+def _process_input(self, data: Any) -> None:
     if isinstance(data, dict) and data.get("type") == "system_event":
         event_name = data.get("name")
         

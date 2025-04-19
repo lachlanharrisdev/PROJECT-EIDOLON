@@ -7,15 +7,27 @@ This guide walks through the process of creating a custom pipeline for Project E
 A pipeline is defined in a YAML file with a `.yaml` extension in the `src/pipelines/` directory. The file should have the following structure:
 
 ```yaml
-name: custom_pipeline_name
-modules:
-  - name: module1_name
+pipeline:
+  name: custom_pipeline_name
+  description: "A description of what this pipeline does"
   
-  - name: module2_name
-    depends_on:
-      - module1_name
-    input_mappings:
-      module2_input: module1_output
+  execution:
+    timeout: 300s
+    retries: 2
+    error_policy: halt
+    
+  modules:
+    - id: module1
+      module: module1_name
+      
+    - id: module2
+      module: module2_name
+      depends_on: [module1]
+      input:
+        module2_input: module1.module1_output
+      config:
+        option1: value1
+      run_mode: reactive
 ```
 
 ## Step-by-Step Guide
@@ -24,110 +36,158 @@ modules:
 
 Create a new file in the `src/pipelines/` directory with a descriptive name, such as `analytics_pipeline.yaml`.
 
-### Step 2: Define the pipeline name
+### Step 2: Define the pipeline properties
 
-Start by defining the pipeline name at the top of the file:
+Start by defining the pipeline properties at the top of the file:
 
 ```yaml
-name: analytics_pipeline
+pipeline:
+  name: analytics_pipeline
+  description: "Processes analytics data from various sources"
+  
+  execution:
+    timeout: 300s
+    retries: 3
+    error_policy: halt
 ```
 
-This name will be used when running the pipeline via the command line.
+The name will be used when running the pipeline via the command line, and the description helps document the pipeline's purpose.
 
 ### Step 3: List the modules
 
-Add all the modules that should be part of the pipeline under a `modules` key:
+Add all the modules that should be part of the pipeline under the `modules` key:
 
 ```yaml
-modules:
-  - name: module_1
-  - name: module_2
-  # etc...
+pipeline:
+  # ...pipeline properties...
+  modules:
+    - id: collector
+      module: data_collector
+      run_mode: loop
+      
+    - id: processor
+      module: data_processor
+      run_mode: reactive
 ```
+
+The `id` field defines how the module is referenced within the pipeline, while the `module` field specifies the actual module name (directory) to load.
 
 ### Step 4: Define dependencies
 
 For each module that depends on data from another module, add a `depends_on` list:
 
 ```yaml
-modules:  
-  - name: module_1
-    depends_on:
-      - module_2
+pipeline:
+  # ...pipeline properties...
+  modules:
+    - id: collector
+      module: data_collector
+      
+    - id: processor
+      module: data_processor
+      depends_on: [collector]
 ```
 
 ### Step 5: Map inputs and outputs
 
-Connect specific module inputs to other modules' outputs using `input_mappings`:
+Connect specific module inputs to other modules' outputs using the `input` field:
 
 ```yaml
-modules:
-  - name: module_1
-    depends_on:
-      - module_2
-    input_mappings:
-      my_input_string: module_2_output_string
+pipeline:
+  # ...pipeline properties...
+  modules:
+    - id: collector
+      module: data_collector
+      outputs:
+        - collected_data
+      
+    - id: processor
+      module: data_processor
+      depends_on: [collector]
+      input:
+        raw_data: collector.collected_data
 ```
 
-The `input_mappings` dictionary connects:
+The `input` dictionary connects:
 
 - Keys: Input names in the current module
-- Values: Output names from dependency modules
+- Values: Qualified references to outputs from dependency modules (module_id.output_name)
+
+### Step 6: Configure module behavior
+
+Add module-specific configuration via the `config` field and specify execution behavior with `run_mode`:
+
+```yaml
+pipeline:
+  # ...pipeline properties...
+  modules:
+    - id: processor
+      module: data_processor
+      depends_on: [collector]
+      input:
+        raw_data: collector.collected_data
+      config:
+        batch_size: 100
+        cleanup: true
+      run_mode: reactive
+```
+
+Available run modes include:
+- `loop`: Module runs continuously in a loop (default)
+- `once`: Module runs once and completes
+- `reactive`: Module runs whenever new data is received
+- `on_trigger`: Module runs only when explicitly triggered
 
 ## Input Mapping Rules
 
 When setting up input mappings, follow these rules:
 
 1. The input name (key) must match an input defined in the module's `module.yaml`
-2. The output name (value) must match an output defined in one of the dependency modules' `module.yaml`
+2. The output reference (value) should use the format `module_id.output_name`
 3. The types of the connected inputs and outputs must be compatible
 
 ## Advanced Pipeline Features
 
-### Implicit Mappings
+### Module Configuration
 
-If an input name exactly matches an output name, you can omit the mapping. The system will automatically connect them:
+Each module can have custom configuration options that override the defaults:
 
 ```yaml
-# This implicit mapping:
-- name: module_1
-  depends_on:
-    - module_2
-
-# Is equivalent to this explicit mapping:
-- name: module_1
-  depends_on:
-    - module_2
-  input_mappings:
-    my_input: their_output
+- id: processor
+  module: data_processor
+  config:
+    batch_size: 100
+    cleanup: true
+    stopwords: ["the", "and", "is"]
 ```
 
-### Multiple Dependencies
+### Run Mode Selection
 
-A module can depend on multiple other modules:
+The `run_mode` field controls how a module executes:
 
 ```yaml
-- name: module_1
-  depends_on:
-    - module_2
-    - module_3
-    - module_4
-  input_mappings:
-    module_1_string: module_2_output
-    module_1_list_strings: module_3_output_name
-    another_input: module_4_named_their_output_weirdly_and_this_is_it
+- id: monitor
+  module: keyword_monitor
+  run_mode: loop  # Runs continuously in a loop
+
+- id: processor
+  module: data_processor
+  run_mode: reactive  # Runs when new data is received
+
+- id: reporter
+  module: data_reporter
+  run_mode: once  # Runs once and completes
 ```
 
-### Renaming Data Channels
+### Error Handling
 
-Input mappings allow you to connect outputs to differently named inputs:
+The `execution` section controls pipeline-wide error handling:
 
 ```yaml
-- name: alert_system
-  depends_on:
-    - keyword_monitor
-  input_mappings:
-    alert_triggers: keywords  # Maps "keywords" output to "alert_triggers" input
+execution:
+  timeout: 300s  # Maximum execution time before shutdown
+  retries: 2     # Number of retries if critical errors occur
+  error_policy: halt  # How to handle errors (halt, continue, isolate, log_only)
 ```
 
 ## Common Patterns
@@ -137,21 +197,23 @@ Input mappings allow you to connect outputs to differently named inputs:
 Modules run in sequence with each depending on the previous:
 
 ```yaml
-name: linear_pipeline
-modules:
-  - name: data_collector
-  
-  - name: data_processor
-    depends_on:
-      - data_collector
-    input_mappings:
-      raw_data: collected_data
-  
-  - name: data_analyzer
-    depends_on:
-      - data_processor
-    input_mappings:
-      processed_data: normalized_data
+pipeline:
+  name: linear_pipeline
+  modules:
+    - id: collector
+      module: data_collector
+      
+    - id: processor
+      module: data_processor
+      depends_on: [collector]
+      input:
+        raw_data: collector.collected_data
+      
+    - id: analyzer
+      module: data_analyzer
+      depends_on: [processor]
+      input:
+        processed_data: processor.normalized_data
 ```
 
 ### Star Pattern
@@ -159,27 +221,29 @@ modules:
 One central module feeds data to multiple independent modules:
 
 ```yaml
-name: star_pipeline
-modules:
-  - name: central_publisher
-  
-  - name: consumer_a
-    depends_on:
-      - central_publisher
-    input_mappings:
-      input_data: published_data
-  
-  - name: consumer_b
-    depends_on:
-      - central_publisher
-    input_mappings:
-      input_data: published_data
-  
-  - name: consumer_c
-    depends_on:
-      - central_publisher
-    input_mappings:
-      input_data: published_data
+pipeline:
+  name: star_pipeline
+  modules:
+    - id: publisher
+      module: central_publisher
+      
+    - id: consumer_a
+      module: consumer_a
+      depends_on: [publisher]
+      input:
+        input_data: publisher.published_data
+      
+    - id: consumer_b
+      module: consumer_b
+      depends_on: [publisher]
+      input:
+        input_data: publisher.published_data
+      
+    - id: consumer_c
+      module: consumer_c
+      depends_on: [publisher]
+      input:
+        input_data: publisher.published_data
 ```
 
 ### Aggregation Pattern
@@ -187,21 +251,25 @@ modules:
 Multiple modules feed into a single aggregator:
 
 ```yaml
-name: aggregation_pipeline
-modules:
-  - name: data_source_a
-  - name: data_source_b
-  - name: data_source_c
-  
-  - name: aggregator
-    depends_on:
-      - data_source_a
-      - data_source_b
-      - data_source_c
-    input_mappings:
-      source_a_data: data_a
-      source_b_data: data_b
-      source_c_data: data_c
+pipeline:
+  name: aggregation_pipeline
+  modules:
+    - id: source_a
+      module: data_source_a
+      
+    - id: source_b
+      module: data_source_b
+      
+    - id: source_c
+      module: data_source_c
+      
+    - id: aggregator
+      module: aggregator
+      depends_on: [source_a, source_b, source_c]
+      input:
+        source_a_data: source_a.data_a
+        source_b_data: source_b.data_b
+        source_c_data: source_c.data_c
 ```
 
 ## Testing a Pipeline
@@ -224,25 +292,21 @@ You should see log messages showing:
 ### Common Issues
 
 1. **Module not found**: Ensure the module name in the pipeline matches the directory name in `src/modules/`
-
 ```
 ERROR: Module 'sentiment_analizer' not found. Did you mean 'sentiment_analyzer'?
 ```
 
 2. **Input/output mismatch**: Check that the input and output names match those defined in the module configuration files
-
 ```
 WARNING: Module 'data_visualizer' has no input named 'raw_data'
 ```
 
 3. **Type mismatch**: Ensure the types of connected inputs and outputs are compatible
-
 ```
 WARNING: Type mismatch: Output 'keywords' (List[str]) -> Input 'numeric_data' (Dict[str, float])
 ```
 
 4. **Circular dependencies**: Avoid creating circular dependencies between modules
-
 ```
 ERROR: Circular dependency detected: module1 -> module2 -> module3 -> module1
 ```
@@ -275,59 +339,74 @@ ERROR: Circular dependency detected: module1 -> module2 -> module3 -> module1
 ## Example: Full Analytics Pipeline
 
 Here's a complete example of an analytics pipeline that:
+
 1. Monitors news sources for keywords
 2. Analyzes sentiment of the collected articles
 3. Generates visualization data for a dashboard
 4. Publishes results to both a web interface and a CSV exporter
 
 ```yaml
-name: full_analytics_pipeline
-modules:
-  # Data collection layer
-  - name: keyword_monitor
+pipeline:
+  name: full_analytics_pipeline
+  description: "Full analytics pipeline for monitoring, analyzing, and visualizing data"
   
-  - name: news_scraper
-    depends_on:
-      - keyword_monitor
-    input_mappings:
-      search_terms: keywords
+  execution:
+    timeout: 300s
+    retries: 3
+    error_policy: halt
   
-  # Analysis layer
-  - name: sentiment_analyzer
-    depends_on:
-      - news_scraper
-    input_mappings:
-      text_data: article_content
-  
-  - name: entity_extractor
-    depends_on:
-      - news_scraper
-    input_mappings:
-      input_text: article_content
-  
-  # Visualization layer
-  - name: chart_generator
-    depends_on:
-      - sentiment_analyzer
-      - entity_extractor
-    input_mappings:
-      sentiment_data: sentiment_scores
-      entity_data: extracted_entities
-  
-  # Output layer
-  - name: web_interface
-    depends_on:
-      - chart_generator
-    input_mappings:
-      chart_data: visualization_data
-  
-  - name: csv_exporter
-    depends_on:
-      - sentiment_analyzer
-      - entity_extractor
-    input_mappings:
-      sentiment_export: sentiment_scores
-      entity_export: extracted_entities
+  modules:
+    # Data collection layer
+    - id: keyword_monitor
+      module: keyword_monitor
+      run_mode: loop
+    
+    - id: news_scraper
+      module: news_scraper
+      depends_on: [keyword_monitor]
+      input:
+        search_terms: keyword_monitor.keywords
+      run_mode: reactive
+    
+    # Analysis layer
+    - id: sentiment_analyzer
+      module: sentiment_analyzer
+      depends_on: [news_scraper]
+      input:
+        text_data: news_scraper.article_content
+      run_mode: reactive
+    
+    - id: entity_extractor
+      module: entity_extractor
+      depends_on: [news_scraper]
+      input:
+        input_text: news_scraper.article_content
+      run_mode: reactive
+    
+    # Visualization layer
+    - id: chart_generator
+      module: chart_generator
+      depends_on: [sentiment_analyzer, entity_extractor]
+      input:
+        sentiment_data: sentiment_analyzer.sentiment_scores
+        entity_data: entity_extractor.extracted_entities
+      run_mode: reactive
+    
+    # Output layer
+    - id: web_interface
+      module: web_interface
+      depends_on: [chart_generator]
+      input:
+        chart_data: chart_generator.visualization_data
+      run_mode: reactive
+    
+    - id: csv_exporter
+      module: csv_exporter
+      depends_on: [sentiment_analyzer, entity_extractor]
+      input:
+        sentiment_export: sentiment_analyzer.sentiment_scores
+        entity_export: entity_extractor.extracted_entities
+      run_mode: reactive
 ```
 
 ## See Also

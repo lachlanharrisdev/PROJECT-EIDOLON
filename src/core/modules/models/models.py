@@ -101,20 +101,39 @@ class Device:
 
 
 @dataclass
-class PipelineModuleDependency:
-    name: str
+class PipelineExecution:
+    """Execution configuration for a pipeline"""
+
+    timeout: Optional[str] = None  # e.g., "300s"
+    retries: Optional[int] = 0
+    error_policy: Optional[str] = "halt"  # halt, continue, isolate, log_only
 
 
 @dataclass
 class PipelineModule:
-    name: str
-    depends_on: Optional[List[str]] = None
-    input_mappings: Optional[Dict[str, str]] = (
-        None  # Maps input_name -> dependency.output_name
-    )
+    """Represents a module in a pipeline configuration"""
+
+    # Required fields
+    name: str  # Will come from the 'module' field
+
+    # New fields
+    id: Optional[str] = None  # How this module is identified within the pipeline
+    depends_on: Optional[List[str]] = None  # List of module IDs this depends on
+    input_mappings: Optional[Dict[str, str]] = None  # Maps input_name -> output_name
+    config: Optional[Dict[str, Any]] = None  # Module-specific configuration
+    outputs: Optional[List[Dict[str, str]]] = None  # Output mappings
+    run_mode: Optional[str] = None  # loop, once, on_trigger, reactive
+
+    def get_id(self) -> str:
+        """Get the ID used to reference this module"""
+        return self.id if self.id else self.name
 
 
 @dataclass
 class Pipeline:
+    """Overall pipeline configuration"""
+
     name: str
     modules: List[PipelineModule]
+    description: Optional[str] = None
+    execution: Optional[PipelineExecution] = None
