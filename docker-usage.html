@@ -8,11 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://lachlanharrisdev.github.io/PROJECT-EIDOLON/index.html">
+        <link rel="canonical" href="https://lachlanharrisdev.github.io/PROJECT-EIDOLON/docker-usage.html">
       
       
+        <link rel="prev" href="index.html">
       
-        <link rel="next" href="docker-usage.html">
+      
+        <link rel="next" href="modules/1-overview.html">
       
       
       <link rel="icon" href="assets/images/favicon.png">
@@ -20,7 +22,7 @@
     
     
       
-        <title>Project Eidolon</title>
+        <title>Docker Usage - Project Eidolon</title>
       
     
     
@@ -76,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#overview" class="md-skip">
+        <a href="#docker-usage" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Overview
+              Docker Usage
             
           </span>
         </div>
@@ -215,6 +217,28 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -232,7 +256,7 @@
   
   
   <span class="md-ellipsis">
-    Overview
+    Docker Usage
     
   </span>
   
@@ -240,12 +264,12 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="index.html" class="md-nav__link md-nav__link--active">
+      <a href="docker-usage.html" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
-    Overview
+    Docker Usage
     
   </span>
   
@@ -268,27 +292,102 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#eidolon" class="md-nav__link">
+  <a href="#installation-options" class="md-nav__link">
     <span class="md-ellipsis">
-      EIDOLON
+      Installation Options
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Installation Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-1-pull-from-github-container-registry-recommended-for-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option 1: Pull from GitHub Container Registry (recommended for users)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-2-build-from-source-recommended-for-developers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option 2: Build from Source (recommended for developers)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-3-using-docker-compose" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option 3: Using Docker Compose
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      Quick Start
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#features" class="md-nav__link">
+  <a href="#available-commands" class="md-nav__link">
     <span class="md-ellipsis">
-      Features
+      Available Commands
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Available Commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-the-github-container-registry-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using the GitHub Container Registry image:
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-commands-with-docker-compose" class="md-nav__link">
+    <span class="md-ellipsis">
+      Running Commands with Docker Compose:
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      Environment Variables
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#default-modules" class="md-nav__link">
+  <a href="#building-the-docker-image" class="md-nav__link">
     <span class="md-ellipsis">
-      Default Modules
+      Building the Docker Image
     </span>
   </a>
   
@@ -298,28 +397,6 @@
   
 </nav>
       
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="docker-usage.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Docker Usage
-    
-  </span>
-  
-
-      </a>
     </li>
   
 
@@ -625,27 +702,102 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#eidolon" class="md-nav__link">
+  <a href="#installation-options" class="md-nav__link">
     <span class="md-ellipsis">
-      EIDOLON
+      Installation Options
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Installation Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-1-pull-from-github-container-registry-recommended-for-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option 1: Pull from GitHub Container Registry (recommended for users)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-2-build-from-source-recommended-for-developers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option 2: Build from Source (recommended for developers)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-3-using-docker-compose" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option 3: Using Docker Compose
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      Quick Start
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#features" class="md-nav__link">
+  <a href="#available-commands" class="md-nav__link">
     <span class="md-ellipsis">
-      Features
+      Available Commands
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Available Commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-the-github-container-registry-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using the GitHub Container Registry image:
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-commands-with-docker-compose" class="md-nav__link">
+    <span class="md-ellipsis">
+      Running Commands with Docker Compose:
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      Environment Variables
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#default-modules" class="md-nav__link">
+  <a href="#building-the-docker-image" class="md-nav__link">
     <span class="md-ellipsis">
-      Default Modules
+      Building the Docker Image
     </span>
   </a>
   
@@ -667,7 +819,7 @@
 
 
   
-    <a href="https://github.com/lachlanharrisdev/PROJECT-EIDOLON/edit/main/docs/index.md" title="Edit this page" class="md-content__button md-icon">
+    <a href="https://github.com/lachlanharrisdev/PROJECT-EIDOLON/edit/main/docs/docker-usage.md" title="Edit this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -675,56 +827,92 @@
   
 
 
-<h1 id="overview">Overview</h1>
-<p>Project Eidolon is a decentralised suite of OSINT tools built to analyze the evolution of political disinformation on social media. </p>
-<p>In it's default configuration, Eidolon uses clever keyword rotation to scrape popular social media networks (primarily Twitter/X) 
-for posts about major political entities, identifies opinionated posts coming from potential bot accounts, and tracks these accounts towards botnets to identify organisations running unethical political propaganda schemes. </p>
-<blockquote>
-<h3 id="eidolon"><strong>EIDOLON</strong></h3>
-<p><strong><em>Noun</em></strong> ● <strong>/ʌɪˈdəʊlɒn/</strong></p>
-<p>In ancient Greek literature, an eidolon is a spirit-image of a living or dead person; a shade or phantom 'look-alike' of the human form.
-<br/></p>
-</blockquote>
-<p><br/></p>
-<h2 id="features">Features</h2>
+<h1 id="docker-usage">Docker Usage</h1>
+<p>This guide explains how to use Project Eidolon with Docker for easy deployment and usage.</p>
+<h2 id="installation-options">Installation Options</h2>
+<p>There are several ways to get started with the Eidolon Docker image:</p>
+<h3 id="option-1-pull-from-github-container-registry-recommended-for-users">Option 1: Pull from GitHub Container Registry (recommended for users)</h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Pull the latest stable version</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>docker<span class="w"> </span>pull<span class="w"> </span>ghcr.io/lachlanharrisdev/project-eidolon:latest
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Or pull a specific version</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>docker<span class="w"> </span>pull<span class="w"> </span>ghcr.io/lachlanharrisdev/project-eidolon:1.0.0
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Create a simpler name for the image</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>docker<span class="w"> </span>tag<span class="w"> </span>ghcr.io/lachlanharrisdev/project-eidolon:latest<span class="w"> </span>eidolon
+</span></code></pre></div>
+<h3 id="option-2-build-from-source-recommended-for-developers">Option 2: Build from Source (recommended for developers)</h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Clone the repository</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/your-username/project-eidolon.git
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nb">cd</span><span class="w"> </span>project-eidolon
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># Build the Docker image with a simple name</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>eidolon<span class="w"> </span>-f<span class="w"> </span>docker/Dockerfile<span class="w"> </span>.
+</span></code></pre></div>
+<h3 id="option-3-using-docker-compose">Option 3: Using Docker Compose</h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Clone the repository</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/your-username/project-eidolon.git
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nb">cd</span><span class="w"> </span>project-eidolon
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1"># Start with docker-compose</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>docker-compose<span class="w"> </span>up
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="c1"># Or build and start in one command</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>docker-compose<span class="w"> </span>up<span class="w"> </span>--build
+</span></code></pre></div>
+<h2 id="quick-start">Quick Start</h2>
+<p>The simplest way to get started is with Docker Compose:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>docker-compose<span class="w"> </span>up
+</span></code></pre></div>
+<p>This will start Eidolon with the default pipeline.</p>
+<h2 id="available-commands">Available Commands</h2>
+<p>The Docker image uses the Eidolon CLI as its entrypoint, allowing you to run any command:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Run with a specific pipeline</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>docker<span class="w"> </span>run<span class="w"> </span>eidolon<span class="w"> </span>run<span class="w"> </span>custom_pipeline
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># List available modules</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>docker<span class="w"> </span>run<span class="w"> </span>eidolon<span class="w"> </span>list<span class="w"> </span>modules
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># List pipelines</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>docker<span class="w"> </span>run<span class="w"> </span>eidolon<span class="w"> </span>list<span class="w"> </span>pipeline
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="c1"># Validate the installation</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>docker<span class="w"> </span>run<span class="w"> </span>eidolon<span class="w"> </span>validate
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1"># View configuration</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>docker<span class="w"> </span>run<span class="w"> </span>eidolon<span class="w"> </span>config<span class="w"> </span>logging.level
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="c1"># Update configuration (requires a volume mount to persist changes)</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>docker<span class="w"> </span>run<span class="w"> </span>-v<span class="w"> </span>./src/settings:/app/src/settings<span class="w"> </span>eidolon<span class="w"> </span>config<span class="w"> </span>logging.level<span class="w"> </span>DEBUG
+</span></code></pre></div>
+<h3 id="using-the-github-container-registry-image">Using the GitHub Container Registry image:</h3>
+<p>If you prefer to use the registry image directly without tagging, you can use the full path:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Run with a specific pipeline</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>docker<span class="w"> </span>run<span class="w"> </span>ghcr.io/lachlanharrisdev/project-eidolon<span class="w"> </span>run<span class="w"> </span>custom_pipeline
+</span></code></pre></div>
+<h3 id="running-commands-with-docker-compose">Running Commands with Docker Compose:</h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Run a specific command using docker-compose</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>docker-compose<span class="w"> </span>run<span class="w"> </span>eidolon<span class="w"> </span>list<span class="w"> </span>modules
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>docker-compose<span class="w"> </span>run<span class="w"> </span>eidolon<span class="w"> </span>validate
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>docker-compose<span class="w"> </span>run<span class="w"> </span>eidolon<span class="w"> </span>config<span class="w"> </span>logging.level
+</span></code></pre></div>
+<h2 id="environment-variables">Environment Variables</h2>
+<p>You can configure the Eidolon container using environment variables:</p>
 <ul>
-<li><strong>ENTIRELY MODULE-BASED</strong><ul>
-<li>Default modules are verified based on a key-pair-based signed hash generator</li>
-<li>Modules communicate via a universal message bus</li>
-<li>Modules specify any number of inputs &amp; outputs, and automatically subscribe to matching outputs from other modules</li>
-<li>Modules each have their own <code>.yaml</code> file for configuration</li>
-<li>All core functionality (beyond module management, security &amp; logging) is stored in modules, making it easy to remove unnecessary functionality</li>
+<li><code>LOG_LEVEL</code>: Sets the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)</li>
 </ul>
-</li>
-<li><strong>DYNAMIC KEYWORD GENERATION</strong> <em>[via keyword_monitor module]</em><ul>
-<li>Keywords are updated regularly in real-time based on trending political news articles</li>
-<li>Political entities are identified &amp; classified via NLP</li>
-<li>Keywords are transmitted on the message bus for any module to subscribe to</li>
-</ul>
-</li>
-<li><strong>PRODUCTION-READY LOGGING</strong><ul>
-<li>Console logging has been standardised across modules</li>
-<li>Logging has a fully customisable format, including colours, text decoration &amp; variables</li>
-<li>All logs are saved into a persistent <code>.logs/</code> folder</li>
-</ul>
-</li>
-</ul>
-<p><br/></p>
-<h2 id="default-modules">Default Modules</h2>
-<table>
-<thead>
-<tr>
-<th>Module</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Keyword Monitor</td>
-<td>Scrapes RSS feeds for popular political news articles, then uses NLP to identify political entities</td>
-</tr>
-</tbody>
-</table>
+<p>Example:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>docker-compose<span class="w"> </span>run<span class="w"> </span>-e<span class="w"> </span><span class="nv">LOG_LEVEL</span><span class="o">=</span>DEBUG<span class="w"> </span>eidolon<span class="w"> </span>run
+</span></code></pre></div>
+<h2 id="building-the-docker-image">Building the Docker Image</h2>
+<p>If you've made changes to the Dockerfile, you can build the image locally:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>eidolon:local<span class="w"> </span>-f<span class="w"> </span>docker/Dockerfile<span class="w"> </span>.
+</span></code></pre></div>
+<p>Available tags:
+- <code>latest</code>: Latest stable build from the main branch
+- <code>x.y.z</code>: Specific version releases
+- <code>x.y</code>: Major.minor version releases
+- <code>sha-abcdef</code>: Specific commit builds</p>
 
 
 
@@ -747,7 +935,7 @@ for posts about major political entities, identifies opinionated posts coming fr
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="April 19, 2025 03:17:11">April 19, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="April 19, 2025 10:41:34">April 19, 2025</span>
   </span>
 
     
@@ -757,7 +945,7 @@ for posts about major political entities, identifies opinionated posts coming fr
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="April 18, 2025 01:50:59">April 18, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="April 19, 2025 10:41:34">April 19, 2025</span>
   </span>
 
     
