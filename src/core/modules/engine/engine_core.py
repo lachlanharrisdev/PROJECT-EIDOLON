@@ -74,8 +74,15 @@ class ModuleEngine:
         # Wait for all module tasks to complete during shutdown
         if self.module_tasks:
             self._logger.info("Waiting for module tasks to complete...")
-            await asyncio.gather(*self.module_tasks, return_exceptions=True)
-
+            try:
+                await asyncio.wait_for(
+                    asyncio.gather(*self.module_tasks, return_exceptions=True),
+                    timeout=30  # Timeout in seconds
+                )
+            except asyncio.TimeoutError:
+                self._logger.warning(
+                    "Timeout while waiting for module tasks to complete. Some tasks may not have finished."
+                )
         return True
 
     def __reload_modules(self, modules=None, pipeline=None):
