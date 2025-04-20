@@ -179,3 +179,4 @@ cython_debug/
 # EIDOLON SPECIFIC
 .vscode/
 .logs/
+src/reports/

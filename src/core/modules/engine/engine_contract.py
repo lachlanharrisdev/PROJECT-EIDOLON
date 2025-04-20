@@ -31,36 +31,33 @@ class ModuleCore(object, metaclass=IModuleRegistry):
     meta: Optional[Meta]
 
     def __init__(self, logger: Logger, thread_pool) -> None:
-        """
-        Initialize the module with common setup functionality.
-
-        Args:
-            logger: Logger instance for this module
-        """
         self._logger = logger
-        self._config = None
-        self._arguments = {}  # Arguments from pipeline config
-        self._shutdown_event = asyncio.Event()
         self._running = False
-        self._module_id = (
-            f"{self.__class__.__name__}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
-        )
-        self._subscribers = set()
-        self.input_data = {}
+        self._thread_pool = thread_pool
+        self._input_buffer = {}  # For storing input data by topic
+        self._arguments = (
+            {}
+        )  # For storing arguments passed from the pipeline configuration
+        self._config = None  # Cache for module configuration
+        self._shutdown_event = asyncio.Event()  # Event for signaling shutdown
 
-        self.thread_pool = thread_pool
-
-        # Automatically load meta data from config
+        # Load metadata from module configuration file
         try:
-            module_data = self.get_config()
-            self.meta = Meta(
-                name=module_data.get("name", self.__class__.__name__),
-                description=module_data.get("description", "No description provided"),
-                version=module_data.get("version", "0.0.0"),
+            config_path = os.path.join(
+                os.path.dirname(inspect.getfile(self.__class__)), "module.yaml"
             )
-            self._logger.debug(
-                f"Initialized module: {self.meta.name} v{self.meta.version}"
-            )
+            with open(config_path, "r", encoding="utf-8") as file:
+                config_data = yaml.safe_load(file)
+                self._config = config_data  # Cache the config
+                # Read name, description and version directly from top level
+                self.meta = Meta(
+                    name=config_data.get("name", self.__class__.__name__),
+                    description=config_data.get("description", "No description"),
+                    version=config_data.get("version", "0.0.0"),
+                )
+                self._logger.debug(
+                    f"Initialized module: {self.meta.name} v{self.meta.version}"
+                )
         except FileNotFoundError:
             self.meta = Meta(
                 name=self.__class__.__name__,
@@ -422,6 +419,8 @@ class ModuleCore(object, metaclass=IModuleRegistry):
             arguments: A dictionary containing the module's arguments
         """
         self._arguments = arguments or {}
+        # Set args attribute so modules can access it directly via self.args
+        self.args = self._arguments
         self._logger.debug(
             f"Module arguments set for {self.meta.name}: {self._arguments}"
         )

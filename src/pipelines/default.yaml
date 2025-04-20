@@ -6,13 +6,13 @@ pipeline:
 
   execution:
     timeout: 300s
-    retries: 2 
-    error_policy: halt  # or continue, isolate, log_only
+    # retries: 2 
+    # error_policy: halt  # or continue, isolate, log_only
     max_threads: 4 
 
   modules:
     - id: monitor # how this module is identified within the pipeline
-      module: keyword_monitor # the name of the actual module used
+      name: keyword_monitor # the name of the actual module used
       config: # custom configuration that could be given to the module
         polling_interval: 1s
       outputs: # map the name of the outputs located in the module's `module.yaml` file to an output usable by other modules in the pipeline
@@ -20,7 +20,7 @@ pipeline:
       run_mode: loop  # or once, on_trigger
 
     - id: processor
-      module: template_module
+      name: template_module
       depends_on: [monitor]
       input:
         keywords: monitor.keywords  # maps the monitor's "keywords" output to this module's "keywords" input
@@ -30,10 +30,3 @@ pipeline:
       config:
         base_score: 15
         length_weight: 0.8
-
-    - id: printer
-      module: keyword_printer
-      depends_on: [processor]
-      input:
-        keywords: processor.processed_keywords  # explicitly map processor's processed_keywords to printer's keywords input
-      run_mode: reactive  # runs whenever new data arrives

@@ -111,7 +111,9 @@ class AethonCrawler(ModuleCore):
 
         # Message frequency control
         self.last_status_time = 0
-        self.status_update_interval = 3  # seconds
+        self.status_update_interval = (
+            1  # Reduced from 3 to 1 second for more frequent updates
+        )
 
     def _process_input(self, data: Any) -> None:
         """
@@ -183,6 +185,20 @@ class AethonCrawler(ModuleCore):
         """
         Setup code that runs once before the main module loop.
         """
+        # Record the start time for duration tracking
+        self.start_time = datetime.now()
+
+        # Get configuration from pipeline if available
+        if hasattr(self, "args") and self.args and isinstance(self.args, dict):
+            self._logger.info("Loading configuration from pipeline")
+            self._update_config(self.args)
+
+            # Debug logging to verify URL is loaded correctly
+            if self.config["url"]:
+                self._logger.info(f"Target URL set to: {self.config['url']}")
+            else:
+                self._logger.warning("No target URL specified in configuration")
+
         # Initialize semaphore to control concurrency
         self.semaphore = asyncio.Semaphore(self.config["threads"])
 
@@ -213,6 +229,7 @@ class AethonCrawler(ModuleCore):
         if self.config["url"]:
             self.url_queue.append((self.config["url"], 0))  # Start at depth 0
             self.discovered_urls.add(self.config["url"])
+            self._logger.info(f"Added root URL to crawl queue: {self.config['url']}")
 
         # Add seed URLs to the queue
         for seed in self.config["seeds"]:
@@ -360,45 +377,55 @@ class AethonCrawler(ModuleCore):
 
     async def _finalize_crawl(self, message_bus: MessageBus) -> None:
         """
-        Complete the crawl and publish all collected data.
+        Complete the crawl and print a summary to console
         """
-        self.log(
-            f"Crawl complete: processed {len(self.visited_urls)} URLs, found {len(self.discovered_urls)} URLs"
+        crawl_duration = (
+            datetime.now() - self.start_time if hasattr(self, "start_time") else None
         )
+        duration_str = (
+            str(crawl_duration).split(".")[0] if crawl_duration else "Unknown"
+        )
+
+        # Print summary to console
+        self.log("-" * 80)
+        self.log(f"AETHON CRAWLER SUMMARY")
+        self.log(f"Target URL: {self.config['url']}")
+        self.log(f"Crawl duration: {duration_str}")
+        self.log(f"Depth reached: Level {self.current_level}/{self.config['level']}")
+        self.log(f"URLs discovered: {len(self.discovered_urls)}")
+        self.log(f"URLs processed: {len(self.visited_urls)}")
+
+        # Print data extraction summary
+        self.log(f"Data extracted:")
+        self.log(f"  - Emails: {len(self.extracted['emails'])}")
+        self.log(
+            f"  - Social accounts: {sum(len(accounts) for accounts in self.extracted['social'].values())}"
+        )
+        self.log(f"  - JavaScript files: {len(self.extracted['js_files'])}")
+        self.log(f"  - Endpoints: {len(self.extracted['js_endpoints'])}")
+        self.log(
+            f"  - Parameters: {sum(len(urls) for urls in self.extracted['parameters'].values())}"
+        )
+        self.log(f"  - Subdomains: {len(self.extracted['subdomains'])}")
+        self.log("-" * 80)
 
         # Convert sets to lists for serialization
         result_data = prepare_results_for_publishing(self.extracted)
 
-        # Publish the extracted data to various outputs
+        # Publish minimal data to the message bus for other modules
         await message_bus.publish("crawled_urls", list(self.visited_urls))
         await message_bus.publish("extracted_data", result_data)
-        await message_bus.publish("parameters", self.extracted["parameters"])
-
-        # Create intel dictionary
-        intel_data = {
-            "emails": list(self.extracted["emails"]),
-            "social": self.extracted["social"],
-            "aws_buckets": list(self.extracted["aws_buckets"]),
-        }
-        await message_bus.publish("intel", intel_data)
-
-        # Only publish if we found any
-        if any(self.extracted["secret_keys"].values()):
-            await message_bus.publish("secret_keys", self.extracted["secret_keys"])
-
-        # JavaScript files and endpoints
-        js_data = {
-            "files": list(self.extracted["js_files"]),
-            "endpoints": list(self.extracted["js_endpoints"]),
-        }
-        await message_bus.publish("js_files", js_data)
-
-        # Subdomains
-        if self.extracted["subdomains"]:
-            await message_bus.publish("subdomains", list(self.extracted["subdomains"]))
 
         # Final status update
-        await self._publish_status(message_bus, is_final=True)
+        final_status = {
+            "timestamp": datetime.now().isoformat(),
+            "target_url": self.config["url"],
+            "duration": duration_str,
+            "urls_discovered": len(self.discovered_urls),
+            "urls_processed": len(self.visited_urls),
+            "complete": True,
+        }
+        await message_bus.publish("crawl_status", final_status)
 
         # Mark crawl as complete
         self.running = False

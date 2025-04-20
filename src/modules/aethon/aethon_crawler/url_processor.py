@@ -3,46 +3,17 @@ URL processing utilities for the Aethon Web Crawler
 """
 
 import re
-from typing import Optional, Set
+import urllib.parse
+from typing import Dict, List, Optional, Set
 from urllib.parse import urlparse, urljoin
 
-from tld import get_fld
-
-from .constants import FILE_EXTENSIONS
+from bs4 import BeautifulSoup
 
 
-def normalize_url(base_url: str, url: str) -> Optional[str]:
+# URL validation
+def is_valid_url(url: str) -> bool:
     """
-    Normalize a URL against a base URL.
-    """
-    try:
-        # Handle empty or None URLs
-        if not url or url.startswith(("mailto:", "tel:", "javascript:", "data:", "#")):
-            return None
-
-        # Remove fragments
-        url = url.split("#")[0]
-
-        # Join with base URL if relative
-        full_url = urljoin(base_url, url)
-
-        # Parse and normalize
-        parsed = urlparse(full_url)
-
-        # Skip URLs without scheme or netloc
-        if not parsed.scheme or not parsed.netloc:
-            return None
-
-        # Clean the URL
-        return parsed.geturl()
-
-    except Exception:
-        return None
-
-
-def is_valid_url(url: str, domain: str = None, extracted_files: dict = None) -> bool:
-    """
-    Check if a URL is valid and should be crawled.
+    Check if the URL is valid and within scope.
     """
     if not url:
         return False
@@ -50,154 +21,264 @@ def is_valid_url(url: str, domain: str = None, extracted_files: dict = None) -> 
     try:
         parsed = urlparse(url)
 
-        # Must have scheme and domain
-        if not parsed.scheme or not parsed.netloc:
-            return False
-
-        # Check for common binary file extensions we don't want to crawl
-        if any(
-            parsed.path.lower().endswith(f".{ext}")
-            for ext in FILE_EXTENSIONS["audio"]
-            + FILE_EXTENSIONS["video"]
-            + FILE_EXTENSIONS["image"]
-            + FILE_EXTENSIONS["executable"]
-        ):
-            # Still track them as files, but don't crawl them
-            file_type = get_file_type(url)
-            if file_type and extracted_files is not None:
-                extracted_files[file_type].add(url)
-            return False
-
-        # Must be http or https
+        # Check URL scheme
         if parsed.scheme not in ["http", "https"]:
             return False
 
-        # Check if URL is in scope (same domain)
-        if domain:
-            try:
-                url_domain = get_fld(url, fix_protocol=True)
-                # Only restrict to the same domain if domain is provided
-                if url_domain != domain:
-                    # Out-of-scope URL
-                    return False
-            except Exception:
-                # If we can't parse the domain, be cautious and don't crawl
+        # Check for common binary file patterns we want to skip for crawling
+        # These are files we won't extract links from, but may add to the files collection
+        binary_extensions = [
+            ".pdf",
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".gif",
+            ".ico",
+            ".svg",
+            ".webp",
+            ".mp4",
+            ".webm",
+            ".mp3",
+            ".wav",
+            ".ogg",
+            ".zip",
+            ".tar.gz",
+            ".exe",
+        ]
+
+        for ext in binary_extensions:
+            if parsed.path.lower().endswith(ext):
                 return False
 
         return True
-
     except Exception:
         return False
 
 
-def is_excluded(url: str, exclude_pattern: str) -> bool:
+def normalize_url(base_url: str, href: str) -> Optional[str]:
     """
-    Check if a URL matches the exclusion pattern.
+    Normalize a URL found in a page.
     """
-    if not exclude_pattern:
+    if not href:
+        return None
+
+    # Skip non-http(s) links, fragments, and javascript
+    if href.startswith(("javascript:", "mailto:", "tel:", "#")):
+        return None
+
+    try:
+        # Convert to absolute URL
+        full_url = urljoin(base_url, href)
+
+        # Parse the URL
+        parsed = urlparse(full_url)
+
+        # Remove fragments
+        normalized = urllib.parse.urlunparse(
+            (
+                parsed.scheme,
+                parsed.netloc,
+                parsed.path,
+                parsed.params,
+                parsed.query,
+                "",  # Remove fragment
+            )
+        )
+
+        return normalized if is_valid_url(normalized) else None
+    except Exception:
+        return None
+
+
+def is_excluded(url: str, exclude_pattern: Optional[str]) -> bool:
+    """
+    Check if URL should be excluded based on pattern.
+    """
+    if not exclude_pattern or not url:
         return False
 
     try:
-        pattern = re.compile(exclude_pattern)
-        return bool(pattern.search(url))
+        return bool(re.search(exclude_pattern, url))
     except re.error:
-        # Log error in the calling code
+        # If regex is invalid, don't exclude
         return False
-
-
-def get_file_type(url: str) -> Optional[str]:
-    """
-    Determine the file type based on URL extension.
-    """
-    path = urlparse(url).path.lower()
-
-    for file_type, extensions in FILE_EXTENSIONS.items():
-        if any(path.endswith(f".{ext}") for ext in extensions):
-            return file_type
-
-    return None
 
 
 def extract_urls(
     base_url: str,
     html_content: str,
-    extracted_params: dict,
-    js_files: set,
-    js_endpoints: set,
-) -> Set[str]:
+    parameters_dict: Dict[str, List[str]],
+    js_files_set: Set[str],
+    js_endpoints_set: Set[str],
+) -> List[str]:
     """
-    Extract URLs from HTML content and normalize them.
+    Extract URLs from the HTML content.
     """
-    from bs4 import BeautifulSoup
-    import re
+    if not html_content:
+        return []
 
-    urls = set()
+    discovered_urls = []
+
     try:
-        # Parse HTML with BeautifulSoup
-        soup = BeautifulSoup(html_content, "lxml")
+        soup = BeautifulSoup(html_content, "html.parser")
 
-        # Extract URLs from various HTML elements
-        for tag, attr in [
-            ("a", "href"),
-            ("img", "src"),
-            ("script", "src"),
-            ("link", "href"),
-            ("form", "action"),
-            ("object", "data"),
-            ("embed", "src"),
-            ("iframe", "src"),
-            ("audio", "src"),
-            ("video", "src"),
-            ("source", "src"),
-        ]:
-            for element in soup.find_all(tag):
-                if element.has_attr(attr):
-                    url = element[attr]
-                    # Normalize and filter URLs
-                    normalized = normalize_url(base_url, url)
-                    if normalized and is_valid_url(normalized):
-                        # Track URLs with parameters
-                        if "?" in normalized:
-                            path = urlparse(normalized).path
-                            base = path.split("/")[-1] if "/" in path else path
-                            if base:
-                                if base not in extracted_params:
-                                    extracted_params[base] = []
-                                if normalized not in extracted_params[base]:
-                                    extracted_params[base].append(normalized)
+        # Find all links in a tags
+        for a_tag in soup.find_all("a", href=True):
+            href = a_tag.get("href", "")
+            url = normalize_url(base_url, href)
+            if url and url not in discovered_urls:
+                discovered_urls.append(url)
 
-                        # Special handling for JavaScript files
-                        if normalized.lower().endswith(".js"):
-                            js_files.add(normalized)
+                # Check for URL parameters
+                if "?" in url:
+                    path = urlparse(url).path.strip("/")
+                    endpoint = path.split("/")[-1] if path else "root"
 
-                        # Add to discovered URLs
-                        urls.add(normalized)
+                    # Initialize the dictionary entry if it doesn't exist
+                    if endpoint not in parameters_dict:
+                        parameters_dict[endpoint] = []
 
-        # Look for URLs in JavaScript
-        for script in soup.find_all("script"):
-            if script.string:
-                # Extract URLs from inline JavaScript
-                js_urls = re.findall(
-                    r'(?:url|href|src):\s*[\'"`]([^\'"`,;{}<>]+)[\'"`]',
-                    script.string,
-                )
-                for url in js_urls:
-                    normalized = normalize_url(base_url, url)
-                    if normalized and is_valid_url(normalized):
-                        urls.add(normalized)
+                    # Add the URL to the parameters dictionary
+                    parameters_dict[endpoint].append(url)
 
-                # Extract API endpoints from JavaScript
-                api_endpoints = re.findall(
-                    r'[\'"`](/api/[^\'"`,;{}<>]+)[\'"`]', script.string
-                )
-                for endpoint in api_endpoints:
-                    normalized = normalize_url(base_url, endpoint)
-                    if normalized:
-                        js_endpoints.add(normalized)
-                        urls.add(normalized)
+        # Find links in iframe sources
+        for iframe in soup.find_all("iframe", src=True):
+            src = iframe.get("src", "")
+            iframe_url = normalize_url(base_url, src)
+            if iframe_url and iframe_url not in discovered_urls:
+                discovered_urls.append(iframe_url)
 
-    except Exception:
-        # Log error in the calling code
+        # Find JavaScript files
+        for script in soup.find_all("script", src=True):
+            src = script.get("src", "")
+            js_url = normalize_url(base_url, src)
+            if js_url:
+                if js_url.endswith(".js"):
+                    js_files_set.add(js_url)
+                if js_url not in discovered_urls:
+                    discovered_urls.append(js_url)
+
+        # Find CSS files
+        for css in soup.find_all("link", href=True):
+            if css.get("rel") and "stylesheet" in css.get("rel"):
+                href = css.get("href", "")
+                css_url = normalize_url(base_url, href)
+                if css_url and css_url not in discovered_urls:
+                    discovered_urls.append(css_url)
+
+        # Find image sources
+        for img in soup.find_all("img", src=True):
+            src = img.get("src", "")
+            img_url = normalize_url(base_url, src)
+            if img_url and img_url not in discovered_urls:
+                discovered_urls.append(img_url)
+
+        # Look for URLs in meta tags (e.g., OpenGraph)
+        for meta in soup.find_all("meta", content=True):
+            if meta.get("property") in ["og:url", "og:image", "og:video"]:
+                content = meta.get("content", "")
+                meta_url = normalize_url(base_url, content)
+                if meta_url and meta_url not in discovered_urls:
+                    discovered_urls.append(meta_url)
+
+        # Look for URLs in data attributes
+        for tag in soup.find_all(attrs={"data-src": True}):
+            data_src = tag.get("data-src", "")
+            data_url = normalize_url(base_url, data_src)
+            if data_url and data_url not in discovered_urls:
+                discovered_urls.append(data_url)
+
+        # Look for JavaScript endpoints in the HTML
+        js_patterns = [
+            r"api/v[0-9]+/[a-zA-Z0-9_/-]+",
+            r'fetch\(["\']([^"\']+)["\']',
+            r'axios\.[a-z]+\(["\']([^"\']+)["\']',
+            r'url:\s*["\']([^"\']+)["\']',
+            r'src=["\']((?:http|https)://[^"\']+)["\']',  # Additional pattern for src attributes
+            r'href=["\']((?:http|https)://[^"\']+)["\']',  # Additional pattern for href attributes
+        ]
+
+        for pattern in js_patterns:
+            endpoints = re.findall(pattern, html_content)
+            for endpoint in endpoints:
+                if isinstance(endpoint, tuple):
+                    endpoint = endpoint[
+                        0
+                    ]  # Extract first group if capturing groups are used
+                endpoint_url = normalize_url(base_url, endpoint)
+                if endpoint_url and endpoint_url not in js_endpoints_set:
+                    if (
+                        "/api/" in endpoint_url.lower()
+                        or "endpoint" in endpoint_url.lower()
+                    ):
+                        js_endpoints_set.add(endpoint_url)
+                    if endpoint_url not in discovered_urls:
+                        discovered_urls.append(endpoint_url)
+
+    except Exception as e:
+        # Error handling happens in caller
         pass
 
-    return urls
+    return discovered_urls
+
+
+def get_file_type(url: str) -> Optional[str]:
+    """
+    Determine the file type from a URL extension.
+    """
+    if not url:
+        return None
+
+    try:
+        # Extract file extension
+        path = urlparse(url).path.lower()
+        extension = path.split(".")[-1] if "." in path else None
+
+        if not extension:
+            return None
+
+        # Map extension to file type
+        extension_map = {
+            "jpg": "image",
+            "jpeg": "image",
+            "png": "image",
+            "gif": "image",
+            "bmp": "image",
+            "svg": "image",
+            "webp": "image",
+            "ico": "image",
+            "mp4": "video",
+            "webm": "video",
+            "avi": "video",
+            "mov": "video",
+            "mp3": "audio",
+            "wav": "audio",
+            "ogg": "audio",
+            "flac": "audio",
+            "pdf": "document",
+            "doc": "document",
+            "docx": "document",
+            "xls": "document",
+            "xlsx": "document",
+            "ppt": "document",
+            "pptx": "document",
+            "txt": "document",
+            "zip": "archive",
+            "tar": "archive",
+            "gz": "archive",
+            "rar": "archive",
+            "js": "code",
+            "css": "code",
+            "html": "code",
+            "xml": "code",
+            "json": "code",
+            "exe": "executable",
+            "dll": "executable",
+            "so": "executable",
+            "apk": "executable",
+        }
+
+        return extension_map.get(extension)
+
+    except Exception:
+        return None

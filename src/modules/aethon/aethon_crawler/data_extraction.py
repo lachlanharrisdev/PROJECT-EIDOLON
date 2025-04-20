@@ -65,27 +65,49 @@ def extract_data(
 
         # Extract subdomains if dns option is enabled
         if config["dns"]:
-            extract_subdomains(content, domain, extracted["subdomains"])
+            extract_subdomains(url, content, domain, extracted["subdomains"])
 
     except Exception:
         # Logger will be handled in the caller
         pass
 
 
-def extract_subdomains(content: str, domain: str, subdomain_set: set) -> None:
+def extract_subdomains(url: str, content: str, domain: str, subdomain_set: set) -> None:
     """
-    Extract subdomains from content.
+    Extract subdomains from content and the current URL.
     """
     if not domain:
         return
 
     try:
-        subdomain_pattern = f"([a-zA-Z0-9]{{1,63}}\.){domain}"
-        subdomains = re.findall(subdomain_pattern, content)
-        for subdomain in subdomains:
-            # Clean up the subdomain string
-            clean_subdomain = subdomain.rstrip(".")
-            if clean_subdomain != domain:
-                subdomain_set.add(clean_subdomain)
+        # First, check the current URL for a subdomain
+        from urllib.parse import urlparse
+
+        parsed_url = urlparse(url)
+        hostname = parsed_url.netloc
+
+        # Add the current hostname if it's a subdomain
+        if hostname.endswith(domain) and hostname != domain:
+            subdomain_set.add(hostname)
+
+        # Process the base domain to create a proper regex pattern
+        # Escape dots to match literal dots in regex
+        escaped_domain = domain.replace(".", r"\.")
+        # Pattern to match subdomains: word chars + dots + base domain
+        pattern = (
+            r"((?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+)" + escaped_domain
+        )
+
+        # Find all matches in the content
+        matches = re.findall(pattern, content)
+
+        for match in matches:
+            if match:
+                # Construct the full subdomain
+                full_subdomain = match + domain
+                # Avoid adding the main domain as a subdomain
+                if full_subdomain != domain and full_subdomain not in subdomain_set:
+                    subdomain_set.add(full_subdomain)
     except Exception:
+        # Silently continue - errors handled in caller
         pass

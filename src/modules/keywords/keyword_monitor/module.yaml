@@ -1,4 +1,7 @@
-name: 'keyword_monitor'
+meta:
+  name: 'keyword_monitor'
+  description: 'Monitors news sources for political keywords and entities'
+  version: '0.1.0'
 alias: 'keyword-monitor'
 creator: 'Project Eidolon Team'
 runtime:
@@ -6,8 +9,6 @@ runtime:
   tests:
     - 'tests/test_keyword_monitor.py'
 repository: 'https://github.com/lachlanharrisdev/PROJECT-EIDOLON'
-description: 'Monitors news sources for political keywords and entities'
-version: '0.1.0'
 requirements:
   - name: 'requests'
     version: '2.28.1'
