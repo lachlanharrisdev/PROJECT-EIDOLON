@@ -3,7 +3,7 @@ import asyncio
 from unittest.mock import Mock
 
 from core.modules.util import LogUtil
-from modules.keyword_monitor.main import KeywordMonitor
+from ..main import KeywordMonitor
 
 
 @pytest.fixture
