@@ -173,6 +173,10 @@ class PipelineLoader:
                     f"Module with ID '{module['id']}' mapped to name '{module['name']}'"
                 )
 
+            if "config" in module and isinstance(module["config"], dict):
+                for key, value in module["config"].items():
+                    module["config"][key] = value
+
             # Handle 'input' field and convert to input_mappings with qualified names
             if "input" in module and isinstance(module["input"], dict):
                 # Create input_mappings if not present

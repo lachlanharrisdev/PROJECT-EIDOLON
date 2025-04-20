@@ -9,8 +9,7 @@ from core.modules.util.messagebus import MessageBus
 
 class TemplateModule(ModuleCore):
     """
-    Template module that demonstrates the use of the enhanced ModuleCore functionality.
-    This module processes input data and publishes results to the message bus.
+    Template module that demonstrates key module functionality.
     """
 
     def _initialize_module(self) -> None:
@@ -21,40 +20,9 @@ class TemplateModule(ModuleCore):
         self.keywords: List[str] = []
         self.processed_keywords: Dict[str, int] = {}
 
-    async def _before_run(self, message_bus: MessageBus) -> None:
-        """
-        Execute setup code before the main module loop starts.
-        """
-        self._logger.info(f"Setting up {self.meta.name} module...")
-        # Any pre-run setup can go here
-
-    async def _run_iteration(self, message_bus: MessageBus) -> None:
-        """
-        A single iteration of the module's main logic.
-        This is called periodically by the ModuleCore's run method.
-        """
-        if self.keywords:
-            self._process_keywords()
-
-            if self.processed_keywords:
-                self._logger.info(
-                    f"Publishing {len(self.processed_keywords)} processed keywords"
-                )
-                await message_bus.publish("processed_keywords", self.processed_keywords)
-
-    def _process_keywords(self) -> None:
-        """
-        Process the keywords and assign priority scores.
-        This is an example of module-specific business logic.
-        """
-        self.processed_keywords = {}
-
-        for keyword in self.keywords:
-            # Simple example: score is based on length
-            score = len(keyword)
-            self.processed_keywords[keyword] = score
-
-        self._logger.debug(f"Processed {len(self.keywords)} keywords")
+        # Read any arguments from the pipeline
+        self.module_args = self.get_arguments()
+        self.log(f"Initialized with module arguments: {self.module_args}")
 
     def _process_input(self, data: Any) -> None:
         """
@@ -63,21 +31,47 @@ class TemplateModule(ModuleCore):
         """
         if isinstance(data, list) and all(isinstance(item, str) for item in data):
             self.keywords = data
-            self._logger.info(f"Received {len(data)} keywords")
+            self._process_keywords()
         else:
-            self._logger.warning(f"Received data of unexpected type: {type(data)}")
+            self.log(f"Received unexpected data type: {type(data)}", "warning")
 
-    def _get_cycle_time(self) -> float:
+    async def _run_iteration(self, message_bus: MessageBus) -> None:
         """
-        Get the time between execution cycles.
+        Run one iteration of the module's main logic.
         """
-        return 10.0  # Run every 10 seconds
+        # Process any pending keywords and publish results
+        if self.keywords and not self.processed_keywords:
+            self._process_keywords()
 
-    def _get_default_output_topic(self) -> str:
+        # Publish processed keywords if available
+        if self.processed_keywords:
+            self.log(
+                f"Publishing {len(self.processed_keywords)} processed keywords", "info"
+            )
+            await message_bus.publish("processed_keywords", self.processed_keywords)
+
+    def _process_keywords(self) -> None:
         """
-        Get the default output topic for this module.
+        Process the keywords and assign priority scores.
+        Uses weighting from module arguments if available.
         """
-        return "processed_keywords"
+        self.processed_keywords = {}
+
+        # Get argument values with defaults if not provided
+        base_score = self.get_argument("base_score", 10)
+        length_weight = self.get_argument("length_weight", 0.5)
+
+        self.log(
+            f"Processing keywords with base_score={base_score}, length_weight={length_weight}",
+            "debug",
+        )
+
+        for keyword in self.keywords:
+            # Simple algorithm: base score + weighted score based on word length
+            score = base_score + (len(keyword) * length_weight)
+            self.processed_keywords[keyword] = int(score)
+
+        self.log(f"Processed {len(self.processed_keywords)} keywords", "debug")
 
     def _handle_custom_command(self, command: chr) -> Device:
         """
@@ -86,7 +80,6 @@ class TemplateModule(ModuleCore):
         if command == "C":
             # Example custom command to clear keywords
             self.keywords = []
-            self._logger.info("Keywords cleared")
             return Device(
                 name=self.meta.name, firmware=0xB0000, protocol="CUSTOM", errors=[]
             )

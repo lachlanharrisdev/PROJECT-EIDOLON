@@ -75,6 +75,9 @@ class ModuleEngine:
         self._logger.info(f"Loading modules from pipeline '{pipeline.name}'")
         self.__reload_modules(pipeline=pipeline)
 
+        # Set module arguments from pipeline
+        self.__set_module_arguments(pipeline)
+
         # Connect modules
         self.__connect_modules()
 
@@ -236,6 +239,54 @@ class ModuleEngine:
                 )
 
         self._logger.debug(f"Final input mappings: {self.input_mappings}")
+
+    def __set_module_arguments(self, pipeline):
+        """
+        Pass arguments to modules based on the pipeline config (module["config"][<key>] = <value>).
+
+        Args:
+            pipeline: The pipeline configuration object containing module configs
+        """
+        for module in self.use_case.modules:
+            module_name = (
+                module.meta.name
+                if hasattr(module, "meta") and module.meta
+                else str(module)
+            )
+            self._logger.debug(f"Setting arguments for module: {module_name}")
+
+            # Get module configuration from module.yaml
+            config = module.get_config()
+
+            # Log if config section is found in module.yaml (just for information)
+            if "config" in config and config["config"]:
+                for key, value in config["config"].items():
+                    self._logger.debug(
+                        f"Module '{module_name}' has config '{key}': '{value}' in module.yaml"
+                    )
+
+            # Set pipeline-provided arguments on the module
+            try:
+                # Find the corresponding module config in the pipeline
+                pipeline_args = None
+                for pipeline_module in pipeline.modules:
+                    if pipeline_module.name == module_name:
+                        pipeline_args = pipeline_module.config
+                        break
+
+                if pipeline_args:
+                    self._logger.info(
+                        f"Setting arguments for module '{module_name}': {pipeline_args}"
+                    )
+                    module.set_module_arguments(pipeline_args)
+                else:
+                    self._logger.debug(
+                        f"No arguments found for module '{module_name}' in pipeline"
+                    )
+            except Exception as e:
+                self._logger.error(
+                    f"Error applying arguments to module '{module_name}': {e}"
+                )
 
     def __connect_modules(self):
         """Connect modules based on their inputs and outputs with type validation."""
