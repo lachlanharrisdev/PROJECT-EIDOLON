@@ -18,132 +18,156 @@ from core.modules.util import FileSystem
 class PipelineLoader:
     def __init__(self, logger: logging.Logger):
         self._logger = logger
+        self._pipeline_dir = FileSystem.get_pipelines_directory()
 
     def load_pipeline(self, pipeline_name: str) -> Optional[Pipeline]:
         """
-        Load a pipeline configuration by name.
-        If a file extension is provided, it will be used as-is, otherwise .yaml is appended.
+        Load a pipeline configuration from the specified YAML file.
 
-        :param pipeline_name: The name of the pipeline to load (with or without .yaml extension)
-        :return: A Pipeline object if successful, None otherwise
+        Args:
+            pipeline_name: Name of the pipeline (without .yaml extension)
+
+        Returns:
+            Pipeline object or None if loading fails
         """
-        pipeline_path = self._get_pipeline_path(pipeline_name)
-        if not pipeline_path:
-            return None
+        pipeline_path = os.path.join(self._pipeline_dir, f"{pipeline_name}.yaml")
+        self._logger.debug(f"Loading pipeline from: {pipeline_path}")
 
-        return self._parse_pipeline_file(pipeline_path)
-
-    def _get_pipeline_path(self, pipeline_name: str) -> Optional[str]:
-        """
-        Determine the full path to a pipeline configuration file.
-
-        :param pipeline_name: The name of the pipeline (with or without extension)
-        :return: The absolute path to the pipeline file, or None if it doesn't exist
-        """
-        pipelines_dir = FileSystem.get_pipelines_directory()
-
-        # If no extension is provided, append .yaml
-        if not any(pipeline_name.endswith(ext) for ext in [".yaml", ".yml"]):
-            pipeline_file = f"{pipeline_name}.yaml"
-        else:
-            pipeline_file = pipeline_name
-
-        pipeline_path = os.path.join(pipelines_dir, pipeline_file)
-
-        if not os.path.isfile(pipeline_path):
-            self._logger.error(f"Pipeline file not found: {pipeline_path}")
-            return None
-
-        return pipeline_path
-
-    def _parse_pipeline_file(self, pipeline_path: str) -> Optional[Pipeline]:
-        """
-        Parse a pipeline YAML file and convert it to a Pipeline object.
-
-        :param pipeline_path: The absolute path to the pipeline YAML file
-        :return: A Pipeline object if successful, None otherwise
-        """
         try:
-            with open(pipeline_path, "r") as file:
-                raw_data = yaml.safe_load(file)
-
-            if not raw_data:
-                self._logger.error(f"Empty or invalid pipeline file: {pipeline_path}")
+            # Check if file exists
+            if not os.path.exists(pipeline_path):
+                self._logger.error(f"Pipeline file not found: {pipeline_path}")
                 return None
 
-            # Extract pipeline data from the wrapping pipeline object
-            if "pipeline" not in raw_data:
-                self._logger.error(
-                    f"Pipeline file missing required 'pipeline' wrapper: {pipeline_path}"
+            # Load YAML file
+            with open(pipeline_path, "r", encoding="utf-8") as file:
+                pipeline_data = yaml.safe_load(file)
+
+            # Check if pipeline data is nested under a 'pipeline' key and extract it if needed
+            if isinstance(pipeline_data, dict) and "pipeline" in pipeline_data:
+                self._logger.debug(
+                    "Pipeline data is nested under 'pipeline' key, extracting..."
                 )
-                return None
+                pipeline_data = pipeline_data["pipeline"]
 
-            pipeline_data = raw_data["pipeline"]
-
-            # Ensure pipeline_data has required fields
-            if "name" not in pipeline_data:
-                self._logger.error(
-                    f"Pipeline file missing required 'name' field: {pipeline_path}"
-                )
-                return None
-
-            if "modules" not in pipeline_data or not isinstance(
-                pipeline_data["modules"], list
-            ):
-                self._logger.error(
-                    f"Pipeline file missing required 'modules' list: {pipeline_path}"
-                )
-                return None
-
-            # Process modules to normalize field formats
+            # Normalize pipeline modules structure if needed
             self._normalize_pipeline_modules(pipeline_data)
 
-            # Normalize execution configuration if present
-            if "execution" in pipeline_data and isinstance(
-                pipeline_data["execution"], dict
-            ):
-                if "timeout" in pipeline_data["execution"] and isinstance(
-                    pipeline_data["execution"]["timeout"], str
-                ):
-                    timeout = pipeline_data["execution"]["timeout"]
-                    self._logger.debug(f"Processing execution timeout: {timeout}")
+            # Convert to Pipeline object using dacite
+            try:
+                pipeline = from_dict(
+                    data_class=Pipeline,
+                    data=pipeline_data,
+                    config=self._get_dacite_config(),
+                )
+                self._logger.debug(
+                    f"Successfully loaded pipeline '{pipeline.name}' with {len(pipeline.modules)} modules"
+                )
+                return pipeline
+            except ForwardReferenceError as e:
+                self._logger.error(
+                    f"Forward reference error in pipeline '{pipeline_name}': {e}"
+                )
+            except UnexpectedDataError as e:
+                self._logger.error(
+                    f"Unexpected data in pipeline '{pipeline_name}': {e}"
+                )
+            except WrongTypeError as e:
+                self._logger.error(f"Wrong type in pipeline '{pipeline_name}': {e}")
+            except MissingValueError as e:
+                self._logger.error(
+                    f"Missing required value in pipeline '{pipeline_name}': {e}"
+                )
+            except Exception as e:
+                self._logger.error(f"Failed to parse pipeline '{pipeline_name}': {e}")
 
-                if "max_threads" in pipeline_data["execution"] and isinstance(
-                    pipeline_data["execution"]["max_threads"], int
-                ):
-                    max_threads = pipeline_data["execution"]["max_threads"]
-                    self._logger.debug(
-                        f"Processing execution max_threads: {max_threads}"
-                    )
-
-            # Convert to Pipeline object
-            pipeline = from_dict(data_class=Pipeline, data=pipeline_data)
-            self._logger.info(
-                f"Successfully loaded pipeline '{pipeline.name}' with {len(pipeline.modules)} modules"
-            )
-            return pipeline
-
-        except FileNotFoundError:
-            self._logger.error(f"Pipeline file not found: {pipeline_path}")
         except yaml.YAMLError as e:
-            self._logger.error(
-                f"Error parsing YAML in pipeline file {pipeline_path}: {e}"
-            )
-        except (
-            ForwardReferenceError,
-            UnexpectedDataError,
-            WrongTypeError,
-            MissingValueError,
-        ) as e:
-            self._logger.error(
-                f"Error converting pipeline data to Pipeline object: {e}"
-            )
+            self._logger.error(f"Invalid YAML in pipeline '{pipeline_name}': {e}")
         except Exception as e:
-            self._logger.error(
-                f"Unexpected error loading pipeline file {pipeline_path}: {e}"
-            )
+            self._logger.error(f"Error loading pipeline '{pipeline_name}': {e}")
 
         return None
+
+    def list_pipelines(self) -> List[Dict]:
+        """
+        List all available pipelines with basic information.
+
+        Returns:
+            List of dictionaries with pipeline info
+        """
+        result = []
+        pipelines_dir = self._pipeline_dir
+        self._logger.debug(f"Listing pipelines from directory: {pipelines_dir}")
+
+        try:
+            # Get all YAML files in the pipeline directory
+            yaml_files = [
+                f
+                for f in os.listdir(pipelines_dir)
+                if os.path.isfile(os.path.join(pipelines_dir, f))
+                and f.endswith(".yaml")
+            ]
+
+            # Load basic information from each pipeline file
+            for yaml_file in yaml_files:
+                pipeline_path = os.path.join(pipelines_dir, yaml_file)
+                pipeline_name = os.path.splitext(yaml_file)[0]
+
+                try:
+                    with open(pipeline_path, "r", encoding="utf-8") as file:
+                        pipeline_data = yaml.safe_load(file)
+
+                    # Extract basic information
+                    info = {
+                        "name": pipeline_name,
+                        "display_name": pipeline_data.get("name", pipeline_name),
+                        "description": pipeline_data.get("description", ""),
+                        "modules_count": len(pipeline_data.get("modules", [])),
+                        "filename": yaml_file,
+                    }
+                    result.append(info)
+                except Exception as e:
+                    self._logger.warning(
+                        f"Error reading pipeline '{pipeline_name}': {e}"
+                    )
+                    # Include with minimal information
+                    result.append(
+                        {
+                            "name": pipeline_name,
+                            "display_name": pipeline_name,
+                            "description": "Error loading pipeline",
+                            "modules_count": 0,
+                            "filename": yaml_file,
+                            "error": str(e),
+                        }
+                    )
+        except Exception as e:
+            self._logger.error(f"Error listing pipelines: {e}")
+
+        return result
+
+    def _get_dacite_config(self):
+        """
+        Create configuration for dacite to handle optional fields.
+
+        Returns:
+            Dacite configuration object
+        """
+        # Import Config class from dacite
+        from dacite.config import Config
+        from typing import Dict, List, Any, Union
+
+        # This configuration tells dacite how to handle optional fields
+        # Using the Config class instead of a dict to ensure all required attributes are present
+        return Config(
+            check_types=True,
+            strict=True,  # Enforce strict type checking
+            cast=[str, int, float, bool],  # Basic type casting
+            type_hooks={
+                List: lambda x: [] if x is None else x,
+                Dict: lambda x: {} if x is None else x,
+            },
+        )
 
     def _normalize_pipeline_modules(self, pipeline_data: Dict) -> None:
         """

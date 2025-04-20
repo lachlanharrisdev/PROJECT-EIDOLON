@@ -1,0 +1,40 @@
+name: 'aethon_crawler'
+alias: 'aethon-crawler'
+creator: 'Eidolon Team'
+runtime:
+  main: 'main.py'
+  tests:
+    - 'tests/test_aethon_crawler.py'
+repository: 'https://github.com/lachlanharrisdev/PROJECT-EIDOLON'
+description: 'A lightweight, high-performance web crawler with console reporting'
+version: '0.2.0'
+requirements:
+  - name: 'requests'
+    version: '2.31.0'
+  - name: 'beautifulsoup4'
+    version: '4.12.2'
+  - name: 'lxml'
+    version: '4.9.3'
+  - name: 'urllib3'
+    version: '2.0.7'
+  - name: 'tld'
+    version: '0.13'
+  - name: 'aiohttp'
+    version: '3.9.1'
+inputs:
+  - name: "crawl_config"
+    type: "Dict[str, Any]"
+    description: "Configuration for crawling (url, levels, delay, etc.)"
+  - name: "additional_seeds"
+    type: "List[str]"
+    description: "Additional seed URLs to crawl"
+outputs:
+  - name: "crawled_urls"
+    type: "List[str]"
+    description: "List of all crawled URLs"
+  - name: "extracted_data"
+    type: "Dict[str, List]"
+    description: "Extracted data from crawled pages (emails, social media, JS files, etc.)"
+  - name: "crawl_status"
+    type: "Dict[str, Any]"
+    description: "Status updates about the crawling process"

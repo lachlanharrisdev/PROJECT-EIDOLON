@@ -46,7 +46,7 @@ class ModuleUseCase:
                     )
             else:
                 self._logger.error(
-                    f"Expected to import -> `{current_module_name}` but got -> `{latest_module_name}`"
+                    f"Module import mismatch: expected `{current_module_name}` but got `{latest_module_name}`"
                 )
 
             # Clear modules from the registry when we're done with them
@@ -70,7 +70,7 @@ class ModuleUseCase:
                 mod.lower() for mod in allowed_modules
             }:
                 self._logger.debug(
-                    f"Skipping module {module_name} (in {directory}) as it's not in the pipeline"
+                    f"Skipping module {module_name} (not in pipeline configuration)"
                 )
                 continue
 
@@ -95,7 +95,7 @@ class ModuleUseCase:
                         f"Failed to import module {import_target_module}: {e}"
                     )
             else:
-                self._logger.debug(f"No valid module found in {directory}")
+                self._logger.debug(f"No valid module entry point found in {directory}")
 
     def discover_modules(
         self, reload: bool, pipeline: Optional[Pipeline] = None, thread_pool=None
@@ -124,8 +124,8 @@ class ModuleUseCase:
             allowed_modules = None
             if pipeline:
                 allowed_modules = {module.name for module in pipeline.modules}
-                self._logger.info(
-                    f"Loading only modules specified in pipeline '{pipeline.name}': {', '.join(allowed_modules)}"
+                self._logger.debug(
+                    f"Loading pipeline '{pipeline.name}' modules: {', '.join(allowed_modules)}"
                 )
 
             self.__search_for_modules_in(modules_path, package_name, allowed_modules)

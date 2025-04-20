@@ -62,7 +62,7 @@ class ModuleEngine:
             and hasattr(pipeline.execution, "max_threads")
             else 4
         )
-        self._logger.info(f"Initializing thread pool with {max_threads} workers")
+        self._logger.debug(f"Initializing thread pool with {max_threads} workers")
         self.thread_pool = ThreadPoolExecutor(max_workers=max_threads)
 
         # Update the thread_pool in use_case
@@ -96,7 +96,7 @@ class ModuleEngine:
 
             # Wait for all module tasks to complete during shutdown
             if self.module_tasks:
-                self._logger.info("Waiting for module tasks to complete...")
+                self._logger.debug("Waiting for module tasks to complete...")
                 try:
                     await asyncio.wait_for(
                         asyncio.gather(*self.module_tasks, return_exceptions=True),
@@ -104,17 +104,17 @@ class ModuleEngine:
                     )
                 except asyncio.TimeoutError:
                     self._logger.warning(
-                        "Timeout while waiting for module tasks to complete. Some tasks may not have finished."
+                        "Timeout waiting for module tasks to complete - some tasks may be terminated"
                     )
 
             # Shutdown the thread pool
             if self.thread_pool:
-                self._logger.info("Shutting down thread pool")
+                self._logger.debug("Shutting down thread pool")
                 self.thread_pool.shutdown()
 
             return True
         except Exception as e:
-            self._logger.error(f"Error during engine shutdown: {e}")
+            self._logger.critical(f"Critical error during engine shutdown: {e}")
             return False
 
     def __reload_modules(self, modules=None, pipeline=None):
@@ -144,29 +144,29 @@ class ModuleEngine:
         from core.modules.usecase.utilities import ModuleUtility
 
         modules_directory = FileSystem.get_modules_directory()
-        
+
         # Use the centralized function to get all modules
         all_module_paths = ModuleUtility.find_all_modules(modules_directory)
-        
+
         # Determine which modules to check based on input parameters
         module_paths_to_check = []
         if modules:
             # Filter to only specified module names
             module_paths_to_check = [
-                path for path in all_module_paths
-                if os.path.basename(path) in modules
+                path for path in all_module_paths if os.path.basename(path) in modules
             ]
         elif pipeline:
             # Filter to only modules in the pipeline
             pipeline_module_names = {module.name for module in pipeline.modules}
             module_paths_to_check = [
-                path for path in all_module_paths
+                path
+                for path in all_module_paths
                 if os.path.basename(path) in pipeline_module_names
             ]
         else:
             # Check all modules
             module_paths_to_check = all_module_paths
-        
+
         # Verify each module
         for module_path in module_paths_to_check:
             full_path = os.path.join(modules_directory, module_path)
@@ -319,7 +319,7 @@ class ModuleEngine:
                     # Register with message bus
                     topic = output_def.name
                     self.message_bus.register_output(topic, output_def, module_name)
-                    self._logger.info(
+                    self._logger.debug(
                         f"Module '{module_name}' set to PUBLISH topic: '{topic}' with type '{output_def.type_name}'"
                     )
 
@@ -386,11 +386,11 @@ class ModuleEngine:
                     # Log with clear indication of mapping, if applicable
                     if explicit_source and explicit_source != input_def.name:
                         source_info = f"'{source_module}." if source_module else ""
-                        self._logger.info(
+                        self._logger.debug(
                             f"Module '{module_name}' subscribed to MAPPED INPUT: '{input_def.name}' → topic: '{topic}' from {source_info}{topic}' with type '{input_def.type_name}'"
                         )
                     else:
-                        self._logger.info(
+                        self._logger.debug(
                             f"Module '{module_name}' subscribed to INPUT topic: '{topic}' with type '{input_def.type_name}'"
                         )
 
@@ -405,8 +405,20 @@ class ModuleEngine:
                 else str(module)
             )
             try:
-                # Create and store the task
+                # Explicitly log that we're about to start this module
                 self._logger.info(f"Starting module: {module_name}")
+
+                # Ensure module args are available during initialization
+                if hasattr(module, "args") and module.args:
+                    self._logger.info(
+                        f"Module {module_name} has pipeline args: {module.args}"
+                    )
+                else:
+                    self._logger.warning(
+                        f"Module {module_name} doesn't have pipeline args set!"
+                    )
+
+                # Create and store the task
                 task = asyncio.create_task(
                     module.run(self.message_bus), name=f"module_{module_name}"
                 )

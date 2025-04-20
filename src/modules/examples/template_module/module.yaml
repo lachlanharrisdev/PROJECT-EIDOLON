@@ -1,4 +1,7 @@
-name: 'template_module'
+meta:
+  name: 'template_module'
+  description: 'This is a sample module description'
+  version: '0.0.1'
 alias: 'template-module'
 creator: 'John Doe'
 runtime:
@@ -6,8 +9,6 @@ runtime:
   tests:
     - 'tests/test_template.py'
 repository: 'https://github.com/lachlanharrisdev/PROJECT-EIDOLON'
-description: 'This is a sample module description'
-version: '0.0.1'
 requirements:
   - name: 'PyYAML'
     version: '6.0.2'

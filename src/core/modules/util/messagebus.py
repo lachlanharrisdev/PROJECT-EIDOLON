@@ -44,7 +44,7 @@ class MessageBus:
             if existing_source != source_module:
                 self._logger.warning(
                     f"Topic '{topic}' already registered by module '{existing_source}', "
-                    f"but is also provided by '{source_module}'"
+                    f"but is also provided by '{source_module}' - this may cause conflicts"
                 )
 
         python_type = output_def.get_python_type()
@@ -75,9 +75,10 @@ class MessageBus:
                 and registered_type != Any
                 and expected_type != registered_type
             ):
-                self._logger.warning(
+                self._logger.error(
                     f"Type mismatch for topic '{topic}': Module '{target_module}' expects "
-                    f"'{input_def.type_name}' but topic provides '{registered_type.__name__}'"
+                    f"'{input_def.type_name}' but topic provides '{registered_type.__name__}' - "
+                    f"this will likely cause errors during execution"
                 )
         else:
             self._logger.warning(
@@ -114,7 +115,7 @@ class MessageBus:
     async def publish(self, topic: str, data: Any) -> None:
         """Publish data to a topic with type validation asynchronously."""
         if topic not in self.subscribers:
-            self._logger.warning(f"Publishing to topic '{topic}' with no subscribers")
+            self._logger.debug(f"Publishing to topic '{topic}' with no subscribers")
             return
 
         # Validate data type if expected type is defined
@@ -124,7 +125,8 @@ class MessageBus:
                 if not self._is_instance_of_type(data, expected_type):
                     self._logger.error(
                         f"Type validation failed: Data published to topic '{topic}' is of type {type(data).__name__}, "
-                        f"expected {getattr(expected_type, '__name__', str(expected_type))}"
+                        f"expected {getattr(expected_type, '__name__', str(expected_type))} - "
+                        f"subscribers may not be able to process this data"
                     )
                     # Don't raise to avoid crashing the system, but log the error
                     return
@@ -136,7 +138,7 @@ class MessageBus:
 
         # Warn if data is empty
         if data is None or (isinstance(data, (list, dict, str)) and len(data) == 0):
-            self._logger.warning(f"Warning: Empty data published to topic '{topic}'")
+            self._logger.debug(f"Empty data published to topic '{topic}'")
 
         # Create a list to collect coroutines for awaiting
         tasks = []
@@ -170,10 +172,11 @@ class MessageBus:
         if expected_type:
             if topic in self.output_types and self.output_types[topic] != expected_type:
                 if self.output_types[topic] != Any and expected_type != Any:
-                    self._logger.warning(
+                    self._logger.error(
                         f"Type mismatch for topic '{topic}': Subscriber expects "
                         f"{getattr(expected_type, '__name__', str(expected_type))} but topic was registered with "
-                        f"{getattr(self.output_types[topic], '__name__', str(self.output_types[topic]))}"
+                        f"{getattr(self.output_types[topic], '__name__', str(self.output_types[topic]))} - "
+                        f"this will likely cause errors during runtime"
                     )
             else:
                 self.output_types[topic] = expected_type

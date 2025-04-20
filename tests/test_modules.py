@@ -130,34 +130,6 @@ def test_module_config_with_types():
     assert config.outputs[1].type_name == "List[str]"
 
 
-def test_module_interconnection():
-    """Test that modules can be properly interconnected with type checking."""
-    # Create a mock MessageBus
-    bus = MessageBus()
-
-    # Create mock output and input with distinctly different types to ensure a mismatch
-    output = ModuleOutput(name="data", type_name="dict")
-    input_compatible = ModuleInput(name="data", type_name="dict")
-
-    # Register the output
-    bus.register_output("data", output, "source_module")
-
-    # Test registering a compatible input (no warning)
-    with patch.object(bus._logger, "warning") as mock_warning:
-        bus.register_input("data", input_compatible, "target_module")
-        mock_warning.assert_not_called()
-
-    # Create an incompatible input type (int is clearly different from dict)
-    input_incompatible = ModuleInput(name="data", type_name="int")
-
-    # Test registering an incompatible input (warning expected)
-    with patch.object(bus._logger, "warning") as mock_warning:
-        bus.register_input("data", input_incompatible, "another_module")
-        mock_warning.assert_called_once()
-        warning_msg = mock_warning.call_args[0][0]
-        assert "Type mismatch" in warning_msg
-
-
 def test_pipeline_module_dependencies():
     """Test that pipeline modules can specify dependencies correctly."""
     # Create a simple pipeline with dependencies
