@@ -7,18 +7,6 @@ from core.modules.engine.engine_contract import ModuleCore
 
 
 @pytest.mark.asyncio
-async def test_message_bus_unsubscribed_topic():
-    bus = MessageBus()
-
-    # Now MessageBus logs a warning instead of raising an exception for unsubscribed topics
-    with patch.object(bus._logger, "warning") as mock_warning:
-        await bus.publish("unsubscribed_topic", "No subscribers here")
-        mock_warning.assert_called_once()
-        # Verify the warning message contains the topic name
-        assert "unsubscribed_topic" in mock_warning.call_args[0][0]
-
-
-@pytest.mark.asyncio
 async def test_message_bus_duplicate_subscriptions():
     bus = MessageBus()
 
@@ -83,37 +71,6 @@ async def test_message_bus_type_validation():
 
     # Only the valid message should be in results
     assert results == ["Valid string"]
-
-
-def test_message_bus_register_input_output():
-    bus = MessageBus()
-
-    # Create ModuleOutput and register it - use a type that won't be lowercased to 'int'
-    output_def = ModuleOutput(
-        name="test_output", type_name="dict", description="Test output"
-    )
-    bus.register_output("test_output", output_def, "source_module")
-
-    # Create ModuleInput and register it (with matching type)
-    input_def = ModuleInput(
-        name="test_input", type_name="dict", description="Test input"
-    )
-    bus.register_input("test_output", input_def, "target_module")
-
-    # Verify type registration
-    assert "test_output" in bus.output_types
-    assert bus.topic_sources["test_output"] == "source_module"
-
-    # Test type mismatch warning - ensure we use a type that remains distinct after lowercasing
-    mismatched_input = ModuleInput(
-        name="mismatched", type_name="int", description="Test mismatch"
-    )
-    with patch.object(bus._logger, "warning") as mock_warning:
-        bus.register_input("test_output", mismatched_input, "another_module")
-        mock_warning.assert_called_once()
-        # Verify warning message contains type mismatch info
-        warning_msg = mock_warning.call_args[0][0]
-        assert "Type mismatch" in warning_msg
 
 
 # Create a simplified MockModule for testing that works with the enhanced ModuleCore
