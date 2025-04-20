@@ -1,0 +1,55 @@
+name: 'aethon_report'
+alias: 'aethon-report'
+creator: 'Eidolon Team'
+runtime:
+  main: 'main.py'
+  tests:
+    - 'tests/test_aethon_report.py'
+repository: 'https://github.com/lachlanharrisdev/PROJECT-EIDOLON'
+description: 'Report generator for Aethon web crawler data'
+version: '0.1.0'
+requirements:
+  - name: 'jinja2'
+    version: '3.1.2'
+  - name: 'markdown'
+    version: '3.4.3'
+  - name: 'tabulate'
+    version: '0.9.0'
+inputs:
+  - name: "crawled_urls"
+    type: "List[str]"
+    description: "List of all crawled URLs from Aethon crawler"
+  - name: "extracted_data"
+    type: "Dict[str, Any]"
+    description: "Extracted data from crawled pages"
+  - name: "parameters"
+    type: "Dict[str, List[str]]"
+    description: "URLs with parameters (example.com/gallery.php?id=2)"
+  - name: "intel"
+    type: "Dict[str, Any]"
+    description: "Extracted intel (emails, social media accounts, buckets, etc.)"
+  - name: "secret_keys"
+    type: "Dict[str, List[str]]"
+    description: "Extracted secret keys (auth/API keys & hashes)"
+  - name: "js_files"
+    type: "Dict[str, List[str]]"
+    description: "JavaScript files and endpoints found in them"
+  - name: "subdomains"
+    type: "List[str]"
+    description: "Discovered subdomains"
+  - name: "crawl_status"
+    type: "Dict[str, Any]"
+    description: "Status updates about the crawling process"
+  - name: "report_config"
+    type: "Dict[str, Any]"
+    description: "Configuration for report generation (format, output path, etc.)"
+outputs:
+  - name: "report_path"
+    type: "str"
+    description: "Path to the generated report file"
+  - name: "report_summary"
+    type: "Dict[str, Any]"
+    description: "Summary of the generated report data"
+  - name: "completion_status"
+    type: "Dict[str, Any]"
+    description: "Status of report generation process"

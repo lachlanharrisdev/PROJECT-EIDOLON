@@ -1,0 +1,57 @@
+name: 'aethon_crawler'
+alias: 'aethon-crawler'
+creator: 'Eidolon Team'
+runtime:
+  main: 'main.py'
+  tests:
+    - 'tests/test_aethon_crawler.py'
+repository: 'https://github.com/lachlanharrisdev/PROJECT-EIDOLON'
+description: 'A modern, high-performance web crawler that builds upon the Photon project'
+version: '0.1.0'
+requirements:
+  - name: 'requests'
+    version: '2.31.0'
+  - name: 'beautifulsoup4'
+    version: '4.12.2'
+  - name: 'lxml'
+    version: '4.9.3'
+  - name: 'colorama'
+    version: '0.4.6'
+  - name: 'urllib3'
+    version: '2.0.7'
+  - name: 'tld'
+    version: '0.13'
+  - name: 'aiohttp'
+    version: '3.9.1'
+inputs:
+  - name: "crawl_config"
+    type: "Dict[str, Any]"
+    description: "Configuration for crawling (url, levels, delay, etc.)"
+  - name: "additional_seeds"
+    type: "List[str]"
+    description: "Additional seed URLs to crawl"
+outputs:
+  - name: "crawled_urls"
+    type: "List[str]"
+    description: "List of all crawled URLs"
+  - name: "extracted_data"
+    type: "Dict[str, List]"
+    description: "Extracted data from crawled pages (emails, social media, files, etc.)"
+  - name: "parameters"
+    type: "Dict[str, List[str]]"
+    description: "URLs with parameters (example.com/gallery.php?id=2)"
+  - name: "intel"
+    type: "Dict[str, List[str]]"
+    description: "Extracted intel (emails, social media accounts, buckets, etc.)"
+  - name: "secret_keys"
+    type: "Dict[str, List[str]]"
+    description: "Extracted secret keys (auth/API keys & hashes)"
+  - name: "js_files"
+    type: "Dict[str, List[str]]"
+    description: "JavaScript files and endpoints found in them"
+  - name: "subdomains"
+    type: "List[str]"
+    description: "Discovered subdomains"
+  - name: "crawl_status"
+    type: "Dict[str, Any]"
+    description: "Status updates about the crawling process"
