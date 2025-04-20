@@ -140,33 +140,38 @@ class ModuleEngine:
             self._logger.error("Failed to load public key for module verification")
             return
 
-        modules_directory = FileSystem.get_modules_directory()
+        # Import here to avoid circular imports
+        from core.modules.usecase.utilities import ModuleUtility
 
-        # If specific modules are specified, only check those
-        module_dirs_to_check = []
+        modules_directory = FileSystem.get_modules_directory()
+        
+        # Use the centralized function to get all modules
+        all_module_paths = ModuleUtility.find_all_modules(modules_directory)
+        
+        # Determine which modules to check based on input parameters
+        module_paths_to_check = []
         if modules:
-            module_dirs_to_check = [
-                os.path.join(modules_directory, m)
-                for m in modules
-                if os.path.isdir(os.path.join(modules_directory, m))
+            # Filter to only specified module names
+            module_paths_to_check = [
+                path for path in all_module_paths
+                if os.path.basename(path) in modules
             ]
         elif pipeline:
-            module_dirs_to_check = [
-                os.path.join(modules_directory, m.name)
-                for m in pipeline.modules
-                if os.path.isdir(os.path.join(modules_directory, m.name))
+            # Filter to only modules in the pipeline
+            pipeline_module_names = {module.name for module in pipeline.modules}
+            module_paths_to_check = [
+                path for path in all_module_paths
+                if os.path.basename(path) in pipeline_module_names
             ]
         else:
-            # Check all directories in the modules directory
-            module_dirs_to_check = [
-                os.path.join(modules_directory, d)
-                for d in os.listdir(modules_directory)
-                if os.path.isdir(os.path.join(modules_directory, d))
-            ]
-
-        for module_path in module_dirs_to_check:
+            # Check all modules
+            module_paths_to_check = all_module_paths
+        
+        # Verify each module
+        for module_path in module_paths_to_check:
+            full_path = os.path.join(modules_directory, module_path)
             module_name = os.path.basename(module_path)
-            is_verified = verify_module(module_path, public_key)
+            is_verified = verify_module(full_path, public_key)
 
             if is_verified:
                 self._logger.info(f"\033[96mModule {module_name} VERIFIED\033[0m")

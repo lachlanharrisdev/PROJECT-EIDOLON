@@ -61,12 +61,16 @@ class ModuleUseCase:
         allowed_modules: Optional[Set[str]] = None,
     ):
         for directory in modules_path:
+            # For modules in the pipeline, we need to match only the module name,
+            # not the full path including subdirectories
+            module_name = os.path.basename(directory)
+
             # Skip directories not in allowed_modules if specified
-            if allowed_modules is not None and directory.lower() not in {
+            if allowed_modules is not None and module_name.lower() not in {
                 mod.lower() for mod in allowed_modules
             }:
                 self._logger.debug(
-                    f"Skipping module {directory} as it's not in the pipeline"
+                    f"Skipping module {module_name} (in {directory}) as it's not in the pipeline"
                 )
                 continue
 
@@ -74,17 +78,18 @@ class ModuleUseCase:
                 package_name, directory
             )
             if entry_point is not None:
-                module_name, module_ext = os.path.splitext(entry_point)
+                module_file, module_ext = os.path.splitext(entry_point)
                 # Construct the full import path relative to the modules_package
-                relative_path = os.path.relpath(directory, self.modules_package)
-                normalized_path = relative_path.replace(os.sep, ".").strip(".")
-                import_target_module = f"{package_name}.{normalized_path}.{module_name}"
+                import_path = os.path.join(directory, module_file)
+                normalized_path = import_path.replace(os.sep, ".")
+                import_target_module = f"{package_name}.{normalized_path}"
+
                 self._logger.debug(f"Importing module: {import_target_module}")
                 try:
                     module = import_module(import_target_module)
                     self.__check_loaded_module_state(module)
-                    # Pass module alias for verification
-                    module.alias = os.path.basename(directory)
+                    # Pass module basename as alias for verification
+                    module.alias = module_name
                 except ModuleNotFoundError as e:
                     self._logger.error(
                         f"Failed to import module {import_target_module}: {e}"
