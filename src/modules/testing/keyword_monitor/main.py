@@ -252,7 +252,7 @@ class KeywordMonitorModule(ModuleCore):
         """
         self.keyword_monitor.refresh()
         keywords = self.get_keywords()
-        
+
         if keywords:
             self._logger.info(f"Publishing {len(keywords)} keywords")
             await message_bus.publish("keywords", keywords)
@@ -288,15 +288,35 @@ class KeywordMonitorModule(ModuleCore):
             keywords = self.refresh_keywords()
             self._logger.debug(f"Refreshed {len(keywords)} keywords")
             return self._get_status()
-            
+
         return super()._handle_custom_command(command)
-        
+
     def _get_cycle_time(self) -> float:
         """
-        Get the time between execution cycles.
+        Get the time in seconds between module execution cycles.
+        Uses the polling_interval from pipeline arguments if provided.
+
+        Returns:
+            The cycle time in seconds
         """
-        return 60.0  # Run every 60 seconds
-        
+        # Get polling_interval from module arguments, with 5.0 as default
+        polling_interval = self.get_argument("polling_interval", "5s")
+
+        # Parse the polling interval string (e.g. "5s" -> 5.0)
+        if isinstance(polling_interval, str):
+            if polling_interval.endswith("s"):
+                try:
+                    return float(polling_interval[:-1])
+                except ValueError:
+                    self._logger.warning(
+                        f"Invalid polling_interval format: {polling_interval}, using default of 5.0s"
+                    )
+        elif isinstance(polling_interval, (int, float)):
+            return float(polling_interval)
+
+        # Default fallback
+        return 5.0
+
     def _get_default_output_topic(self) -> str:
         """
         Get the default output topic for this module.

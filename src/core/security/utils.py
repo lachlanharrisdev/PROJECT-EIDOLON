@@ -138,6 +138,9 @@ def get_module_verification_status(modules_directory: str = None) -> Dict[str, b
     if modules_directory is None:
         return {}
 
+    # Import here to avoid circular imports
+    from core.modules.usecase.utilities import ModuleUtility
+
     public_key = get_public_key()
     if not public_key:
         return {}
@@ -145,11 +148,16 @@ def get_module_verification_status(modules_directory: str = None) -> Dict[str, b
     verification_status = {}
 
     try:
-        for item in os.listdir(modules_directory):
-            module_path = os.path.join(modules_directory, item)
-            if os.path.isdir(module_path):
-                verification_status[item] = verify_module(module_path, public_key)
-    except Exception:
+        # Use the centralized function to find all modules
+        module_paths = ModuleUtility.find_all_modules(modules_directory)
+        
+        for module_path in module_paths:
+            full_path = os.path.join(modules_directory, module_path)
+            # Use the basename for the verification key
+            module_name = os.path.basename(module_path)
+            verification_status[module_name] = verify_module(full_path, public_key)
+    except Exception as e:
+        # Log any unexpected exceptions
         pass
 
     return verification_status

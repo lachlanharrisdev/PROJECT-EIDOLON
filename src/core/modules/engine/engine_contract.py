@@ -39,6 +39,7 @@ class ModuleCore(object, metaclass=IModuleRegistry):
         """
         self._logger = logger
         self._config = None
+        self._arguments = {}  # Arguments from pipeline config
         self._shutdown_event = asyncio.Event()
         self._running = False
         self._module_id = (
@@ -411,3 +412,38 @@ class ModuleCore(object, metaclass=IModuleRegistry):
         """
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(self.thread_pool, function, *args, **kwargs)
+
+    def set_module_arguments(self, arguments: dict) -> None:
+        """
+        Set module arguments from the pipeline.
+        Called by the ModuleEngine to provide arguments based on pipeline settings.
+
+        Args:
+            arguments: A dictionary containing the module's arguments
+        """
+        self._arguments = arguments or {}
+        self._logger.debug(
+            f"Module arguments set for {self.meta.name}: {self._arguments}"
+        )
+
+    def get_arguments(self) -> dict:
+        """
+        Get the module arguments set from the pipeline.
+
+        Returns:
+            A dictionary containing the module arguments
+        """
+        return self._arguments
+
+    def get_argument(self, key: str, default: Any = None) -> Any:
+        """
+        Get a specific argument value with fallback to default.
+
+        Args:
+            key: The argument key to look up
+            default: The default value to return if the key is not found
+
+        Returns:
+            The argument value if found, otherwise the default value
+        """
+        return self._arguments.get(key, default)

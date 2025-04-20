@@ -14,7 +14,7 @@ pipeline:
     - id: monitor # how this module is identified within the pipeline
       module: keyword_monitor # the name of the actual module used
       config: # custom configuration that could be given to the module
-        polling_interval: 5s
+        polling_interval: 1s
       outputs: # map the name of the outputs located in the module's `module.yaml` file to an output usable by other modules in the pipeline
         - keywords: "keywords"
       run_mode: loop  # or once, on_trigger
@@ -23,14 +23,17 @@ pipeline:
       module: template_module
       depends_on: [monitor]
       input:
-        keywords: monitor.keywords
+        keywords: monitor.keywords  # maps the monitor's "keywords" output to this module's "keywords" input
       outputs:
-        - processed_keywords: "processed_keywords"
+        - processed_keywords: "processed_keywords"  # publish to "processed_keywords" topic
       run_mode: reactive  # runs on new data
+      config:
+        base_score: 15
+        length_weight: 0.8
 
     - id: printer
       module: keyword_printer
       depends_on: [processor]
       input:
-        keywords: processor.processed_keywords
-      run_mode: once
+        keywords: processor.processed_keywords  # explicitly map processor's processed_keywords to printer's keywords input
+      run_mode: reactive  # runs whenever new data arrives

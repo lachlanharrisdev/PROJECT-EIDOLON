@@ -153,7 +153,7 @@ jobs:
           pytest -xvs --cov=src --cov-report=xml -n auto
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage.xml
@@ -188,7 +188,7 @@ jobs:
             ${{ runner.os }}-pip-
       
       - name: Download built package from previous job
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist

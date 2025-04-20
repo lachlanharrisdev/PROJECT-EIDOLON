@@ -31,7 +31,7 @@ USAGE = """
 Eidolon CLI Tool - A modular OSINT suite for analyzing disinformation.
 
 Usage:
-  eidolon run [<pipeline>] [--log-level=<level> | --verbose | --quiet | --silent]
+  eidolon run [<pipeline>] [--log-level=<level> | --verbose | --quiet | --silent] [--set <setting>=<value>...]...
   eidolon list [(pipeline | modules)] [--filter=<filter>]
   eidolon config <setting> [<value>]
   eidolon validate [<directory>]
@@ -49,6 +49,7 @@ Options:
   --quiet                   Suppress all output below WARNING (equivalent to --log-level=WARNING).
   --silent                  Suppress all output below ERROR (equivalent to --log-level=ERROR).
   --filter=<filter>         Filter results to only show items that include the filter string in their name.
+  --set <setting>=<value>  Set a module argument defined in the pipeline (e.g., 'scraper.timeout=30').
 
 Arguments:
   <pipeline>                Name of pipeline to run [default: default].
@@ -56,6 +57,7 @@ Arguments:
   <setting>                 Configuration setting path (e.g., 'logging.level' or 'registry.url').
   <value>                   New value for the configuration setting.
   <directory>               Directory to run tests in [default: tests].
+  <setting>                 Module ID and argument defined in pipeline (e.g., 'scraper.timeout').
 
 Commands:
   run       Run the application with modules specified in the pipeline.
@@ -66,7 +68,7 @@ Commands:
 
 Examples:
   eidolon run
-  eidolon run custom_pipeline --verbose
+  eidolon run custom_pipeline --verbose --set scraper.timeout=30
   eidolon list modules --filter=keyword
   eidolon list pipelines
   eidolon config logging.level
@@ -78,7 +80,7 @@ Examples:
 def run_command(args):
     """Run the main application with modules from the specified pipeline."""
     import asyncio
-    
+
     log_level = args["--log-level"].upper()
     pipeline = args["<pipeline>"] or "default"
 
@@ -97,7 +99,7 @@ def run_command(args):
     engine = ModuleEngine(options={"log_level": log_level}, pipeline=pipeline)
 
     logger.info("Running modules asynchronously...")
-    
+
     # Create an async function to run the engine
     async def run_engine():
         try:

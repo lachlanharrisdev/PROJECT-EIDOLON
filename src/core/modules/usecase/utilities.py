@@ -29,20 +29,58 @@ class ModuleUtility:
     @staticmethod
     def __filter_unwanted_directories(name: str) -> bool:
         return not ModuleUtility.__IGNORE_LIST.__contains__(name)
+    
+    @staticmethod
+    def find_all_modules(base_directory: str) -> List[str]:
+        """
+        Recursively finds all module paths in the given base directory.
+        A module is identified as a directory containing a module.yaml file.
+        
+        Args:
+            base_directory: Root directory to start scanning for modules
+            
+        Returns:
+            List of relative paths to modules (relative to base_directory)
+        """
+        result = []
+        
+        def scan_directory(current_path, relative_path=""):
+            # Get all items in the current directory
+            try:
+                items = os.listdir(current_path)
+                # Filter out unwanted items like __pycache__
+                items = [item for item in items if ModuleUtility.__filter_unwanted_directories(item)]
+                
+                for item in items:
+                    item_path = os.path.join(current_path, item)
+                    item_relative_path = os.path.join(relative_path, item)
+                    
+                    # If this is a directory, check if it's a module and scan it
+                    if os.path.isdir(item_path):
+                        # If it has module.yaml, it's a module
+                        if os.path.exists(os.path.join(item_path, "module.yaml")):
+                            result.append(item_relative_path)
+                        
+                        # Continue scanning this directory for more modules
+                        scan_directory(item_path, item_relative_path)
+            except (PermissionError, FileNotFoundError) as e:
+                # Skip directories we can't access
+                pass
+        
+        # Start the recursive scan
+        scan_directory(base_directory)
+        return result
 
     @staticmethod
     def filter_modules_paths(modules_package) -> List[str]:
         """
-        filters out a list of unwanted directories
-        :param modules_package:
-        :return: list of directories
+        Filters out a list of unwanted directories (deprecated)
+        Use find_all_modules instead for recursive discovery
+        
+        :param modules_package: Root path of modules directory
+        :return: List of filtered directories
         """
-        paths = list(
-            filter(
-                ModuleUtility.__filter_unwanted_directories, os.listdir(modules_package)
-            )
-        )
-        return paths
+        return ModuleUtility.find_all_modules(modules_package)
 
     @staticmethod
     def __get_missing_packages(
@@ -125,31 +163,32 @@ class ModuleUtility:
             )
         return None
 
-    def setup_module_configuration(self, package_name, module_name) -> Optional[str]:
+    def setup_module_configuration(self, package_name, module_path) -> Optional[str]:
         """
-        Handles primary configuration for a give package and module
+        Handles primary configuration for a given package and module
         :param package_name: package of the potential module
-        :param module_name: module of the potential module
+        :param module_path: path to the potential module (relative to modules directory)
         :return: a module name to import
         """
-        self._logger.debug(f"Setting up module configuration for {module_name}")
-        # if the item has not folder we will assume that it is a directory
-        module_path = os.path.join(FileSystem.get_modules_directory(), module_name)
-        if os.path.isdir(module_path):
+        self._logger.debug(f"Setting up module configuration for {module_path}")
+        # Get the full path to the module
+        full_module_path = os.path.join(FileSystem.get_modules_directory(), module_path)
+
+        if os.path.isdir(full_module_path):
             self._logger.debug(
-                f"Checking if configuration file exists for module: {module_name}"
+                f"Checking if configuration file exists for module: {module_path}"
             )
             module_config: Optional[ModuleConfig] = self.__read_configuration(
-                module_path
+                full_module_path
             )
             if module_config is not None:
                 self.__manage_requirements(package_name, module_config)
                 return module_config.runtime.main
             else:
                 self._logger.debug(
-                    f"No configuration file exists for module: {module_name}"
+                    f"No configuration file exists for module: {module_path}"
                 )
         self._logger.debug(
-            f"Module: {module_name} is not a directory, skipping scanning phase"
+            f"Module: {module_path} is not a directory, skipping scanning phase"
         )
         return None

@@ -75,6 +75,9 @@ class ModuleEngine:
         self._logger.info(f"Loading modules from pipeline '{pipeline.name}'")
         self.__reload_modules(pipeline=pipeline)
 
+        # Set module arguments from pipeline
+        self.__set_module_arguments(pipeline)
+
         # Connect modules
         self.__connect_modules()
 
@@ -137,33 +140,38 @@ class ModuleEngine:
             self._logger.error("Failed to load public key for module verification")
             return
 
-        modules_directory = FileSystem.get_modules_directory()
+        # Import here to avoid circular imports
+        from core.modules.usecase.utilities import ModuleUtility
 
-        # If specific modules are specified, only check those
-        module_dirs_to_check = []
+        modules_directory = FileSystem.get_modules_directory()
+        
+        # Use the centralized function to get all modules
+        all_module_paths = ModuleUtility.find_all_modules(modules_directory)
+        
+        # Determine which modules to check based on input parameters
+        module_paths_to_check = []
         if modules:
-            module_dirs_to_check = [
-                os.path.join(modules_directory, m)
-                for m in modules
-                if os.path.isdir(os.path.join(modules_directory, m))
+            # Filter to only specified module names
+            module_paths_to_check = [
+                path for path in all_module_paths
+                if os.path.basename(path) in modules
             ]
         elif pipeline:
-            module_dirs_to_check = [
-                os.path.join(modules_directory, m.name)
-                for m in pipeline.modules
-                if os.path.isdir(os.path.join(modules_directory, m.name))
+            # Filter to only modules in the pipeline
+            pipeline_module_names = {module.name for module in pipeline.modules}
+            module_paths_to_check = [
+                path for path in all_module_paths
+                if os.path.basename(path) in pipeline_module_names
             ]
         else:
-            # Check all directories in the modules directory
-            module_dirs_to_check = [
-                os.path.join(modules_directory, d)
-                for d in os.listdir(modules_directory)
-                if os.path.isdir(os.path.join(modules_directory, d))
-            ]
-
-        for module_path in module_dirs_to_check:
+            # Check all modules
+            module_paths_to_check = all_module_paths
+        
+        # Verify each module
+        for module_path in module_paths_to_check:
+            full_path = os.path.join(modules_directory, module_path)
             module_name = os.path.basename(module_path)
-            is_verified = verify_module(module_path, public_key)
+            is_verified = verify_module(full_path, public_key)
 
             if is_verified:
                 self._logger.info(f"\033[96mModule {module_name} VERIFIED\033[0m")
@@ -236,6 +244,54 @@ class ModuleEngine:
                 )
 
         self._logger.debug(f"Final input mappings: {self.input_mappings}")
+
+    def __set_module_arguments(self, pipeline):
+        """
+        Pass arguments to modules based on the pipeline config (module["config"][<key>] = <value>).
+
+        Args:
+            pipeline: The pipeline configuration object containing module configs
+        """
+        for module in self.use_case.modules:
+            module_name = (
+                module.meta.name
+                if hasattr(module, "meta") and module.meta
+                else str(module)
+            )
+            self._logger.debug(f"Setting arguments for module: {module_name}")
+
+            # Get module configuration from module.yaml
+            config = module.get_config()
+
+            # Log if config section is found in module.yaml (just for information)
+            if "config" in config and config["config"]:
+                for key, value in config["config"].items():
+                    self._logger.debug(
+                        f"Module '{module_name}' has config '{key}': '{value}' in module.yaml"
+                    )
+
+            # Set pipeline-provided arguments on the module
+            try:
+                # Find the corresponding module config in the pipeline
+                pipeline_args = None
+                for pipeline_module in pipeline.modules:
+                    if pipeline_module.name == module_name:
+                        pipeline_args = pipeline_module.config
+                        break
+
+                if pipeline_args:
+                    self._logger.info(
+                        f"Setting arguments for module '{module_name}': {pipeline_args}"
+                    )
+                    module.set_module_arguments(pipeline_args)
+                else:
+                    self._logger.debug(
+                        f"No arguments found for module '{module_name}' in pipeline"
+                    )
+            except Exception as e:
+                self._logger.error(
+                    f"Error applying arguments to module '{module_name}': {e}"
+                )
 
     def __connect_modules(self):
         """Connect modules based on their inputs and outputs with type validation."""

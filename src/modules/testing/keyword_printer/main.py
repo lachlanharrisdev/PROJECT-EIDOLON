@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import List, Any
+from typing import List, Dict, Any
 
 from core.modules.engine import ModuleCore
 from core.modules.models import Device
@@ -16,16 +16,22 @@ class KeywordPrinterModule(ModuleCore):
         """
         Initialize module-specific components.
         """
-        self.keywords = []
+        self.keywords = {}
+        self._logger.info(
+            "KeywordPrinter module initialized and ready to receive keywords"
+        )
 
     def _process_input(self, data: Any) -> None:
         """
         Process input data from the message bus.
         """
+        # Make sure we clearly log when we receive data to help with debugging
+        self._logger.info(f"Received data of type: {type(data).__name__}")
+
         if isinstance(data, dict):
             self.keywords = data
             self._logger.info(
-                f"\nI'm a keyword printer! I'm printing {len(data)} keywords: \n{data}\n"
+                f"\nKeyword printer received {len(data)} keywords: \n{data}\n"
             )
         else:
             self._logger.error(
