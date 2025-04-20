@@ -38,6 +38,8 @@ jobs:
           python src/core/security/generate_module_hashes.py
 
       - name: Commit and Create Pull Request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

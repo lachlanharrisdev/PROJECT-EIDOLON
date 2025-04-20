@@ -46,38 +46,46 @@ def sign_hash(hash_value, private_key):
 
 def generate_signed_hashes(private_key):
     """Generate signed hashes for all modules."""
+    # Import the ModuleUtility class to use find_all_modules function
+    from core.modules.usecase.utilities import ModuleUtility
+
     signed_hashes = {"modules": {}}
-    for module_name in os.listdir(MODULES_DIR):
-        module_path = os.path.join(MODULES_DIR, module_name)
-        if os.path.isdir(module_path):
-            module_hash = compute_hash(module_path)
-            if module_hash:
-                # Load module.yaml to extract version and repository
-                config_path = os.path.join(module_path, "module.yaml")
-                try:
-                    with open(config_path, "r") as f:
-                        if os.stat(config_path).st_size == 0:
-                            raise ValueError("module.yaml is empty")
-                        module_config = yaml.safe_load(f)
-                except (yaml.YAMLError, ValueError) as e:
-                    logger.error(
-                        f"Error parsing 'module.yaml' in module {module_path}: {e}"
-                    )
-                    raise RuntimeError(f"Invalid module.yaml in {module_path}") from e
 
-                version = module_config.get("version", "unknown")
-                repo = module_config.get("repository", "unknown")
+    # Use the centralized function to find all modules
+    module_paths = ModuleUtility.find_all_modules(MODULES_DIR)
 
-                # Sign the hash
-                signature = sign_hash(module_hash, private_key)
+    for module_path in module_paths:
+        full_module_path = os.path.join(MODULES_DIR, module_path)
+        module_name = os.path.basename(module_path)
 
-                # Add to the signed hashes
-                signed_hashes["modules"][module_name] = {
-                    "version": version,
-                    "hash": module_hash,
-                    "signature": signature,
-                    "repo": repo,
-                }
+        module_hash = compute_hash(full_module_path)
+        if module_hash:
+            # Load module.yaml to extract version and repository
+            config_path = os.path.join(full_module_path, "module.yaml")
+            try:
+                with open(config_path, "r") as f:
+                    if os.stat(config_path).st_size == 0:
+                        raise ValueError("module.yaml is empty")
+                    module_config = yaml.safe_load(f)
+            except (yaml.YAMLError, ValueError) as e:
+                logger.error(
+                    f"Error parsing 'module.yaml' in module {full_module_path}: {e}"
+                )
+                raise RuntimeError(f"Invalid module.yaml in {full_module_path}") from e
+
+            version = module_config.get("version", "unknown")
+            repo = module_config.get("repository", "unknown")
+
+            # Sign the hash
+            signature = sign_hash(module_hash, private_key)
+
+            # Add to the signed hashes
+            signed_hashes["modules"][module_name] = {
+                "version": version,
+                "hash": module_hash,
+                "signature": signature,
+                "repo": repo,
+            }
     return signed_hashes
 
 
