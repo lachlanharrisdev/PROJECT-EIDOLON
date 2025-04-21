@@ -46,6 +46,20 @@ class ModuleEngine:
             {}
         )  # module_name -> {input_name -> source}
 
+        # Store CLI-provided module settings
+        self.module_settings: Dict[str, Dict[str, Any]] = {}
+        if "module_settings" in args:
+            self.module_settings = args["module_settings"]
+
+        # Dry run flag - validate config without executing modules
+        self.dry_run = args.get("dry_run", False)
+
+        # Additional pipeline options
+        self.pipeline_options = args.get("pipeline_options", {})
+
+        # Output file path if specified
+        self.output_file = args.get("output", None)
+
     async def start(self):
         """Start the engine by loading modules from the specified pipeline and connecting them asynchronously."""
         # Load the pipeline configuration
@@ -56,7 +70,7 @@ class ModuleEngine:
             )
             return False
 
-        # Get max threads from pipeline configuration
+        # Get max threads from pipeline configuration or use from pipeline options
         max_threads = (
             pipeline.execution.max_threads
             if hasattr(pipeline, "execution")
@@ -81,6 +95,85 @@ class ModuleEngine:
         # Connect modules
         self._connect_modules()
 
+        # If in dry run mode, validate configuration and return without running modules
+        if self.dry_run:
+            self._logger.info("Running in dry run mode - validating configuration...")
+
+            # Validate each module's configuration
+            validation_errors = []
+            for module in self.use_case.modules:
+                module_name = (
+                    module.meta.name
+                    if hasattr(module, "meta") and module.meta
+                    else str(module)
+                )
+                try:
+                    # Call module's validate_configuration method if it exists
+                    if hasattr(module, "validate_configuration") and callable(
+                        getattr(module, "validate_configuration")
+                    ):
+                        valid, errors = module.validate_configuration()
+                        if not valid:
+                            for error in errors:
+                                validation_errors.append(f"{module_name}: {error}")
+
+                    # Check required inputs
+                    config = module.get_config()
+                    if "inputs" in config:
+                        for input_def in config["inputs"]:
+                            if input_def.get("required", False):
+                                input_name = input_def["name"]
+                                # Check if this required input has a mapping defined
+                                if (
+                                    module_name not in self.input_mappings
+                                    or input_name
+                                    not in self.input_mappings[module_name]
+                                ):
+                                    validation_errors.append(
+                                        f"{module_name}: Required input '{input_name}' has no defined source"
+                                    )
+                except Exception as e:
+                    validation_errors.append(
+                        f"{module_name}: Configuration validation error: {str(e)}"
+                    )
+
+            # Report validation results
+            if validation_errors:
+                self._logger.error("Configuration validation failed with errors:")
+                for error in validation_errors:
+                    self._logger.error(f"  - {error}")
+
+                # If --force flag isn't set, return an error
+                if not self.pipeline_options.get("ignore_warnings", False):
+                    return False
+                else:
+                    self._logger.warning(
+                        "Proceeding despite validation errors (--force flag set)"
+                    )
+            else:
+                self._logger.info("Configuration validation completed successfully")
+
+            # Write to output file if specified
+            if self.output_file:
+                try:
+                    with open(self.output_file, "w") as f:
+                        f.write("Pipeline configuration validation:\n")
+                        if validation_errors:
+                            f.write("FAILED with errors:\n")
+                            for error in validation_errors:
+                                f.write(f"  - {error}\n")
+                        else:
+                            f.write("PASSED - all modules configured correctly\n")
+                    self._logger.info(
+                        f"Validation results written to {self.output_file}"
+                    )
+                except Exception as e:
+                    self._logger.error(f"Failed to write to output file: {str(e)}")
+
+            return len(validation_errors) == 0 or self.pipeline_options.get(
+                "ignore_warnings", False
+            )
+
         # Register shutdown handler
         self.shutdown_coordinator.register_signal_handlers(self.use_case.modules)
 
@@ -88,8 +181,26 @@ class ModuleEngine:
         await self._start_modules()
 
         try:
-            # Wait for shutdown signal
-            await self.shutdown_coordinator.wait_for_shutdown()
+            # Apply timeout if specified
+            timeout = self.pipeline_options.get("timeout", None)
+            if timeout is not None:
+                self._logger.info(
+                    f"Setting pipeline execution timeout to {timeout} seconds"
+                )
+                try:
+                    # Wait for shutdown with timeout
+                    await asyncio.wait_for(
+                        self.shutdown_coordinator.wait_for_shutdown(), timeout=timeout
+                    )
+                except asyncio.TimeoutError:
+                    self._logger.warning(
+                        f"Pipeline execution timed out after {timeout} seconds"
+                    )
+                    # Force shutdown
+                    self.shutdown_coordinator.trigger_shutdown()
+            else:
+                # Wait for shutdown signal with no timeout
+                await self.shutdown_coordinator.wait_for_shutdown()
 
             # Perform shutdown process
             await self.shutdown_coordinator.shutdown_application()
@@ -236,6 +347,32 @@ class ModuleEngine:
                         break
 
                 if pipeline_args:
+                    module.set_module_arguments(pipeline_args)
+
+                # Apply any CLI-provided settings for this module
+                module_id = None
+                if pipeline_module and pipeline_module.id:
+                    module_id = pipeline_module.id
+                else:
+                    # Try to use the module name as ID if no explicit ID
+                    module_id = module_name.lower()
+
+                # Check if we have CLI settings for this module (by ID or name)
+                if module_id in self.module_settings:
+                    cli_args = self.module_settings[module_id]
+                    self._logger.info(
+                        f"Applying CLI settings to module '{module_name}': {cli_args}"
+                    )
+
+                    # Merge with existing args if any
+                    if not pipeline_args:
+                        pipeline_args = {}
+
+                    # Update with CLI args
+                    for key, value in cli_args.items():
+                        pipeline_args[key] = value
+
+                    # Set the updated arguments
                     module.set_module_arguments(pipeline_args)
 
                 # Set run_mode from pipeline configuration if available

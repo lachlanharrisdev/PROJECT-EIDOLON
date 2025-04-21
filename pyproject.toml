@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "eidolon"
 description = "A decentralised, fully modular OSINT tool monitoring political disinformation emergent from botnets "
 authors = [{name="Project Eidolon"}]
-dependencies = ["requests", "PyYAML", "cryptography", "dacite", "spacy", "Requests"]
+dependencies = ["requests", "PyYAML", "cryptography", "dacite", "spacy", "typer>=0.15.0", "rich>=10.0.0"]
 readme = ".github/README.md"
 license = "GPL-3.0-or-later"
 keywords = ["osint", "bot", "botnets", "politics", "data", "social media", "social"]

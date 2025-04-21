@@ -2,6 +2,7 @@ pipeline:
   name: aethon 
   description: >
     Lightweight, high-performance web crawler with console reporting
+    and data extraction capabilities through Scryer and Hermes modules.
 
   execution:
     timeout: 600s
@@ -54,3 +55,59 @@ pipeline:
     - crawl_count: "crawl_count"
     run_mode: reactive
     depends_on: [cleaner]
+
+  - name: osiris
+    id: filter
+    config:
+      rules:
+        status_codes: [200, 201, 202, 203, 204, 205, 206, 207, 208, 226]
+    input:
+      data: crawler.crawled_data
+    outputs:
+    - filtered_data: "filtered_data"
+    - filtered_out_data: "filtered_out_data"
+    - pass_count: "pass_count"
+    - reject_count: "reject_count"
+    run_mode: reactive
+    depends_on: [crawler]
+
+  - name: scryer
+    id: extractor
+    depends_on: [filter]
+    input:
+      crawled_data: filter.filtered_data
+    config:
+      extract:
+        title: true
+        meta: ["description", "keywords", "author", "og:title", "og:description"]
+        links: true
+        emails: true
+        phones: true
+        headers: true
+        cookies: true
+        custom_selectors:
+          - name: "main_heading"
+            selector: "h1"
+          - name: "paragraphs"
+            selector: "p"
+      output_format: "json"
+      include_failed: false
+      min_text_length: 200
+      max_text_length: 50000
+      filters:
+        content_type: ["text/html"]
+        status_codes: [200]
+    outputs:
+    - extracted_data: "extracted_data"
+    - extraction_count: "extraction_count"
+    run_mode: reactive
+    
+  - name: hermes
+    id: reporter
+    depends_on: [extractor]
+    input:
+      data: extractor.extracted_data
+    config:
+      report_title: "Aethon Web Analysis Report"
+      output_dir: "reports"
+    run_mode: reactive
