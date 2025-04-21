@@ -13,8 +13,7 @@ pipeline:
     id: loader
     config:
       supported_formats: [".txt", ".csv", ".json", ".xml"]
-      example_mode: true
-      example_count: 30
+      example_mode: false
       skip_empty_lines: true
       strip_whitespace: true
       remove_duplicates: true

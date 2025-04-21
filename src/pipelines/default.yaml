@@ -1,32 +1,112 @@
 pipeline:
   name: default 
   description: >
-    Basic keyword monitoring pipeline.
-    Monitors sources, processes keywords, then prints results.
+    Demonstration of the basic suite of built-in tools.
 
   execution:
-    timeout: 300s
-    # retries: 2 
-    # error_policy: halt  # or continue, isolate, log_only
-    max_threads: 4 
+    timeout: 600s
+    max_threads: 8
 
   modules:
-    - id: monitor # how this module is identified within the pipeline
-      name: keyword_monitor # the name of the actual module used
-      config: # custom configuration that could be given to the module
-        polling_interval: 1s
-      outputs: # map the name of the outputs located in the module's `module.yaml` file to an output usable by other modules in the pipeline
-        - keywords: "keywords"
-      run_mode: loop  # or once, on_trigger
+  - name: aethon_urllist
+    id: loader
+    config:
+      supported_formats: [".txt", ".csv", ".json", ".xml"]
+      example_mode: true
+      example_count: 30
+      skip_empty_lines: true
+      strip_whitespace: true
+      remove_duplicates: true
+    outputs:
+    - urls: "urls"
+    run_mode: once
 
-    - id: processor
-      name: template_module
-      depends_on: [monitor]
-      input:
-        keywords: monitor.keywords  # maps the monitor's "keywords" output to this module's "keywords" input
-      outputs:
-        - processed_keywords: "processed_keywords"  # publish to "processed_keywords" topic
-      run_mode: reactive  # runs on new data
-      config:
-        base_score: 15
-        length_weight: 0.8
+  - name: aethon_urlclean
+    id: cleaner
+    config:
+      whitelist: []
+      blacklist: ["css", "png", "jpg", "jpeg", "svg"]
+      filters: ["removecontent", "noparams"]
+      keepslash: true
+    input:
+      urls: loader.urls
+    outputs:
+    - cleaned_urls: "cleaned_urls"
+    - url_count: "url_count"
+    run_mode: reactive
+    depends_on: [loader]
+
+  - name: aethon_crawler
+    id: crawler
+    config:
+      concurrency: 300
+      timeout: 8
+      user_agent: "Eidolon/1.0 Web Crawler"
+      follow_redirects: true
+      max_redirects: 5
+      retry_count: 3
+      retry_delay: 1
+      verify_ssl: true
+    input:
+      urls: cleaner.cleaned_urls
+    outputs:
+    - crawled_data: "crawled_data"
+    - crawl_count: "crawl_count"
+    run_mode: reactive
+    depends_on: [cleaner]
+
+  - name: osiris
+    id: filter
+    config:
+      rules:
+        status_codes: [200, 201, 202, 203, 204, 205, 206, 207, 208, 226]
+    input:
+      data: crawler.crawled_data
+    outputs:
+    - filtered_data: "filtered_data"
+    - filtered_out_data: "filtered_out_data"
+    - pass_count: "pass_count"
+    - reject_count: "reject_count"
+    run_mode: reactive
+    depends_on: [crawler]
+
+  - name: scryer
+    id: extractor
+    depends_on: [filter]
+    input:
+      crawled_data: filter.filtered_data
+    config:
+      extract:
+        title: true
+        meta: ["description", "keywords", "author", "og:title", "og:description"]
+        links: true
+        emails: true
+        phones: true
+        headers: true
+        cookies: true
+        custom_selectors:
+          - name: "main_heading"
+            selector: "h1"
+          - name: "paragraphs"
+            selector: "p"
+      output_format: "json"
+      include_failed: false
+      min_text_length: 200
+      max_text_length: 50000
+      filters:
+        content_type: ["text/html"]
+        status_codes: [200]
+    outputs:
+    - extracted_data: "extracted_data"
+    - extraction_count: "extraction_count"
+    run_mode: reactive
+    
+  - name: hermes
+    id: reporter
+    depends_on: [extractor]
+    input:
+      data: extractor.extracted_data
+    config:
+      report_title: "Aethon Web Analysis Report"
+      output_dir: "reports"
+    run_mode: reactive
