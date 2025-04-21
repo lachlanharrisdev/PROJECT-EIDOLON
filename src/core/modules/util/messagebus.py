@@ -14,7 +14,7 @@ from typing import (
 import asyncio
 import inspect
 import logging
-from core.modules.models import ModuleInput, ModuleOutput
+from core.modules.models import ModuleInput, ModuleOutput, CourierEnvelope
 
 
 class MessageBus:
@@ -143,15 +143,26 @@ class MessageBus:
         # Create a list to collect coroutines for awaiting
         tasks = []
 
+        # Wrap the data in a CourierEnvelope
+        source_module = self.topic_sources.get(topic, None)
+        data_type = (
+            getattr(expected_type, "__name__", str(expected_type))
+            if expected_type
+            else None
+        )
+        envelope = CourierEnvelope(
+            data=data, topic=topic, source_module=source_module, data_type=data_type
+        )
+
         for subscriber in self.subscribers[topic]:
             try:
                 # Check if the subscriber is a coroutine function
                 if inspect.iscoroutinefunction(subscriber):
                     # Add coroutine to tasks list
-                    tasks.append(subscriber(data))
+                    tasks.append(subscriber(envelope))
                 else:
                     # Handle synchronous subscribers immediately
-                    subscriber(data)
+                    subscriber(envelope)
             except Exception as e:
                 self._logger.error(f"Error in subscriber for topic '{topic}': {e}")
 

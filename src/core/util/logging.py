@@ -7,6 +7,7 @@ from datetime import datetime
 class ColorFormatter(logging.Formatter):
     """
     Custom formatter to add color coding to specific parts of log lines for console output.
+    Also supports fixed-width formatting for level names and logger names.
     """
 
     COLOR_CODES = {
@@ -20,22 +21,44 @@ class ColorFormatter(logging.Formatter):
     BOLD_CODE = "\033[1m"
     DIM_CODE = "\033[2m"  # Toned-down color for timestamps
 
+    # Fixed widths for consistent formatting
+    LEVEL_WIDTH = 8  # Enough for "CRITICAL"
+    NAME_WIDTH = 20  # Adjust based on your logger name lengths
+    LOCATION_WIDTH = 28
+
+    def __init__(self, fmt=None, datefmt=None, style="%", use_color=True):
+        super().__init__(fmt, datefmt, style)
+        self.use_color = use_color
+
     def format(self, record: logging.LogRecord) -> str:
-        # Apply color to the log level
-        log_color = self.COLOR_CODES.get(record.levelname, self.RESET_CODE)
-        levelname = f"{self.BOLD_CODE}{log_color}{record.levelname}{self.RESET_CODE}"
+        # Format level name with fixed width
+        level_name = record.levelname.ljust(self.LEVEL_WIDTH)
+        # Format logger name with fixed width
+        logger_name = record.name[: self.NAME_WIDTH].ljust(self.NAME_WIDTH)
 
-        # Apply toned-down color to the timestamp
-        timestamp = f"{self.DIM_CODE}{self.formatTime(record)}{self.RESET_CODE}"
+        location = f"[{record.filename}:{record.lineno}]".ljust(self.LOCATION_WIDTH)
 
-        # Apply bold formatting to the filename and line number
-        location = f"{self.BOLD_CODE}{record.filename}:{record.lineno}{self.RESET_CODE}"
+        if self.use_color:
+            # Apply color to the log level
+            log_color = self.COLOR_CODES.get(record.levelname, self.RESET_CODE)
+            levelname = f"{self.BOLD_CODE}{log_color}{level_name}{self.RESET_CODE}"
+
+            # Apply toned-down color to the timestamp
+            timestamp = f"{self.DIM_CODE}{self.formatTime(record)}{self.RESET_CODE}"
+
+            # Apply bold formatting to the filename and line number
+            location = f"{self.BOLD_CODE}{self.DIM_CODE}{location}{self.RESET_CODE}"
+        else:
+            # Plain text formatting for file logs
+            levelname = level_name
+            timestamp = self.formatTime(record)
+            location = location
 
         # Default formatting for the message
         message = record.getMessage()
 
         # Combine all parts into the final formatted string
-        return f"{timestamp}: {levelname} @{record.name} - {message} [{location}]"
+        return f"{timestamp} {levelname} {location} {message}"
 
 
 def configure_logging(
@@ -43,6 +66,7 @@ def configure_logging(
 ) -> logging.Logger:
     """
     Configure logging based on the settings in the configuration file.
+    Uses a single formatter style with optional color support.
     """
     with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
@@ -72,13 +96,13 @@ def configure_logging(
     # Console handler with color formatting
     console_handler = logging.StreamHandler()
     console_handler.setLevel(console_level)
-    console_handler.setFormatter(ColorFormatter(log_format))
+    console_handler.setFormatter(ColorFormatter(log_format, use_color=True))
     logger.addHandler(console_handler)
 
-    # File handler with standard formatting
+    # File handler with the same formatting but without colors
     file_handler = logging.FileHandler(log_file)
     file_handler.setLevel(file_level)
-    file_handler.setFormatter(logging.Formatter(log_format))
+    file_handler.setFormatter(ColorFormatter(log_format, use_color=False))
     logger.addHandler(file_handler)
 
     logger.info(f"Logging initialized. Log file: {log_file}")
