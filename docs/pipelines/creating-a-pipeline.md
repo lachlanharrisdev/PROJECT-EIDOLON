@@ -34,7 +34,7 @@ pipeline:
 
 ### Step 1: Create a new YAML file
 
-Create a new file in the `src/pipelines/` directory with a descriptive name, such as `analytics_pipeline.yaml`.
+Create a new file in the `src/pipelines/` directory with a descriptive name, such as `osint_pipeline.yaml`.
 
 ### Step 2: Define the pipeline properties
 
@@ -42,8 +42,8 @@ Start by defining the pipeline properties at the top of the file:
 
 ```yaml
 pipeline:
-  name: analytics_pipeline
-  description: "Processes analytics data from various sources"
+  name: osint_pipeline
+  description: "OSINT data collection and analysis pipeline"
   
   execution:
     timeout: 300s
@@ -61,12 +61,12 @@ Add all the modules that should be part of the pipeline under the `modules` key:
 pipeline:
   # ...pipeline properties...
   modules:
-    - id: collector
-      module: data_collector
+    - id: crawler
+      module: data_crawler
       run_mode: loop
       
-    - id: processor
-      module: data_processor
+    - id: analyzer
+      module: data_analyzer
       run_mode: reactive
 ```
 
@@ -80,12 +80,12 @@ For each module that depends on data from another module, add a `depends_on` lis
 pipeline:
   # ...pipeline properties...
   modules:
-    - id: collector
-      module: data_collector
+    - id: crawler
+      module: data_crawler
       
-    - id: processor
-      module: data_processor
-      depends_on: [collector]
+    - id: analyzer
+      module: data_analyzer
+      depends_on: [crawler]
 ```
 
 ### Step 5: Map inputs and outputs
@@ -96,16 +96,16 @@ Connect specific module inputs to other modules' outputs using the `input` field
 pipeline:
   # ...pipeline properties...
   modules:
-    - id: collector
-      module: data_collector
+    - id: crawler
+      module: data_crawler
       outputs:
         - collected_data
       
-    - id: processor
-      module: data_processor
-      depends_on: [collector]
+    - id: analyzer
+      module: data_analyzer
+      depends_on: [crawler]
       input:
-        raw_data: collector.collected_data
+        raw_data: crawler.collected_data
 ```
 
 The `input` dictionary connects:
@@ -121,11 +121,11 @@ Add module-specific configuration via the `config` field and specify execution b
 pipeline:
   # ...pipeline properties...
   modules:
-    - id: processor
-      module: data_processor
-      depends_on: [collector]
+    - id: analyzer
+      module: data_analyzer
+      depends_on: [crawler]
       input:
-        raw_data: collector.collected_data
+        raw_data: crawler.collected_data
       config:
         batch_size: 100
         cleanup: true
@@ -153,8 +153,8 @@ When setting up input mappings, follow these rules:
 Each module can have custom configuration options that override the defaults:
 
 ```yaml
-- id: processor
-  module: data_processor
+- id: analyzer
+  module: data_analyzer
   config:
     batch_size: 100
     cleanup: true
@@ -170,8 +170,8 @@ The `run_mode` field controls how a module executes:
   module: keyword_monitor
   run_mode: loop  # Runs continuously in a loop
 
-- id: processor
-  module: data_processor
+- id: analyzer
+  module: data_analyzer
   run_mode: reactive  # Runs when new data is received
 
 - id: reporter
@@ -277,7 +277,7 @@ pipeline:
 To test your pipeline, run it using the `eidolon run` command:
 
 ```bash
-eidolon run analytics_pipeline
+eidolon run osint_pipeline
 ```
 
 You should see log messages showing:
@@ -293,7 +293,7 @@ You should see log messages showing:
 
 1. **Module not found**: Ensure the module name in the pipeline matches the directory name in `src/modules/`
 ```
-ERROR: Module 'sentiment_analizer' not found. Did you mean 'sentiment_analyzer'?
+ERROR: Module 'data_analizer' not found. Did you mean 'data_analyzer'?
 ```
 
 2. **Input/output mismatch**: Check that the input and output names match those defined in the module configuration files
@@ -315,12 +315,12 @@ ERROR: Circular dependency detected: module1 -> module2 -> module3 -> module1
 
 1. Run with increased log level to see more details:
    ```bash
-   eidolon run analytics_pipeline --log-level=DEBUG
+   eidolon run osint_pipeline --log-level=DEBUG
    ```
 
 2. Check module configurations to ensure inputs and outputs are correctly defined:
    ```bash
-   cat src/modules/sentiment_analyzer/module.yaml
+   cat src/modules/data_analyzer/module.yaml
    ```
 
 3. List all available modules to verify name spelling:
@@ -336,76 +336,98 @@ ERROR: Circular dependency detected: module1 -> module2 -> module3 -> module1
 4. **Documentation**: Add comments in your pipeline YAML file to document non-obvious connections
 5. **Incremental testing**: Build your pipeline incrementally, testing as you add each module
 
-## Example: Full Analytics Pipeline
+## Example: Full OSINT Pipeline
 
-Here's a complete example of an analytics pipeline that:
+Here's a complete example of an OSINT pipeline that:
 
-1. Monitors news sources for keywords
-2. Analyzes sentiment of the collected articles
-3. Generates visualization data for a dashboard
-4. Publishes results to both a web interface and a CSV exporter
+1. Manages a list of target URLs for crawling
+2. Cleans and processes the URLs for effective crawling
+3. Performs web crawling to collect data
+4. Analyzes and extracts entities from the collected data
+5. Generates visualization data for intelligence reports
+6. Outputs results to both a dashboard and an archival system
 
 ```yaml
 pipeline:
-  name: full_analytics_pipeline
-  description: "Full analytics pipeline for monitoring, analyzing, and visualizing data"
+  name: comprehensive_osint_pipeline
+  description: "Complete OSINT pipeline for data collection, analysis, and reporting"
   
   execution:
-    timeout: 300s
+    timeout: 600s
     retries: 3
     error_policy: halt
   
   modules:
-    # Data collection layer
-    - id: keyword_monitor
-      module: keyword_monitor
+    # Web crawling layer
+    - id: url_list
+      module: aethon_urllist
       run_mode: loop
+      config:
+        initial_targets:
+          - "https://example.com/target1"
+          - "https://example.org/target2"
+        max_urls: 1000
     
-    - id: news_scraper
-      module: news_scraper
-      depends_on: [keyword_monitor]
+    - id: url_cleaner
+      module: aethon_urlclean
+      depends_on: [url_list]
       input:
-        search_terms: keyword_monitor.keywords
+        urls_to_clean: url_list.discovered_urls
       run_mode: reactive
+      config:
+        strip_parameters: true
+        normalize_domains: true
+    
+    - id: web_crawler
+      module: aethon_crawler
+      depends_on: [url_cleaner]
+      input:
+        target_urls: url_cleaner.clean_urls
+      run_mode: reactive
+      config:
+        depth: 2
+        respect_robots_txt: true
     
     # Analysis layer
-    - id: sentiment_analyzer
-      module: sentiment_analyzer
-      depends_on: [news_scraper]
-      input:
-        text_data: news_scraper.article_content
-      run_mode: reactive
-    
     - id: entity_extractor
       module: entity_extractor
-      depends_on: [news_scraper]
+      depends_on: [web_crawler]
       input:
-        input_text: news_scraper.article_content
+        source_content: web_crawler.page_content
+      run_mode: reactive
+      config:
+        entity_types: ["PERSON", "ORG", "GPE", "EVENT"]
+    
+    - id: relationship_analyzer
+      module: relationship_analyzer
+      depends_on: [entity_extractor]
+      input:
+        entities: entity_extractor.extracted_entities
       run_mode: reactive
     
     # Visualization layer
-    - id: chart_generator
-      module: chart_generator
-      depends_on: [sentiment_analyzer, entity_extractor]
+    - id: intel_visualizer
+      module: scryer
+      depends_on: [entity_extractor, relationship_analyzer]
       input:
-        sentiment_data: sentiment_analyzer.sentiment_scores
         entity_data: entity_extractor.extracted_entities
+        relationship_data: relationship_analyzer.entity_relationships
       run_mode: reactive
     
     # Output layer
-    - id: web_interface
-      module: web_interface
-      depends_on: [chart_generator]
+    - id: dashboard_interface
+      module: hermes
+      depends_on: [intel_visualizer]
       input:
-        chart_data: chart_generator.visualization_data
+        visualization_data: intel_visualizer.intelligence_visualizations
       run_mode: reactive
     
-    - id: csv_exporter
-      module: csv_exporter
-      depends_on: [sentiment_analyzer, entity_extractor]
+    - id: archive_manager
+      module: osiris
+      depends_on: [entity_extractor, relationship_analyzer]
       input:
-        sentiment_export: sentiment_analyzer.sentiment_scores
-        entity_export: entity_extractor.extracted_entities
+        entities_to_archive: entity_extractor.extracted_entities
+        relationships_to_archive: relationship_analyzer.entity_relationships
       run_mode: reactive
 ```
 

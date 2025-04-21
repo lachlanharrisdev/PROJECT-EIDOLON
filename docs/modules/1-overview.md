@@ -69,15 +69,20 @@ For complete configuration options, see the [Module Configuration documentation]
 
 ## Default Modules
 
-Project Eidolon comes default with the following modules
+Project Eidolon comes with the following default modules to support OSINT workflows:
 
 | Module | Description | Key Features |
 |--------|-------------|-------------|
-| Keyword Monitor | Monitors news sources for relevant keywords | - RSS feed parsing<br>- NLP entity extraction<br>- Real-time updates |
+| Aethon Crawler | Advanced web crawler for targeted OSINT data collection | - Configurable crawl depth<br>- Rate limiting<br>- Content extraction<br>- Pattern matching |
+| Aethon URLClean | URL processing and sanitization module | - URL normalization<br>- Parameter filtering<br>- Domain validation<br>- Duplicate detection |
+| Aethon URLList | URL management and targeting module | - Target list management<br>- Discovery tracking<br>- URL prioritization<br>- Crawl frontier management |
+| Hermes | Communication module for transmitting processed data | - Secure data transmission<br>- Multiple output formats<br>- Customizable alert thresholds |
+| Osiris | Data archival and retrieval system | - Structured data storage<br>- Historical analysis<br>- Efficient retrieval mechanisms |
+| Scryer | Visualization and reporting module | - Interactive dashboards<br>- Custom report generation<br>- Data exploration tools |
 
 ## Security Model
 
-The module system includes security features to prevent unauthorized code execution:
+The module system includes security features to protect data integrity and prevent unauthorized code execution:
 
 - Modules are cryptographically signed
 - Module hashes are verified before loading

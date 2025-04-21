@@ -326,6 +326,123 @@ assert "keywords" in fake_bus.messages
 7. **Don't test private methods directly**: Test through public interfaces
 8. **Mock external dependencies**: Don't rely on external systems in unit tests
 
+## Example Test Scenarios for OSINT Modules
+
+Here are some common test scenarios for OSINT modules:
+
+### Data Collection Module
+
+```python
+def test_url_parser():
+    """Test URL parsing functionality"""
+    parser = URLParser()
+    valid_url = "https://example.com/news/article.html?id=123"
+    result = parser.parse(valid_url)
+    
+    assert result.domain == "example.com"
+    assert result.path == "/news/article.html"
+    assert result.query == {"id": "123"}
+
+def test_rate_limiting():
+    """Test that the crawler respects rate limiting"""
+    crawler = WebCrawler(rate_limit=2)  # 2 requests per second
+    start_time = time.time()
+    
+    crawler.fetch("https://example.com/page1")
+    crawler.fetch("https://example.com/page2")
+    crawler.fetch("https://example.com/page3")
+    
+    elapsed = time.time() - start_time
+    assert elapsed >= 1.0  # Should take at least 1 second for 3 requests
+```
+
+### Data Analysis Module
+
+```python
+def test_entity_extraction():
+    """Test extraction of entities from text"""
+    analyzer = EntityAnalyzer()
+    text = "John Smith works at Acme Corporation in New York City."
+    
+    entities = analyzer.extract_entities(text)
+    
+    assert {"text": "John Smith", "type": "PERSON"} in entities
+    assert {"text": "Acme Corporation", "type": "ORG"} in entities
+    assert {"text": "New York City", "type": "LOC"} in entities
+
+def test_language_detection():
+    """Test language detection functionality"""
+    detector = LanguageDetector()
+    
+    assert detector.detect("Hello world") == "en"
+    assert detector.detect("Hola mundo") == "es"
+    assert detector.detect("Bonjour le monde") == "fr"
+```
+
+### Visualization Module
+
+```python
+def test_chart_generation():
+    """Test chart data generation"""
+    visualizer = DataVisualizer()
+    data = [
+        {"date": "2025-01-01", "value": 10},
+        {"date": "2025-01-02", "value": 15},
+        {"date": "2025-01-03", "value": 7}
+    ]
+    
+    chart_data = visualizer.generate_chart(data, "line")
+    
+    assert "datasets" in chart_data
+    assert len(chart_data["labels"]) == 3
+    assert chart_data["type"] == "line"
+
+def test_geospatial_mapping():
+    """Test geospatial data mapping"""
+    mapper = GeoMapper()
+    locations = [
+        {"name": "New York", "lat": 40.7128, "lon": -74.0060},
+        {"name": "London", "lat": 51.5074, "lon": -0.1278}
+    ]
+    
+    map_data = mapper.generate_map(locations)
+    
+    assert len(map_data["features"]) == 2
+    assert map_data["features"][0]["properties"]["name"] == "New York"
+```
+
+### Communication Module
+
+```python
+def test_alert_formatting():
+    """Test alert message formatting"""
+    alerter = AlertManager()
+    alert_data = {
+        "severity": "high",
+        "source": "web_monitor",
+        "message": "Security incident detected",
+        "timestamp": "2025-04-21T16:35:40"
+    }
+    
+    formatted = alerter.format_alert(alert_data)
+    
+    assert "[HIGH]" in formatted
+    assert "2025-04-21" in formatted
+    assert "Security incident detected" in formatted
+
+def test_throttling():
+    """Test alert throttling functionality"""
+    alerter = AlertManager(throttle_period=60)  # 60 second throttle
+    
+    # First alert should go through
+    assert alerter.should_send("test_alert") == True
+    
+    # Second alert should be throttled
+    assert alerter.should_send("test_alert") == False
+```
+
+These examples demonstrate how to test specific OSINT module functionalities in isolation, ensuring each component performs as expected.
+
 ---
 
 For more information on module methods to test, see the [module methods documentation](methods.md).
