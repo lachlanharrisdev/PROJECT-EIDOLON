@@ -1,124 +1,182 @@
-# Docker Usage
+# Docker Usage Guide
 
-This guide explains how to use Project Eidolon with Docker for easy deployment and usage.
+Project Eidolon provides Docker support for easy deployment and consistent execution environments. This document explains how to use Docker with Project Eidolon.
 
-## Installation Options
+## Prerequisites
 
-There are several ways to get started with the Eidolon Docker image:
-
-### Option 1: Pull from GitHub Container Registry (recommended for users)
-
-```bash
-# Pull the latest stable version
-docker pull ghcr.io/lachlanharrisdev/project-eidolon:latest
-
-# Or pull a specific version
-docker pull ghcr.io/lachlanharrisdev/project-eidolon:1.0.0
-
-# Create a simpler name for the image
-docker tag ghcr.io/lachlanharrisdev/project-eidolon:latest eidolon
-```
-
-### Option 2: Build from Source (recommended for developers)
-
-```bash
-# Clone the repository
-git clone https://github.com/your-username/project-eidolon.git
-cd project-eidolon
-
-# Build the Docker image with a simple name
-docker build -t eidolon -f docker/Dockerfile .
-```
-
-### Option 3: Using Docker Compose
-
-```bash
-# Clone the repository
-git clone https://github.com/your-username/project-eidolon.git
-cd project-eidolon
-
-# Start with docker-compose
-docker-compose up
-
-# Or build and start in one command
-docker-compose up --build
-```
+- [Docker](https://www.docker.com/get-started) installed on your system
+- [Docker Compose](https://docs.docker.com/compose/install/) for multi-container setups
 
 ## Quick Start
 
-The simplest way to get started is with Docker Compose:
+The simplest way to run Project Eidolon with Docker is using the provided Docker Compose file:
 
 ```bash
-docker-compose up
+# Start the containers
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop the containers
+docker-compose down
 ```
 
-This will start Eidolon with the default pipeline.
+## Docker Compose Configuration
 
-## Available Commands
+The default `docker-compose.yaml` file includes:
 
-The Docker image uses the Eidolon CLI as its entrypoint, allowing you to run any command:
+```yaml
+version: '3'
+
+services:
+  eidolon:
+    build: .
+    image: eidolon:latest
+    volumes:
+      - ./src:/app/src
+      - ./reports:/app/reports
+    environment:
+      - LOG_LEVEL=INFO
+      - PIPELINE=default
+    ports:
+      - "8000:8000"
+```
+
+## Customizing the Environment
+
+You can customize the Docker environment by:
+
+1. Modifying the environment variables in the `docker-compose.yaml` file
+2. Creating a `.env` file with your environment variables
+3. Passing environment variables on the command line
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `LOG_LEVEL` | Logging verbosity (DEBUG, INFO, WARNING, ERROR) | INFO |
+| `PIPELINE` | Name of the pipeline to run | default |
+| `CONFIG_PATH` | Path to a custom configuration file | src/settings/configuration.yaml |
+
+### Example Custom Setup
 
 ```bash
-# Run with a specific pipeline
-docker run eidolon run custom_pipeline
+# Create a .env file
+echo "LOG_LEVEL=DEBUG" > .env
+echo "PIPELINE=custom_osint_pipeline" >> .env
 
-# List available modules
-docker run eidolon list modules
-
-# List pipelines
-docker run eidolon list pipeline
-
-# Validate the installation
-docker run eidolon validate
-
-# View configuration
-docker run eidolon config logging.level
-
-# Update configuration (requires a volume mount to persist changes)
-docker run -v ./src/settings:/app/src/settings eidolon config logging.level DEBUG
+# Run with the .env file
+docker-compose up -d
 ```
 
-### Using the GitHub Container Registry image:
+## Building a Custom Image
 
-If you prefer to use the registry image directly without tagging, you can use the full path:
+You can build a custom Docker image with your own modules:
 
 ```bash
-# Run with a specific pipeline
-docker run ghcr.io/lachlanharrisdev/project-eidolon run custom_pipeline
+# Build a custom image
+docker build -t custom-eidolon:1.0 .
+
+# Run the custom image
+docker run -d \
+  -v ./src/modules:/app/src/modules \
+  -v ./reports:/app/reports \
+  -e PIPELINE=custom_pipeline \
+  custom-eidolon:1.0
 ```
 
-### Using Docker Compose:
+## Mounting Custom Modules
+
+You can mount your modules into the container:
 
 ```bash
-# Run a specific command using docker-compose
-docker-compose run eidolon list modules
-docker-compose run eidolon validate
-docker-compose run eidolon config logging.level
+docker run -d \
+  -v ./src/modules/custom_module:/app/src/modules/custom_module \
+  -v ./reports:/app/reports \
+  eidolon:latest
 ```
 
-## Environment Variables
+## Production Deployment
 
-You can configure the Eidolon container using environment variables:
+For production use, consider these best practices:
 
-- `LOG_LEVEL`: Sets the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+1. Use specific image tags rather than `latest`
+2. Mount volumes for persistent data
+3. Set appropriate resource limits
+4. Use Docker Compose or a container orchestration platform (Kubernetes, Docker Swarm)
 
-Example:
+Example production docker-compose.yaml:
 
-```bash
-docker-compose run -e LOG_LEVEL=DEBUG eidolon run
+```yaml
+version: '3'
+
+services:
+  eidolon:
+    image: eidolon:1.2.3
+    volumes:
+      - eidolon-data:/app/data
+      - eidolon-reports:/app/reports
+    environment:
+      - LOG_LEVEL=WARNING
+      - PIPELINE=production_pipeline
+    ports:
+      - "8000:8000"
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+    restart: unless-stopped
+
+volumes:
+  eidolon-data:
+  eidolon-reports:
 ```
 
-## Building the Docker Image
 
-If you've made changes to the Dockerfile, you can build the image locally:
+## Extending the Docker Image
 
-```bash
-docker build -t eidolon:local -f docker/Dockerfile .
+You can create your own Dockerfile that extends the base image:
+
+```dockerfile
+FROM eidolon:latest
+
+# Install additional dependencies
+RUN pip install --no-cache-dir pandas scikit-learn tensorflow
+
+# Copy custom modules
+COPY ./custom_modules /app/src/modules/
+
+# Set default pipeline
+ENV PIPELINE=custom_osint_pipeline
+
+# Override default command if needed
+CMD ["python", "main.py", "--pipeline", "${PIPELINE}"]
 ```
 
+## Troubleshooting
 
-Available tags:
-- `latest`: Latest stable build from the main branch
-- `x.y.z`: Specific version releases
-- `x.y`: Major.minor version releases
-- `sha-abcdef`: Specific commit builds
+### Common Issues
+
+1. **Container exits immediately**
+   - Check logs: `docker logs <container_id>`
+   - Ensure volumes are mounted correctly
+   - Verify environment variables
+
+2. **Module not found**
+   - Check module path in volume mounts
+   - Verify pipeline configuration
+
+3. **Permission issues**
+   - Fix permissions: `chown -R 1000:1000 ./src`
+
+4. **Performance issues**
+   - Increase Docker resource limits
+   - Use volume mounts for frequently accessed files
+
+## Further Reading
+
+- [Docker Documentation](https://docs.docker.com/)
+- [Docker Compose Documentation](https://docs.docker.com/compose/)
+- [Project Eidolon Pipeline Configuration](pipelines/1-overview.md)

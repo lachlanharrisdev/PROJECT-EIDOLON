@@ -85,6 +85,16 @@ Where:
 - `module_id`: ID of the module producing the output
 - `output_name`: Name of the output from the source module
 
+## Default Pipelines
+
+Project Eidolon includes several pre-configured pipelines for common OSINT workflows:
+
+1. **Default Pipeline** (`default.yaml`): A general-purpose pipeline that includes basic data collection and analysis
+   
+2. **Aethon Pipeline** (`aethon.yaml`): A web-focused pipeline for crawling and analyzing web content using the Aethon module package
+
+You can use these as starting points for your own custom pipelines.
+
 ## Running a Pipeline
 
 To run a specific pipeline, use the `eidolon run` command:

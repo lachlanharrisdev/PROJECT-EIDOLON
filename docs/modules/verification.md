@@ -4,7 +4,7 @@ This document explains the security mechanisms in Project Eidolon's module syste
 
 ## Security Model
 
-Project Eidolon uses a security model based on cryptographic signatures to ensure users are aware when they are running unverified modules (that is, modules not officially a part of the project eidolon repository). This can help reduce the chance of malicious attacks based on phishing.
+Project Eidolon uses a security model based on cryptographic signatures to ensure users are aware when they are running unverified modules (that is, modules not officially a part of the project eidolon repository). This security model is crucial for OSINT workflows where data integrity and protection against malicious code are paramount concerns.
 
 ### Key Components
 
