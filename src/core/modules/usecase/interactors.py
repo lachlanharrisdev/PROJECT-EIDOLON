@@ -146,10 +146,3 @@ class ModuleUseCase:
         :return: a high level module
         """
         return module(logger)
-
-    @staticmethod
-    def hook_module(module: ModuleCore):
-        """
-        Return a function accepting commands.
-        """
-        return module.invoke

@@ -8,21 +8,49 @@ pipeline:
     max_threads: 8
 
   modules:
-    - id: crawler
-      name: aethon_crawler
-      config:
-        url: "https://www.eddyconsulting.com.au/"
-        level: 2
-        threads: 8
-        delay: 1
-        timeout: 10
-        exclude: "logout|sign-out"
-        wayback: false
-        keys: false  # Simplified - we're focusing on core crawler functionality
-        ninja: false
-        dns: true
-      outputs:
-        - crawled_urls: "crawled_urls"
-        - extracted_data: "extracted_data" 
-        - crawl_status: "crawl_status"
-      run_mode: loop  # or once, on_trigger
+  - name: aethon_urllist
+    id: loader
+    config:
+      supported_formats: [".txt", ".csv", ".json", ".xml"]
+      example_mode: true
+      example_count: 30
+      skip_empty_lines: true
+      strip_whitespace: true
+      remove_duplicates: true
+    outputs:
+    - urls: "urls"
+    run_mode: once
+
+  - name: aethon_urlclean
+    id: cleaner
+    config:
+      whitelist: []
+      blacklist: ["css", "png", "jpg", "jpeg", "svg"]
+      filters: ["removecontent", "noparams"]
+      keepslash: true
+    input:
+      urls: loader.urls
+    outputs:
+    - cleaned_urls: "cleaned_urls"
+    - url_count: "url_count"
+    run_mode: reactive
+    depends_on: [loader]
+
+  - name: aethon_crawler
+    id: crawler
+    config:
+      concurrency: 300
+      timeout: 8
+      user_agent: "Eidolon/1.0 Web Crawler"
+      follow_redirects: true
+      max_redirects: 5
+      retry_count: 3
+      retry_delay: 1
+      verify_ssl: true
+    input:
+      urls: cleaner.cleaned_urls
+    outputs:
+    - crawled_data: "crawled_data"
+    - crawl_count: "crawl_count"
+    run_mode: reactive
+    depends_on: [cleaner]

@@ -29,44 +29,48 @@ class ModuleUtility:
     @staticmethod
     def __filter_unwanted_directories(name: str) -> bool:
         return not ModuleUtility.__IGNORE_LIST.__contains__(name)
-    
+
     @staticmethod
     def find_all_modules(base_directory: str) -> List[str]:
         """
         Recursively finds all module paths in the given base directory.
         A module is identified as a directory containing a module.yaml file.
-        
+
         Args:
             base_directory: Root directory to start scanning for modules
-            
+
         Returns:
             List of relative paths to modules (relative to base_directory)
         """
         result = []
-        
+
         def scan_directory(current_path, relative_path=""):
             # Get all items in the current directory
             try:
                 items = os.listdir(current_path)
                 # Filter out unwanted items like __pycache__
-                items = [item for item in items if ModuleUtility.__filter_unwanted_directories(item)]
-                
+                items = [
+                    item
+                    for item in items
+                    if ModuleUtility.__filter_unwanted_directories(item)
+                ]
+
                 for item in items:
                     item_path = os.path.join(current_path, item)
                     item_relative_path = os.path.join(relative_path, item)
-                    
+
                     # If this is a directory, check if it's a module and scan it
                     if os.path.isdir(item_path):
                         # If it has module.yaml, it's a module
                         if os.path.exists(os.path.join(item_path, "module.yaml")):
                             result.append(item_relative_path)
-                        
+
                         # Continue scanning this directory for more modules
                         scan_directory(item_path, item_relative_path)
             except (PermissionError, FileNotFoundError) as e:
                 # Skip directories we can't access
                 pass
-        
+
         # Start the recursive scan
         scan_directory(base_directory)
         return result
@@ -76,7 +80,7 @@ class ModuleUtility:
         """
         Filters out a list of unwanted directories (deprecated)
         Use find_all_modules instead for recursive discovery
-        
+
         :param modules_package: Root path of modules directory
         :return: List of filtered directories
         """
@@ -127,6 +131,26 @@ class ModuleUtility:
             if not module_config_data:
                 self._logger.error("Empty or invalid module configuration file")
                 return None
+
+            # Process requirements to extract version constraints
+            if (
+                "requirements" in module_config_data
+                and module_config_data["requirements"]
+            ):
+                for req in module_config_data["requirements"]:
+                    if "version" in req:
+                        version = req["version"]
+                        # Check if version has a constraint prefix like >=, ==, etc.
+                        import re
+
+                        match = re.match(r"([>=<~!]+)(.*)", version)
+                        if match:
+                            constraint, clean_version = match.groups()
+                            req["constraint"] = constraint
+                            req["version"] = clean_version
+                        else:
+                            # Default to exact version if no constraint is specified
+                            req["constraint"] = "=="
 
             # Pre-process inputs and outputs to ensure they have the required fields
             if "inputs" in module_config_data and module_config_data["inputs"]:

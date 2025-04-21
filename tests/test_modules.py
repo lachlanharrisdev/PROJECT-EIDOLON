@@ -165,7 +165,7 @@ def test_module_engine_build_input_mappings():
     engine = ModuleEngine(options={"log_level": "DEBUG"})
 
     # Access the private method to test it directly
-    engine._ModuleEngine__build_input_mappings(pipeline.modules)
+    engine._build_input_mappings(pipeline.modules)
 
     # Verify the input mappings were built correctly
     assert "target_module" in engine.input_mappings

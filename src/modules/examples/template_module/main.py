@@ -12,10 +12,9 @@ class TemplateModule(ModuleCore):
     Template module that demonstrates key module functionality.
     """
 
-    def _initialize_module(self) -> None:
+    def init(self) -> None:
         """
         Initialize module-specific components.
-        Called after the base ModuleCore initialization.
         """
         self.keywords: List[str] = []
         self.processed_keywords: Dict[str, int] = {}
@@ -24,20 +23,19 @@ class TemplateModule(ModuleCore):
         self.module_args = self.get_arguments()
         self.log(f"Initialized with module arguments: {self.module_args}")
 
-    def _process_input(self, data: Any) -> None:
+    def process(self, data: Any) -> None:
         """
-        Process input data from the message bus.
-        Override of the ModuleCore _process_input method.
+        Process incoming data from subscribed topics.
         """
         if isinstance(data, list) and all(isinstance(item, str) for item in data):
             self.keywords = data
             self._process_keywords()
         else:
-            self.log(f"Received unexpected data type: {type(data)}", "warning")
+            self.log(f"Unexpected data type: {type(data)}", "warning")
 
-    async def _run_iteration(self, message_bus: MessageBus) -> None:
+    async def execute(self, message_bus: MessageBus) -> None:
         """
-        Run one iteration of the module's main logic.
+        Run one iteration of the module's logic.
         """
         # Process any pending keywords and publish results
         if self.keywords and not self.processed_keywords:
@@ -45,9 +43,7 @@ class TemplateModule(ModuleCore):
 
         # Publish processed keywords if available
         if self.processed_keywords:
-            self.log(
-                f"Publishing {len(self.processed_keywords)} processed keywords", "info"
-            )
+            self.log(f"Publishing {len(self.processed_keywords)} processed keywords")
             await message_bus.publish("processed_keywords", self.processed_keywords)
 
     def _process_keywords(self) -> None:
@@ -72,16 +68,3 @@ class TemplateModule(ModuleCore):
             self.processed_keywords[keyword] = int(score)
 
         self.log(f"Processed {len(self.processed_keywords)} keywords", "debug")
-
-    def _handle_custom_command(self, command: chr) -> Device:
-        """
-        Handle custom module commands.
-        """
-        if command == "C":
-            # Example custom command to clear keywords
-            self.keywords = []
-            return Device(
-                name=self.meta.name, firmware=0xB0000, protocol="CUSTOM", errors=[]
-            )
-
-        return super()._handle_custom_command(command)

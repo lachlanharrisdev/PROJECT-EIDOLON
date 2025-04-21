@@ -78,7 +78,7 @@ class MockModule(ModuleCore):
     def __init__(self, logger, thread_pool):
         super().__init__(logger, thread_pool)
 
-    async def _run_iteration(self, message_bus):
+    async def execute(self, message_bus):
         pass
 
 
