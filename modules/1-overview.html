@@ -247,7 +247,7 @@
   
   
   <span class="md-ellipsis">
-    Docker Usage
+    Docker Usage Guide
     
   </span>
   
@@ -485,6 +485,29 @@
   
   <span class="md-ellipsis">
     Module Configuration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="converting-existing-apps.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Converting Existing Python Applications
     
   </span>
   
@@ -852,7 +875,7 @@
 </ul>
 <p>For complete configuration options, see the <a href="config.html">Module Configuration documentation</a>.</p>
 <h2 id="default-modules">Default Modules</h2>
-<p>Project Eidolon comes default with the following modules</p>
+<p>Project Eidolon comes with the following default modules to support OSINT workflows:</p>
 <table>
 <thead>
 <tr>
@@ -863,14 +886,39 @@
 </thead>
 <tbody>
 <tr>
-<td>Keyword Monitor</td>
-<td>Monitors news sources for relevant keywords</td>
-<td>- RSS feed parsing<br>- NLP entity extraction<br>- Real-time updates</td>
+<td>Aethon Crawler</td>
+<td>Advanced web crawler for targeted OSINT data collection</td>
+<td>- Configurable crawl depth<br>- Rate limiting<br>- Content extraction<br>- Pattern matching</td>
+</tr>
+<tr>
+<td>Aethon URLClean</td>
+<td>URL processing and sanitization module</td>
+<td>- URL normalization<br>- Parameter filtering<br>- Domain validation<br>- Duplicate detection</td>
+</tr>
+<tr>
+<td>Aethon URLList</td>
+<td>URL management and targeting module</td>
+<td>- Target list management<br>- Discovery tracking<br>- URL prioritization<br>- Crawl frontier management</td>
+</tr>
+<tr>
+<td>Hermes</td>
+<td>Communication module for transmitting processed data</td>
+<td>- Secure data transmission<br>- Multiple output formats<br>- Customizable alert thresholds</td>
+</tr>
+<tr>
+<td>Osiris</td>
+<td>Data archival and retrieval system</td>
+<td>- Structured data storage<br>- Historical analysis<br>- Efficient retrieval mechanisms</td>
+</tr>
+<tr>
+<td>Scryer</td>
+<td>Visualization and reporting module</td>
+<td>- Interactive dashboards<br>- Custom report generation<br>- Data exploration tools</td>
 </tr>
 </tbody>
 </table>
 <h2 id="security-model">Security Model</h2>
-<p>The module system includes security features to prevent unauthorized code execution:</p>
+<p>The module system includes security features to protect data integrity and prevent unauthorized code execution:</p>
 <ul>
 <li>Modules are cryptographically signed</li>
 <li>Module hashes are verified before loading</li>
@@ -902,7 +950,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="April 19, 2025 03:17:11">April 19, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="April 21, 2025 10:20:06">April 21, 2025</span>
   </span>
 
     

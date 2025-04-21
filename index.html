@@ -314,7 +314,7 @@
   
   
   <span class="md-ellipsis">
-    Docker Usage
+    Docker Usage Guide
     
   </span>
   
@@ -421,6 +421,29 @@
   
   <span class="md-ellipsis">
     Module Configuration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="modules/converting-existing-apps.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Converting Existing Python Applications
     
   </span>
   
@@ -676,9 +699,8 @@
 
 
 <h1 id="overview">Overview</h1>
-<p>Project Eidolon is a decentralised suite of OSINT tools built to analyze the evolution of political disinformation on social media. </p>
-<p>In it's default configuration, Eidolon uses clever keyword rotation to scrape popular social media networks (primarily Twitter/X) 
-for posts about major political entities, identifies opinionated posts coming from potential bot accounts, and tracks these accounts towards botnets to identify organisations running unethical political propaganda schemes. </p>
+<p>Project Eidolon is a modular, enterprise-ready pipeline framework for Open Source Intelligence (OSINT) tools.</p>
+<p>In its default configuration, Eidolon provides a flexible, plug-and-play system for data collection, analysis, and reporting across various intelligence domains. The modular architecture allows users to create custom data processing workflows for a wide range of OSINT applications.</p>
 <blockquote>
 <h3 id="eidolon"><strong>EIDOLON</strong></h3>
 <p><strong><em>Noun</em></strong> ● <strong>/ʌɪˈdəʊlɒn/</strong></p>
@@ -696,16 +718,35 @@ for posts about major political entities, identifies opinionated posts coming fr
 <li>All core functionality (beyond module management, security &amp; logging) is stored in modules, making it easy to remove unnecessary functionality</li>
 </ul>
 </li>
-<li><strong>DYNAMIC KEYWORD GENERATION</strong> <em>[via keyword_monitor module]</em><ul>
-<li>Keywords are updated regularly in real-time based on trending political news articles</li>
-<li>Political entities are identified &amp; classified via NLP</li>
-<li>Keywords are transmitted on the message bus for any module to subscribe to</li>
+<li><strong>VERSATILE PIPELINE SYSTEM</strong><ul>
+<li>Define complex workflows through simple YAML configuration</li>
+<li>Connect modules in linear, star, or aggregation patterns</li>
+<li>Dynamic module execution modes: loop, reactive, once, or on-trigger</li>
+<li>Robust error handling and recovery mechanisms</li>
 </ul>
 </li>
 <li><strong>PRODUCTION-READY LOGGING</strong><ul>
 <li>Console logging has been standardised across modules</li>
 <li>Logging has a fully customisable format, including colours, text decoration &amp; variables</li>
 <li>All logs are saved into a persistent <code>.logs/</code> folder</li>
+</ul>
+</li>
+<li><strong>WEB CRAWLING AND ANALYSIS</strong><ul>
+<li>Advanced web crawling capabilities via the Aethon module package</li>
+<li>URL processing, cleaning, and structured data extraction</li>
+<li>Configurable crawl depth and focus areas</li>
+</ul>
+</li>
+<li><strong>SECURE DATA MANAGEMENT</strong><ul>
+<li>Secure storage and retrieval of collected intelligence</li>
+<li>Cryptographically signed modules for security verification</li>
+<li>Granular access control for sensitive data</li>
+</ul>
+</li>
+<li><strong>VISUALIZATION AND REPORTING</strong><ul>
+<li>Interactive dashboards for intelligence analysis</li>
+<li>Customizable report generation</li>
+<li>Real-time monitoring capabilities</li>
 </ul>
 </li>
 </ul>
@@ -720,8 +761,28 @@ for posts about major political entities, identifies opinionated posts coming fr
 </thead>
 <tbody>
 <tr>
-<td>Keyword Monitor</td>
-<td>Scrapes RSS feeds for popular political news articles, then uses NLP to identify political entities</td>
+<td>Aethon Crawler</td>
+<td>Advanced web crawler for targeted OSINT data collection with configurable parameters</td>
+</tr>
+<tr>
+<td>Aethon URLClean</td>
+<td>URL processing module for sanitizing and normalizing web addresses</td>
+</tr>
+<tr>
+<td>Aethon URLList</td>
+<td>URL management module for handling crawl targets and discovered links</td>
+</tr>
+<tr>
+<td>Hermes</td>
+<td>Communication module for transmitting processed data</td>
+</tr>
+<tr>
+<td>Osiris</td>
+<td>Data archival and retrieval system</td>
+</tr>
+<tr>
+<td>Scryer</td>
+<td>Visualization and reporting module</td>
 </tr>
 </tbody>
 </table>
@@ -747,7 +808,7 @@ for posts about major political entities, identifies opinionated posts coming fr
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="April 19, 2025 03:17:11">April 19, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="April 21, 2025 10:20:06">April 21, 2025</span>
   </span>
 
     
