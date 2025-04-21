@@ -246,7 +246,7 @@ class KeywordMonitorModule(ModuleCore):
         # Initialize the keyword monitor
         self.keyword_monitor = KeywordMonitor(logger=self._logger)
 
-    async def _run_iteration(self, message_bus: MessageBus) -> None:
+    async def execute(self, message_bus: MessageBus) -> None:
         """
         A single iteration of the module's main logic.
         """
@@ -268,30 +268,7 @@ class KeywordMonitorModule(ModuleCore):
         self._logger.debug("Refreshing keywords from news sources")
         return self.keyword_monitor.refresh()
 
-    def _get_status(self) -> Device:
-        """
-        Get the current status of the module.
-        """
-        return Device(
-            name=self.meta.name,
-            firmware=0xB4C1D,
-            protocol="MONITOR",
-            errors=[0x0000],
-        )
-
-    def _handle_custom_command(self, command: chr) -> Device:
-        """
-        Handle custom module commands.
-        """
-        # 'R' for refresh keywords
-        if command == "R":
-            keywords = self.refresh_keywords()
-            self._logger.debug(f"Refreshed {len(keywords)} keywords")
-            return self._get_status()
-
-        return super()._handle_custom_command(command)
-
-    def _get_cycle_time(self) -> float:
+    def cycle_time(self) -> float:
         """
         Get the time in seconds between module execution cycles.
         Uses the polling_interval from pipeline arguments if provided.
@@ -316,9 +293,3 @@ class KeywordMonitorModule(ModuleCore):
 
         # Default fallback
         return 5.0
-
-    def _get_default_output_topic(self) -> str:
-        """
-        Get the default output topic for this module.
-        """
-        return "keywords"

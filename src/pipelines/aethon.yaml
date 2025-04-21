@@ -9,7 +9,7 @@ pipeline:
 
   modules:
   - name: aethon_urllist
-    id: urlloader
+    id: loader
     config:
       supported_formats: [".txt", ".csv", ".json", ".xml"]
       example_mode: true
@@ -22,25 +22,25 @@ pipeline:
     run_mode: once
 
   - name: aethon_urlclean
-    id: urlcleaner
+    id: cleaner
     config:
       whitelist: []
       blacklist: ["css", "png", "jpg", "jpeg", "svg"]
       filters: ["removecontent", "noparams"]
       keepslash: true
     input:
-      urls: urlloader.urls
+      urls: loader.urls
     outputs:
     - cleaned_urls: "cleaned_urls"
     - url_count: "url_count"
     run_mode: reactive
-    depends_on: [urlloader]
+    depends_on: [loader]
 
   - name: aethon_crawler
     id: crawler
     config:
       concurrency: 300
-      timeout: 30
+      timeout: 8
       user_agent: "Eidolon/1.0 Web Crawler"
       follow_redirects: true
       max_redirects: 5
@@ -48,9 +48,9 @@ pipeline:
       retry_delay: 1
       verify_ssl: true
     input:
-      urls: urlcleaner.cleaned_urls
+      urls: cleaner.cleaned_urls
     outputs:
     - crawled_data: "crawled_data"
     - crawl_count: "crawl_count"
     run_mode: reactive
-    depends_on: [urlcleaner]
+    depends_on: [cleaner]

@@ -21,7 +21,7 @@ class URLCleanModule(ModuleCore):
     parameters, and content patterns.
     """
 
-    def _initialize_module(self) -> None:
+    def init(self) -> None:
         """Initialize module configuration from pipeline arguments"""
         # Get configuration from pipeline arguments
         self.config = self.get_arguments() or {}
@@ -113,7 +113,7 @@ class URLCleanModule(ModuleCore):
         if "keepslash" in self.active_filters:
             self.active_filters.remove("keepslash")
 
-    def _process_input(self, data: Any) -> None:
+    def process(self, data: Any) -> None:
         """Process input data from the message bus"""
         if isinstance(data, list):
             # Handle list of URLs
@@ -213,7 +213,7 @@ class URLCleanModule(ModuleCore):
                     result.append(host + path)
         return result
 
-    async def _run_iteration(self, message_bus: MessageBus) -> None:
+    async def execute(self, message_bus: MessageBus) -> None:
         """Run one iteration of the module's main logic"""
         if not self.pending_urls:
             return

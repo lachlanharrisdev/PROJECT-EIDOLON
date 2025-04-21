@@ -55,12 +55,12 @@ def _initialize_module(self) -> None:
     self.custom_settings = {}
 ```
 
-### `_process_input(self, data: Any) -> None`
+### `process(self, data: Any) -> None`
 
 Override this method to handle data delivered to your module from subscribed topics.
 
 ```python
-def _process_input(self, data: Any) -> None:
+def process(self, data: Any) -> None:
     if isinstance(data, list) and all(isinstance(item, str) for item in data):
         self.keywords = data
         self._logger.info(f"Received {len(data)} keywords")
@@ -70,12 +70,12 @@ def _process_input(self, data: Any) -> None:
         self._logger.warning(f"Received unrecognized data: {type(data)}")
 ```
 
-### `async _run_iteration(self, message_bus: MessageBus) -> None`
+### `async execute(self, message_bus: MessageBus) -> None`
 
 Override this method to define the main logic that runs in each execution cycle.
 
 ```python
-async def _run_iteration(self, message_bus: MessageBus) -> None:
+async def execute(self, message_bus: MessageBus) -> None:
     if self.keywords:
         results = self._process_keywords()
         if results:
@@ -96,34 +96,22 @@ def _process_data(self) -> Dict[str, Any]:
     return results
 ```
 
-### `_get_cycle_time(self) -> float`
+### `cycle_time(self) -> float`
 
 Override this method to customize how frequently your module's run iteration executes.
 
 ```python
-def _get_cycle_time(self) -> float:
+def cycle_time(self) -> float:
     return 30.0  # Run every 30 seconds
 ```
 
-### `_get_default_output_topic(self) -> Optional[str]`
+### `default_output_topic(self) -> Optional[str]`
 
 Override this method to specify the default output topic for your module.
 
 ```python
-def _get_default_output_topic(self) -> str:
+def default_output_topic(self) -> str:
     return "processed_results"
-```
-
-### `_handle_custom_command(self, command: chr) -> Device`
-
-Override this method to implement custom command handling beyond the standard commands.
-
-```python
-def _handle_custom_command(self, command: chr) -> Device:
-    if command == "C":
-        self._clear_cache()
-        return Device(name=self.meta.name, protocol="CACHE_CLEARED", errors=[])
-    return super()._handle_custom_command(command)
 ```
 
 ### Asynchronous Lifecycle Hooks
@@ -139,7 +127,7 @@ async def _after_run(self, message_bus: MessageBus) -> None:
     """Cleanup code that runs once after the main module loop"""
     await self._close_connections()
 
-async def _custom_shutdown(self):
+async def cleanup(self):
     """Custom resource cleanup during shutdown"""
     await self._release_resources()
 ```
@@ -161,7 +149,7 @@ You can add custom commands by overriding `_handle_custom_command()`.
 To publish data to the message bus from your module:
 
 ```python
-async def _run_iteration(self, message_bus: MessageBus) -> None:
+async def execute(self, message_bus: MessageBus) -> None:
     keywords = ["democracy", "election", "politician"]
     await message_bus.publish("keywords", keywords)
     
@@ -212,7 +200,7 @@ For scenarios where modules need to request data from other modules (rather than
 
 ```python
 # Module A: Makes a request
-async def _run_iteration(self, message_bus: MessageBus) -> None:
+async def execute(self, message_bus: MessageBus) -> None:
     request_id = str(uuid.uuid4())
     request = {
         "id": request_id,
@@ -224,7 +212,7 @@ async def _run_iteration(self, message_bus: MessageBus) -> None:
     await message_bus.publish("data_requests", request)
 
 # Module A: Handle the response
-def _process_input(self, data: Any) -> None:
+def process(self, data: Any) -> None:
     if isinstance(data, dict) and "response_to" in data:
         request_id = data["response_to"]
         if request_id in self.pending_requests:
@@ -234,7 +222,7 @@ def _process_input(self, data: Any) -> None:
 
 ```python
 # Module B: Responds to requests
-def _process_input(self, data: Any) -> None:
+def process(self, data: Any) -> None:
     if isinstance(data, dict) and data.get("type") == "data_request":
         request_id = data["id"]
         content = self._get_requested_data(data["parameters"])
@@ -243,7 +231,7 @@ def _process_input(self, data: Any) -> None:
             "content": content
         })
 
-async def _run_iteration(self, message_bus: MessageBus) -> None:
+async def execute(self, message_bus: MessageBus) -> None:
     for response in self.pending_responses:
         await message_bus.publish("data_responses", response)
     
@@ -256,7 +244,7 @@ For system-wide events that many modules might be interested in:
 
 ```python
 # Broadcasting an event
-async def _run_iteration(self, message_bus: MessageBus) -> None:
+async def execute(self, message_bus: MessageBus) -> None:
     event = {
         "type": "system_event",
         "name": "configuration_changed",
@@ -269,7 +257,7 @@ async def _run_iteration(self, message_bus: MessageBus) -> None:
 
 ```python
 # Handling events
-def _process_input(self, data: Any) -> None:
+def process(self, data: Any) -> None:
     if isinstance(data, dict) and data.get("type") == "system_event":
         event_name = data.get("name")
         

@@ -86,7 +86,7 @@ class YourModule(ModuleCore):
         self.processed_results = []
         self.custom_state = {}
     
-    def _process_input(self, data: Any) -> None:
+    def process(self, data: Any) -> None:
         """
         Process input data from the message bus.
         """
@@ -96,7 +96,7 @@ class YourModule(ModuleCore):
         else:
             self._logger.warning(f"Received unexpected data type: {type(data)}")
     
-    async def _run_iteration(self, message_bus: MessageBus) -> None:
+    async def execute(self, message_bus: MessageBus) -> None:
         """
         A single iteration of the module's main logic.
         This is called periodically by the ModuleCore's run method.
@@ -120,7 +120,7 @@ class YourModule(ModuleCore):
             })
         return results
         
-    def _get_cycle_time(self) -> float:
+    def cycle_time(self) -> float:
         """
         Get the time between execution cycles.
         """
@@ -184,7 +184,7 @@ async def test_run_iteration():
     
     module.input_data = {"test": "data"}
     
-    await module._run_iteration(message_bus)
+    await module.execute(message_bus)
     
     message_bus.publish.assert_called_once()
     args = message_bus.publish.call_args[0]
@@ -197,7 +197,7 @@ def test_process_input():
     module = YourModule(logger)
     
     test_data = {"param1": "value1", "param2": 42}
-    module._process_input(test_data)
+    module.process(test_data)
     assert module.input_data == test_data
 ```
 
@@ -247,7 +247,7 @@ async def _after_run(self, message_bus: MessageBus) -> None:
     self._logger.info("Cleaning up resources...")
     await self.client.close()
 
-async def _custom_shutdown(self):
+async def cleanup(self):
     """Custom resource cleanup during shutdown"""
     self._logger.info("Performing custom shutdown tasks...")
     await self._save_state()

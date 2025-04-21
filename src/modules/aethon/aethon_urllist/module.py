@@ -18,7 +18,7 @@ class URLListModule(ModuleCore):
     or generate a sample list of URLs for testing purposes.
     """
 
-    def _initialize_module(self) -> None:
+    def init(self) -> None:
         """Initialize URL list module with configuration from pipeline args."""
         # Get configuration from pipeline arguments
         config = self.get_arguments() or {}
@@ -36,7 +36,7 @@ class URLListModule(ModuleCore):
         # Initialize data structures
         self.urls = []
 
-    def _process_input(self, data: Any) -> None:
+    def process(self, data: Any) -> None:
         """
         Process input data received from message bus.
 
@@ -56,7 +56,7 @@ class URLListModule(ModuleCore):
                 f"Received unexpected data type: {type(data)}", log_level="warning"
             )
 
-    async def _run_iteration(self, message_bus: MessageBus) -> None:
+    async def execute(self, message_bus: MessageBus) -> None:
         """
         Run the main module logic to load URLs and publish them.
 
