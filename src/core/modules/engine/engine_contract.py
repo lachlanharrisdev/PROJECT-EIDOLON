@@ -40,6 +40,16 @@ class ModuleCore(object, metaclass=IModuleRegistry):
         )  # For storing arguments passed from the pipeline configuration
         self._config = None  # Cache for module configuration
         self._shutdown_event = asyncio.Event()  # Event for signaling shutdown
+        self._run_mode = "once"  # Default run mode: once, loop, on_trigger, reactive
+        self._is_completed = False  # Flag to indicate if a "once" module has completed
+
+        # New fields for reactive mode support
+        self._is_processing = (
+            False  # Flag to track if a reactive module is currently processing
+        )
+        self._input_received = False  # Flag to indicate if new input was received
+        self._processing_lock = asyncio.Lock()  # Lock to prevent concurrent processing
+        self._reactive_task = None  # Track the current reactive processing task
 
         # Load metadata from module configuration file
         try:
@@ -206,13 +216,21 @@ class ModuleCore(object, metaclass=IModuleRegistry):
     def handle_input(self, data: Any) -> None:
         """
         Handle input data from the message bus.
-        Default implementation stores data in input_data attribute.
+        Default implementation stores data in input_data attribute and triggers reactive processing.
 
         Args:
             data: The data received from the message bus
         """
         try:
             self._process_input(data)
+
+            # Signal that new input has been received (for reactive mode)
+            if self._run_mode == "reactive":
+                self._input_received = True
+                self.log(
+                    f"Received input in reactive module {self.meta.name}",
+                    log_level="debug",
+                )
         except Exception as e:
             self.log(f"Error handling input: {e}", log_level="error")
             self.log(traceback.format_exc(), log_level="debug")
@@ -244,30 +262,60 @@ class ModuleCore(object, metaclass=IModuleRegistry):
             # Initialize module run state
             await self._before_run(message_bus)
 
-            # Main module loop
-            while not self._shutdown_event.is_set():
+            # Handle different run modes
+            if self._run_mode == "once":
+                # For "once" mode, run a single iteration and then mark as completed
                 try:
-                    # Run a single iteration of module execution
+                    self.log(
+                        f"Running module '{self.meta.name}' once", log_level="debug"
+                    )
                     await self._run_iteration(message_bus)
-
-                    # Check for shutdown or wait before next iteration
-                    try:
-                        # Default module cycle time is 5 seconds, but can be overridden
-                        await asyncio.wait_for(
-                            self._shutdown_event.wait(), timeout=self._get_cycle_time()
-                        )
-                    except asyncio.TimeoutError:
-                        # This is the normal case - timeout just means continue to next iteration
-                        pass
-                except asyncio.CancelledError:
-                    self.log(f"{self.meta.name} task was cancelled", log_level="debug")
-                    break
+                    self._is_completed = True
+                    self.log(
+                        f"Module '{self.meta.name}' completed successfully",
+                        log_level="info",
+                    )
                 except Exception as e:
                     self._logger.error(
-                        f"Error in {self.meta.name} module iteration: {e}"
+                        f"Error in {self.meta.name} single execution: {e}"
                     )
                     self._logger.debug(traceback.format_exc())
-                    # Continue running despite errors in a single iteration
+                    self._is_completed = True  # Still mark as completed even on error
+            elif self._run_mode == "reactive":
+                # For "reactive" mode, process input data as it arrives
+                self.log(
+                    f"Starting module '{self.meta.name}' in reactive mode",
+                    log_level="info",
+                )
+                await self._reactive_loop(message_bus)
+            else:
+                # Default "loop" mode or any other mode
+                while not self._shutdown_event.is_set():
+                    try:
+                        # Run a single iteration of module execution
+                        await self._run_iteration(message_bus)
+
+                        # Check for shutdown or wait before next iteration
+                        try:
+                            # Default module cycle time is 5 seconds, but can be overridden
+                            await asyncio.wait_for(
+                                self._shutdown_event.wait(),
+                                timeout=self._get_cycle_time(),
+                            )
+                        except asyncio.TimeoutError:
+                            # This is the normal case - timeout just means continue to next iteration
+                            pass
+                    except asyncio.CancelledError:
+                        self.log(
+                            f"{self.meta.name} task was cancelled", log_level="debug"
+                        )
+                        break
+                    except Exception as e:
+                        self._logger.error(
+                            f"Error in {self.meta.name} module iteration: {e}"
+                        )
+                        self._logger.debug(traceback.format_exc())
+                        # Continue running despite errors in a single iteration
 
             # Clean up after main loop
             await self._after_run(message_bus)
@@ -446,3 +494,59 @@ class ModuleCore(object, metaclass=IModuleRegistry):
             The argument value if found, otherwise the default value
         """
         return self._arguments.get(key, default)
+
+    async def _reactive_loop(self, message_bus: MessageBus) -> None:
+        """
+        Reactive processing loop that processes input as it arrives.
+        This is used by modules with the "reactive" run_mode.
+
+        Args:
+            message_bus: The message bus for inter-module communication
+        """
+        self.log(
+            f"Starting reactive mode for module {self.meta.name}", log_level="debug"
+        )
+
+        # Initial run if needed (some modules may have pre-loaded data)
+        if hasattr(self, "input_data") and self.input_data:
+            try:
+                async with self._processing_lock:
+                    self._is_processing = True
+                    await self._run_iteration(message_bus)
+                    self._is_processing = False
+            except Exception as e:
+                self._logger.error(
+                    f"Error in {self.meta.name} reactive processing: {e}"
+                )
+                self._logger.debug(traceback.format_exc())
+                self._is_processing = False
+
+        # Main reactive loop - wait for shutdown
+        while not self._shutdown_event.is_set():
+            # Wait for either new input or shutdown
+            if self._input_received:
+                try:
+                    async with self._processing_lock:
+                        self._input_received = False
+                        self._is_processing = True
+                        self.log(
+                            f"Processing new input in reactive mode for {self.meta.name}",
+                            log_level="debug",
+                        )
+                        await self._run_iteration(message_bus)
+                        self._is_processing = False
+                except Exception as e:
+                    self._logger.error(
+                        f"Error in {self.meta.name} reactive processing: {e}"
+                    )
+                    self._logger.debug(traceback.format_exc())
+                    self._is_processing = False
+            else:
+                # Wait for new input or shutdown with a small timeout for responsiveness
+                try:
+                    await asyncio.wait_for(self._shutdown_event.wait(), timeout=0.1)
+                except asyncio.TimeoutError:
+                    # Check if we have new input (added by handle_input)
+                    pass
+
+        self.log(f"Exiting reactive loop for {self.meta.name}", log_level="debug")

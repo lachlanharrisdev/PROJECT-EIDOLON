@@ -12,9 +12,25 @@ class ModuleRunTimeOption(object):
 class DependencyModule:
     name: str
     version: str
+    constraint: str = "=="  # Default to exact version matching
 
     def __str__(self) -> str:
-        return f"{self.name}=={self.version}"
+        # Format the dependency as name + constraint + version for pip
+        return f"{self.name}{self.constraint}{self.version}"
+
+    @classmethod
+    def from_requirement_string(cls, req_string: str):
+        """Creates a DependencyModule from a requirement string like 'package>=1.0.0'"""
+        import re
+
+        # Match package name and version with constraint
+        match = re.match(r"([a-zA-Z0-9_\-\.]+)([>=<~!]+)([0-9a-zA-Z\.\-]+)", req_string)
+        if match:
+            name, constraint, version = match.groups()
+            return cls(name=name, version=version, constraint=constraint)
+
+        # If no constraint found, assume it's just a package name
+        return cls(name=req_string, version="", constraint="")
 
 
 @dataclass
@@ -103,6 +119,7 @@ class Device:
 @dataclass
 class PipelineExecution:
     """Configuration for pipeline execution"""
+
     timeout: Optional[str] = None
     max_threads: int = 4
 
@@ -134,6 +151,7 @@ class Pipeline:
     A pipeline contains modules with specific execution order, input/output mappings,
     and execution settings.
     """
+
     name: str
     description: Optional[str] = field(default=None)
     modules: List[PipelineModule] = field(default_factory=list)

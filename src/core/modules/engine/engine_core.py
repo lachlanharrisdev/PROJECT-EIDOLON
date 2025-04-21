@@ -26,6 +26,7 @@ class ModuleEngine:
         self._logger = logging.getLogger("__name__")
         self.pipeline_name = args.get("pipeline", "default")
         self.thread_pool = None
+        self._shutdown_event = asyncio.Event()  # Added for module completion monitoring
         self.use_case = ModuleUseCase(
             {
                 "log_level": args["options"]["log_level"],
@@ -274,13 +275,16 @@ class ModuleEngine:
             try:
                 # Find the corresponding module config in the pipeline
                 pipeline_args = None
-                for pipeline_module in pipeline.modules:
-                    if pipeline_module.name == module_name:
-                        pipeline_args = pipeline_module.config
+                pipeline_module = None
+
+                for pm in pipeline.modules:
+                    if pm.name == module_name:
+                        pipeline_args = pm.config
+                        pipeline_module = pm
                         break
 
                 if pipeline_args:
-                    self._logger.info(
+                    self._logger.debug(
                         f"Setting arguments for module '{module_name}': {pipeline_args}"
                     )
                     module.set_module_arguments(pipeline_args)
@@ -288,6 +292,15 @@ class ModuleEngine:
                     self._logger.debug(
                         f"No arguments found for module '{module_name}' in pipeline"
                     )
+
+                # Set run_mode from pipeline configuration if available
+                if pipeline_module and pipeline_module.run_mode:
+                    # Set the run mode on the module
+                    module._run_mode = pipeline_module.run_mode
+                    self._logger.debug(
+                        f"Setting run mode for module '{module_name}': {pipeline_module.run_mode}"
+                    )
+
             except Exception as e:
                 self._logger.error(
                     f"Error applying arguments to module '{module_name}': {e}"
@@ -395,7 +408,7 @@ class ModuleEngine:
                         )
 
     async def __invoke_modules(self):
-        """Invoke all modules asynchronously."""
+        """Invoke all modules asynchronously and monitor their completion."""
         self.module_tasks = []
 
         for module in self.use_case.modules:
@@ -435,6 +448,60 @@ class ModuleEngine:
 
             except Exception as e:
                 self._logger.error(f"Error starting module {module_name}: {e}")
+
+        # Start a task to monitor module completion
+        asyncio.create_task(self.__monitor_module_completion())
+
+    async def __monitor_module_completion(self):
+        """
+        Monitor the completion status of all modules.
+        Triggers system shutdown when all 'once' modules have completed and there are no 'loop' modules.
+        For 'reactive' modules, checks that they are not currently processing input.
+        """
+        check_interval = 2.0  # Check every 2 seconds
+
+        while not self._shutdown_event.is_set():
+            await asyncio.sleep(check_interval)
+
+            # Check if all modules have completed or are in loop mode
+            all_completed = True
+            has_loop_modules = False
+            reactive_modules_idle = (
+                True  # Are all reactive modules idle (not processing)
+            )
+
+            for module in self.use_case.modules:
+                if module._run_mode == "once":
+                    if not module._is_completed:
+                        all_completed = False
+                        break
+                elif module._run_mode == "reactive":
+                    # Check if the reactive module is currently processing input
+                    if module._is_processing:
+                        reactive_modules_idle = False
+                        self._logger.debug(
+                            f"Reactive module {module.meta.name} is still processing input"
+                        )
+                else:
+                    # Module is in loop mode or another continuous mode
+                    has_loop_modules = True
+
+            # Log the monitoring status periodically for debugging
+            self._logger.debug(
+                f"Module monitoring: all_completed={all_completed}, "
+                f"reactive_modules_idle={reactive_modules_idle}, "
+                f"has_loop_modules={has_loop_modules}"
+            )
+
+            # If all 'once' modules are completed, all reactive modules are idle,
+            # and there are no 'loop' modules, then we can initiate shutdown
+            if all_completed and reactive_modules_idle and not has_loop_modules:
+                self._logger.info(
+                    "All modules have completed or are idle. Initiating system shutdown."
+                )
+                # Trigger the shutdown through the coordinator
+                self.shutdown_coordinator.trigger_shutdown()
+                break
 
     @staticmethod
     def create_engine(**args):

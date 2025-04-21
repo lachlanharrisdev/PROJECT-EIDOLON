@@ -1,0 +1,31 @@
+name: aethon_urllist
+alias: url_list_loader
+creator: Project Eidolon Team
+repository: https://github.com/lachlanharrisdev/project-eidolon
+description: URL list loader module that reads URLs from files or provides example URLs
+version: 0.1.0
+
+runtime:
+  main: module.py
+  tests: []
+
+inputs:
+  - name: file_paths
+    type: Union[str, List[str]]
+    description: Path(s) to file(s) containing URLs (one per line)
+
+outputs:
+  - name: urls
+    type: List[str]
+    description: List of URLs loaded from files
+
+requirements: []
+
+# Default configuration
+config:
+  supported_formats: [".txt", ".csv", ".json", ".xml"]
+  example_mode: false
+  example_count: 50
+  skip_empty_lines: true
+  strip_whitespace: true
+  remove_duplicates: true
