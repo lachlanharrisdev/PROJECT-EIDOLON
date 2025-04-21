@@ -180,3 +180,4 @@ cython_debug/
 .vscode/
 .logs/
 src/reports/
+reports/

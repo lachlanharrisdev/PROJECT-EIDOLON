@@ -1,0 +1,26 @@
+name: 'hermes'
+description: 'A versatile data reporting module that generates minimalistic, readable reports from various data sources'
+version: '1.0.0'
+alias: 'hermes'
+creator: 'Project Eidolon'
+runtime:
+  main: 'module.py'
+  tests:
+    - 'tests/test_hermes.py'
+repository: 'https://github.com/lachlanharrisdev/PROJECT-EIDOLON'
+requirements:
+  - name: 'tabulate'
+    version: '0.9.0'
+  - name: 'jinja2'
+    version: '3.0.0'
+inputs:
+  - name: "data"
+    type: "List[Dict[str, Any]]"
+    description: "Structured data to be reported"
+outputs:
+  - name: "report" 
+    type: "Dict[str, Any]"
+    description: "Formatted report data structure"
+  - name: "summary"
+    type: "str"
+    description: "Brief textual summary of the processed data"

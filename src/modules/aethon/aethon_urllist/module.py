@@ -33,6 +33,11 @@ class URLListModule(ModuleCore):
         self.strip_whitespace = config.get("strip_whitespace", True)
         self.remove_duplicates = config.get("remove_duplicates", True)
 
+        # Handle file_path if provided directly in the pipeline config
+        self.file_paths = config.get("file_path", None)
+        if self.file_paths:
+            self.log(f"File path provided in configuration: {self.file_paths}")
+
         # Initialize data structures
         self.urls = []
 
@@ -78,6 +83,12 @@ class URLListModule(ModuleCore):
             self.skip_empty_lines = args.get("skip_empty_lines", True)
             self.strip_whitespace = args.get("strip_whitespace", True)
             self.remove_duplicates = args.get("remove_duplicates", True)
+
+            # Make sure we respect the file_path parameter
+            if not hasattr(self, "file_paths") or self.file_paths is None:
+                self.file_paths = args.get("file_path", None)
+                if self.file_paths:
+                    self.log(f"File path found in arguments: {self.file_paths}")
 
             # Check if we're in example mode
             if self.example_mode:

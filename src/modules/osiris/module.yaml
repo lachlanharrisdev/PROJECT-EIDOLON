@@ -1,0 +1,36 @@
+name: osiris
+alias: data-filter
+description: A lightweight data filter module that filters data based on rules
+version: 0.1.0
+creator: Project Eidolon Team
+repository: https://github.com/lachlanharrisdev/PROJECT-EIDOLON
+
+runtime:
+  main: module.py
+  tests: []
+
+inputs:
+  - name: data
+    type: List[dict]
+    description: List of dictionaries containing data to filter
+
+outputs:
+  - name: filtered_data
+    type: List[dict]
+    description: List of dictionaries that passed the filter rules
+  - name: filtered_out_data
+    type: List[dict]
+    description: List of dictionaries that didn't pass the filter rules
+  - name: pass_count
+    type: int
+    description: Number of items that passed the filter
+  - name: reject_count
+    type: int
+    description: Number of items that didn't pass the filter
+
+requirements: []
+
+# Default configuration
+config:
+  rules:
+    status_codes: [200, 201, 202, 203, 204, 205, 206, 207, 208, 226]

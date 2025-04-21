@@ -3,100 +3,179 @@ import signal
 import os
 import yaml
 import pytest
+import re
+import asyncio
+from typing import List, Dict, Any, Optional
 from pathlib import Path
+from enum import Enum
+
+import typer
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
+from rich.table import Table
 
 from core.modules.engine.engine_core import ModuleEngine
 from core.util.logging import configure_logging
 from core.modules.util import FileSystem
-from core.security.utils import verify_module, get_public_key
+from core.security.utils import (
+    verify_module,
+    get_public_key,
+    get_module_verification_status,
+)
+from core.util.version_utils import (
+    get_current_version,
+    print_version_info,
+    download_update,
+    check_for_updates,
+)
+from core.constants import DEFAULT_VERSION
+
+# Create Typer app
+app = typer.Typer(
+    help="Eidolon CLI Tool - A modular OSINT suite for analyzing disinformation.",
+    add_completion=False,
+)
+
+# Console for rich output
+console = Console()
+
+# Version is now dynamically determined
+VERSION = get_current_version()
 
 
-# ANSI color codes for color-coded output
-class Colors:
-    RESET = "\033[0m"
-    BOLD = "\033[1m"
-    GREEN = "\033[92m"
-    YELLOW = "\033[93m"
-    RED = "\033[91m"
-    BLUE = "\033[94m"
+class LogLevel(str, Enum):
+    """Enum for log levels"""
+
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+    CRITICAL = "CRITICAL"
 
 
-def color_print(message, color=Colors.RESET, bold=False):
-    """Print a message with optional color and bold formatting."""
-    style = Colors.BOLD if bold else ""
-    print(f"{style}{color}{message}{Colors.RESET}")
+class ListType(str, Enum):
+    """Enum for list command types"""
+
+    MODULES = "modules"
+    PIPELINES = "pipelines"
 
 
-USAGE = """
-Eidolon CLI Tool - A modular OSINT suite for analyzing disinformation.
+def print_styled(
+    message: str, style: str = "green", bold: bool = False, panel: bool = False
+):
+    """Print styled message using Rich"""
+    text = Text(message)
+    text.stylize(style)
+    if bold:
+        text.stylize("bold")
 
-Usage:
-  eidolon run [<pipeline>] [--log-level=<level> | --verbose | --quiet | --silent] [--set <setting>=<value>...]...
-  eidolon list [(pipeline | modules)] [--filter=<filter>]
-  eidolon config <setting> [<value>]
-  eidolon validate [<directory>]
-  eidolon version
-    eidolon -V | --version
-  eidolon help
-    eidolon -h | --help
-
-Options:
-  -h --help                 Show this help message.
-  -V --version              Show the version of the CLI.
-  --log-level=<level>       Set the logging level [default: INFO].
-                            Options: DEBUG, INFO, WARNING, ERROR, CRITICAL.
-  --verbose                 Enable verbose output (equivalent to --log-level=DEBUG).
-  --quiet                   Suppress all output below WARNING (equivalent to --log-level=WARNING).
-  --silent                  Suppress all output below ERROR (equivalent to --log-level=ERROR).
-  --filter=<filter>         Filter results to only show items that include the filter string in their name.
-  --set <setting>=<value>  Set a module argument defined in the pipeline (e.g., 'scraper.timeout=30').
-
-Arguments:
-  <pipeline>                Name of pipeline to run [default: default].
-                            This is the name of a YAML file in src/pipelines/ (with or without the .yaml extension).
-  <setting>                 Configuration setting path (e.g., 'logging.level' or 'registry.url').
-  <value>                   New value for the configuration setting.
-  <directory>               Directory to run tests in [default: tests].
-  <setting>                 Module ID and argument defined in pipeline (e.g., 'scraper.timeout').
-
-Commands:
-  run       Run the application with modules specified in the pipeline.
-  list      List available pipelines or modules, including descriptions and metadata.
-  config    View or update global configuration settings.
-  validate  Run tests using pytest in the specified directory.
-  version   Show the version of the CLI.
-
-Examples:
-  eidolon run
-  eidolon run custom_pipeline --verbose --set scraper.timeout=30
-  eidolon list modules --filter=keyword
-  eidolon list pipelines
-  eidolon config logging.level
-  eidolon config logging.level DEBUG
-  eidolon validate
-"""
-
-
-def run_command(args):
-    """Run the main application with modules from the specified pipeline."""
-    import asyncio
-
-    log_level = args["--log-level"].upper()
-    pipeline = args["<pipeline>"] or "default"
-
-    if args["--verbose"]:
-        logger = configure_logging(log_level="DEBUG")
-    elif args["--quiet"]:
-        logger = configure_logging(log_level="WARNING")
-    elif args["--silent"]:
-        logger = configure_logging(log_level="ERROR")
-    elif log_level and log_level in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
-        logger = configure_logging(log_level=log_level)
+    if panel:
+        console.print(Panel(text))
     else:
-        logger = configure_logging(log_level="INFO")
+        console.print(text)
 
+
+@app.command("run")
+def run_command(
+    pipeline: str = typer.Argument("default", help="Name of pipeline to run"),
+    log_level: LogLevel = typer.Option(
+        LogLevel.INFO, "--log-level", "-l", help="Set the logging level"
+    ),
+    verbose: bool = typer.Option(
+        False,
+        "--verbose",
+        "-v",
+        help="Enable verbose output (equivalent to --log-level=DEBUG)",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "--quiet",
+        "-q",
+        help="Suppress output below ERROR (equivalent to --log-level=ERROR)",
+    ),
+    settings: List[str] = typer.Option(
+        [],
+        "--set",
+        "-s",
+        help="Set module arguments defined in pipeline (e.g., 'scraper.timeout=30')",
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        "-n",
+        help="Validate configuration without executing modules (test mode)",
+    ),
+    timeout: Optional[int] = typer.Option(
+        None,
+        "--timeout",
+        "-t",
+        help="Set execution timeout in seconds for the entire pipeline",
+    ),
+    output: Optional[str] = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Write output to the specified file instead of stdout",
+    ),
+):
+    """Run the application with modules specified in the pipeline."""
+
+    # Process log level
+    level = log_level.value
+    if verbose:
+        level = log_level.DEBUG.value
+    elif quiet:
+        level = log_level.ERROR.value
+
+    # Configure logging
+    logger = configure_logging(log_level=level)
     logger.info(f"Starting Eidolon with pipeline: {pipeline}")
-    engine = ModuleEngine(options={"log_level": log_level}, pipeline=pipeline)
+
+    # Process settings
+    module_settings = {}
+    for setting in settings:
+        # Parse settings in format module.param=value or --module.param=value
+        match = re.match(r"^(--)?([\w-]+)\.([\w-]+)=(.+)$", setting)
+        if match:
+            _, module_id, param_name, value = match.groups()
+            if module_id not in module_settings:
+                module_settings[module_id] = {}
+            module_settings[module_id][param_name] = value
+            logger.debug(f"Setting {module_id}.{param_name}={value}")
+        else:
+            logger.warning(
+                f"Invalid setting format: {setting}, expected module.param=value"
+            )
+
+    # Handle dry run mode
+    if dry_run:
+        print_styled(
+            "DRY RUN MODE - Validating configuration only",
+            style="blue",
+            bold=True,
+            panel=True,
+        )
+        logger.info("Running in dry-run mode - modules will not be executed")
+
+    # Handle output file if specified
+    if output:
+        logger.info(f"Output will be written to file: {output}")
+
+    # Handle timeout
+    pipeline_options = {}
+    if timeout is not None:
+        logger.info(f"Setting pipeline timeout to {timeout} seconds")
+        pipeline_options["timeout"] = timeout
+
+    # Initialize the engine with settings
+    engine = ModuleEngine(
+        options={"log_level": level},
+        pipeline=pipeline,
+        module_settings=module_settings,  # Pass module settings to the engine
+        dry_run=dry_run,  # Pass dry run flag to the engine
+        pipeline_options=pipeline_options,  # Pass additional pipeline options
+    )
 
     logger.info("Running modules asynchronously...")
 
@@ -114,31 +193,39 @@ def run_command(args):
         result = asyncio.run(run_engine())
         if not result:
             logger.error(f"Failed to start engine with pipeline '{pipeline}'")
-            return False
-        return True
+            return typer.Exit(code=1)
+        return typer.Exit(code=0)
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt received, shutting down...")
-        return True
+        return typer.Exit(code=0)
 
 
-def list_command(args):
-    """List available pipelines or modules with their descriptions and metadata."""
-    list_type = "modules"  # Default to modules
-    if args["pipeline"]:
-        list_type = "pipeline"
+@app.command("list")
+def list_command(
+    list_type: Optional[ListType] = typer.Argument(
+        None, help="Type of items to list (modules or pipeline)"
+    ),
+    filter_str: str = typer.Option(
+        "",
+        "--filter",
+        "-f",
+        help="Filter results to only show items that include the filter string in their name",
+    ),
+):
+    """List available pipelines or modules, including descriptions and metadata."""
+    # Default to modules if not specified
+    type_to_list = list_type or ListType.MODULES
 
-    filter_str = args["--filter"] or ""
-
-    if list_type == "pipeline":
+    if type_to_list == ListType.PIPELINES:
         list_pipelines(filter_str)
     else:
         list_modules(filter_str)
 
 
-def list_pipelines(filter_str=""):
+def list_pipelines(filter_str: str = ""):
     """List available pipelines with descriptions."""
-    color_print("Available Pipelines:", Colors.BLUE, bold=True)
-    print()
+    print_styled("Available Pipelines:", style="blue", bold=True)
+    console.print()
 
     pipelines_dir = (
         Path(os.path.dirname(os.path.abspath(__file__))) / "../../../src/pipelines"
@@ -147,7 +234,7 @@ def list_pipelines(filter_str=""):
     pipeline_files = list(pipelines_dir.glob("*.yaml"))
 
     if not pipeline_files:
-        color_print("No pipelines found!", Colors.YELLOW, bold=True)
+        print_styled("No pipelines found!", style="yellow", bold=True)
         return
 
     for pipeline_file in sorted(pipeline_files):
@@ -161,11 +248,11 @@ def list_pipelines(filter_str=""):
             with open(pipeline_file, "r") as f:
                 pipeline_data = yaml.safe_load(f)
 
-            color_print(f"Pipeline: {pipeline_name}", Colors.GREEN, bold=True)
+            print_styled(f"Pipeline: {pipeline_name}", style="green", bold=True)
 
             # Display modules in the pipeline
             if pipeline_data and "modules" in pipeline_data:
-                print(f"  Modules ({len(pipeline_data['modules'])}):")
+                console.print(f"  Modules ({len(pipeline_data['modules'])}):")
                 for module in pipeline_data["modules"]:
                     module_name = module.get("name", "Unknown")
                     dependencies = module.get("depends_on", [])
@@ -174,35 +261,33 @@ def list_pipelines(filter_str=""):
                         if dependencies
                         else ""
                     )
-                    print(f"   - {module_name}{dep_str}")
+                    console.print(f"   - {module_name}{dep_str}")
             else:
-                print("  No modules defined in this pipeline.")
+                console.print("  No modules defined in this pipeline.")
 
-            print()
+            console.print()
         except Exception as e:
-            print(f"  Error loading pipeline {pipeline_name}: {str(e)}")
-            print()
+            console.print(f"  Error loading pipeline {pipeline_name}: {str(e)}")
+            console.print()
 
 
-def list_modules(filter_str=""):
+def list_modules(filter_str: str = ""):
     """List available modules with descriptions, versions, and verification status."""
-    color_print("Available Modules:", Colors.BLUE, bold=True)
-    print()
+    print_styled("Available Modules:", style="blue", bold=True)
+    console.print()
 
     modules_directory_str = FileSystem.get_modules_directory()
     modules_directory = Path(modules_directory_str)
 
     if not modules_directory.exists():
-        color_print("Modules directory not found!", Colors.RED, bold=True)
+        print_styled("Modules directory not found!", style="red", bold=True)
         return
 
     # Get verification status for all modules
-    from core.security.utils import get_module_verification_status, get_public_key
-
     public_key = get_public_key()
     if not public_key:
-        color_print(
-            "Failed to load public key for module verification", Colors.RED, bold=True
+        print_styled(
+            "Failed to load public key for module verification", style="red", bold=True
         )
         verification_status = {}
     else:
@@ -217,7 +302,7 @@ def list_modules(filter_str=""):
     module_dirs = [d for d in modules_directory.iterdir() if d.is_dir()]
 
     if not module_dirs:
-        color_print("No modules found!", Colors.YELLOW, bold=True)
+        print_styled("No modules found!", style="yellow", bold=True)
         return
 
     for module_dir in sorted(module_dirs):
@@ -241,30 +326,39 @@ def list_modules(filter_str=""):
 
             # Check verification status
             verified = verification_status.get(module_name, False)
-            verification_color = Colors.GREEN if verified else Colors.YELLOW
+            verification_style = "green" if verified else "yellow"
             verification_status_text = "Verified" if verified else "Unverified"
 
-            color_print(f"Module: {name}", Colors.GREEN, bold=True)
-            print(f"  Description: {description}")
-            print(f"  Version: {version}")
-            color_print(f"  Status: {verification_status_text}", verification_color)
+            print_styled(f"Module: {name}", style="green", bold=True)
+            console.print(f"  Description: {description}")
+            console.print(f"  Version: {version}")
+            print_styled(
+                f"  Status: {verification_status_text}", style=verification_style
+            )
 
             if "requirements" in module_data and module_data["requirements"]:
-                print("  Requirements:")
+                console.print("  Requirements:")
                 for req in module_data["requirements"]:
-                    print(f"   - {req.get('name', 'Unknown')} {req.get('version', '')}")
+                    console.print(
+                        f"   - {req.get('name', 'Unknown')} {req.get('version', '')}"
+                    )
 
-            print()
+            console.print()
         except Exception as e:
-            print(f"  Error loading module {module_name}: {str(e)}")
-            print()
+            console.print(f"  Error loading module {module_name}: {str(e)}")
+            console.print()
 
 
-def config_command(args):
+@app.command("config")
+def config_command(
+    setting: str = typer.Argument(
+        ..., help="Configuration setting path (e.g., 'logging.level')"
+    ),
+    value: Optional[str] = typer.Argument(
+        None, help="New value for the configuration setting"
+    ),
+):
     """View or update a configuration setting."""
-    setting_path = args["<setting>"]
-    new_value = args["<value>"]
-
     # Load the configuration file
     config_path = (
         Path(os.path.dirname(os.path.abspath(__file__)))
@@ -272,141 +366,172 @@ def config_command(args):
     )
 
     if not config_path.exists():
-        color_print(
-            f"Configuration file not found at {config_path}", Colors.RED, bold=True
+        print_styled(
+            f"Configuration file not found at {config_path}", style="red", bold=True
         )
-        return False
+        return typer.Exit(code=1)
 
     try:
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
 
         # Parse the setting path (e.g., 'logging.level')
-        setting_parts = setting_path.split(".")
+        setting_parts = setting.split(".")
 
         # Navigate through the config structure to find the setting
         current = config
         for part in setting_parts[:-1]:
             if part not in current:
-                color_print(
-                    f"Setting '{setting_path}' not found in configuration",
-                    Colors.RED,
+                print_styled(
+                    f"Setting '{setting}' not found in configuration",
+                    style="red",
                     bold=True,
                 )
-                return False
+                return typer.Exit(code=1)
             current = current[part]
 
         last_part = setting_parts[-1]
         if last_part not in current:
-            color_print(
-                f"Setting '{setting_path}' not found in configuration",
-                Colors.RED,
+            print_styled(
+                f"Setting '{setting}' not found in configuration",
+                style="red",
                 bold=True,
             )
-            return False
+            return typer.Exit(code=1)
 
         current_value = current[last_part]
 
         # If no new value is provided, just display the current value
-        if new_value is None:
-            color_print(
-                f"Current value of '{setting_path}': {current_value}",
-                Colors.GREEN,
+        if value is None:
+            print_styled(
+                f"Current value of '{setting}': {current_value}",
+                style="green",
                 bold=True,
             )
-            return True
+            return typer.Exit(code=0)
 
         # Update the setting with the new value
         old_value = current[last_part]
-        current[last_part] = new_value
+        current[last_part] = value
 
         # Save the updated configuration back to the file
         with open(config_path, "w") as f:
             yaml.dump(config, f, default_flow_style=False)
 
-        color_print(f"Updated '{setting_path}':", Colors.GREEN, bold=True)
-        color_print(f"  Old value: {old_value}", Colors.YELLOW)
-        color_print(f"  New value: {new_value}", Colors.GREEN)
+        print_styled(f"Updated '{setting}':", style="green", bold=True)
+        print_styled(f"  Old value: {old_value}", style="yellow")
+        print_styled(f"  New value: {value}", style="green")
 
-        return True
+        return typer.Exit(code=0)
 
     except Exception as e:
-        color_print(f"Error updating configuration: {str(e)}", Colors.RED, bold=True)
-        return False
+        print_styled(f"Error updating configuration: {str(e)}", style="red", bold=True)
+        return typer.Exit(code=1)
 
 
-def validate_command(args):
+@app.command("validate")
+def validate_command(
+    directory: str = typer.Argument("tests", help="Directory to run tests in")
+):
     """Run tests using pytest in the specified directory."""
-    directory = args["<directory>"] or "tests"
-
-    color_print(f"Running tests in '{directory}'...", Colors.BLUE, bold=True)
+    print_styled(f"Running tests in '{directory}'...", style="blue", bold=True)
 
     try:
         exit_code = pytest.main([directory])
 
         if exit_code == 0:
-            color_print("All tests passed!", Colors.GREEN, bold=True)
-            return True
+            print_styled("All tests passed!", style="green", bold=True)
+            return typer.Exit(code=0)
         else:
-            color_print(
-                f"Tests failed with exit code {exit_code}", Colors.RED, bold=True
+            print_styled(
+                f"Tests failed with exit code {exit_code}", style="red", bold=True
             )
-            return False
+            return typer.Exit(code=1)
     except Exception as e:
-        color_print(f"Error running tests: {str(e)}", Colors.RED, bold=True)
-        return False
+        print_styled(f"Error running tests: {str(e)}", style="red", bold=True)
+        return typer.Exit(code=1)
 
 
-def version_command():
-    """Display the CLI version."""
-    color_print("v0.3.0", Colors.GREEN, bold=True)
+@app.command("version")
+def version_command(
+    check_updates: bool = typer.Option(
+        True,
+        "--check-updates/--no-check-updates",
+        help="Check for updates when displaying version",
+    ),
+):
+    """Display the CLI version and check for updates."""
+    # Use the version utility to print version info
+    (
+        print_version_info()
+        if check_updates
+        else console.print(f"Eidolon version: {VERSION}", style="green bold")
+    )
+
+
+@app.command("update")
+def update_command(
+    force: bool = typer.Option(
+        False,
+        "--force",
+        "-f",
+        help="Force update even if already on the latest version",
+    ),
+):
+    """Update Eidolon to the latest version from the repository."""
+    update_available, current_version, latest_version = check_for_updates(force=True)
+
+    if not update_available and not force:
+        console.print(
+            f"You are already using the latest version: {current_version}",
+            style="green",
+        )
+        return
+
+    if force:
+        console.print(
+            f"Forcing update from {current_version} to latest version...",
+            style="yellow",
+        )
+    else:
+        console.print(
+            f"Updating from {current_version} to {latest_version}...", style="blue"
+        )
+
+    # Perform the update
+    success = download_update()
+
+    if success:
+        console.print("Update completed successfully!", style="green bold")
+    else:
+        console.print(
+            "Update failed. Please try again or update manually.", style="red bold"
+        )
+        return typer.Exit(code=1)
 
 
 def main():
-    from .docopt import docopt
-
-    # Parse arguments using docopt
-    args = docopt(USAGE, version="v0.3.0")
+    """Entry point for the CLI."""
 
     # Gracefully handle SIGINT (Ctrl+C)
     def handle_sigint(signum, frame):
-        color_print(
-            "Shutdown initiated. Exiting gracefully...", Colors.YELLOW, bold=True
+        print_styled(
+            "Shutdown initiated. Exiting gracefully...", style="yellow", bold=True
         )
         sys.exit(0)
 
     signal.signal(signal.SIGINT, handle_sigint)
 
-    # Dispatch commands
-    success = True
-    if args["run"]:
-        success = run_command(args)
-        if not success:
-            sys.exit(1)
-    elif args["list"]:
-        success = list_command(args)
-        if not success:
-            sys.exit(1)
-    elif args["config"]:
-        success = config_command(args)
-        if not success:
-            sys.exit(1)
-    elif args["validate"]:
-        success = validate_command(args)
-        if not success:
-            sys.exit(1)
-    elif args["version"] or args["--version"]:
-        version_command()
-    elif args["help"] or args["--help"]:
-        print(USAGE)
+    # Run the Typer app
+    app()
 
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        color_print("Process interrupted by user. Exiting...", Colors.RED, bold=True)
+        print_styled("Process interrupted by user. Exiting...", style="red", bold=True)
         sys.exit(0)
     except Exception as e:
-        color_print(f"Error: {e}", Colors.RED, bold=True)
+        print_styled(f"Error: {e}", style="red", bold=True)
         sys.exit(1)

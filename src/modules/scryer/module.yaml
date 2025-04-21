@@ -1,0 +1,24 @@
+name: 'scryer'
+description: 'A flexible post-crawl analyzer that extracts structured data from web content'
+version: '1.0.0'
+alias: 'scryer'
+creator: 'Project Eidolon'
+runtime:
+  main: 'module.py'
+  tests:
+    - 'tests/test_scryer.py'
+repository: 'https://github.com/lachlanharrisdev/PROJECT-EIDOLON'
+requirements:
+  - name: 'beautifulsoup4'
+    version: '4.12.0'
+inputs:
+  - name: "crawled_data"
+    type: "List[Dict[str, Any]]"
+    description: "Crawled page data from Aethon crawler"
+outputs:
+  - name: "extracted_data" 
+    type: "List[Dict[str, Any]]"
+    description: "A list of dictionaries containing structured data extracted from crawled pages"
+  - name: "extraction_count"
+    type: "int"
+    description: "Number of successfully parsed and processed pages"

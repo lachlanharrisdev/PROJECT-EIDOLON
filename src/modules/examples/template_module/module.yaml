@@ -1,7 +1,6 @@
-meta:
-  name: 'template_module'
-  description: 'This is a sample module description'
-  version: '0.0.1'
+name: 'template_module'
+description: 'This is a sample module description'
+version: '0.0.1'
 alias: 'template-module'
 creator: 'John Doe'
 runtime:
