@@ -88,7 +88,9 @@ Every pipeline, every module & every command is configurable down to the core. Y
 * The CLI has a powerful array of commands & arguments to make every run feel special
 * Every module is swappable & removable
 * A sophisticated translation layer converts datatypes automatically, so everything **just works**
-
+```python
+eidolon run -s crawler.timeout=10 scryer.phones=false
+```
 ```yaml
 modules:
 - name: aethon_crawler
@@ -98,6 +100,7 @@ modules:
   output: [crawled_data: "crawled_data", crawled_count: "url_count"]
 
 - name: scryer
+  config: [phones: true, emails: true]
   input: [data: crawler.crawled_data]
 ```
 
@@ -269,11 +272,16 @@ graph TD
 1. Clone the repo
 ```bash
 git clone https://github.com/lachlanharrisdev/project-eidolon.git
+```
+
+2. Change directory
+```
 cd project-eidolon
 ```
+
 > **NON-DEVELOPERS:** If you don't plan on modifying any source code, just only follow the step below:
 
-2. Install the tool
+3. Install the tool
 ```bash
 pip install .
 ```
@@ -282,12 +290,13 @@ pip install .
 
 > **DEVELOPERS / CONTRIBUTORS:** If you plan on modifying any code, then please continue from here
 
-2. Install package + dependencies
+3. Install package + dependencies
 ```bash
 pip install -r requirements.txt
+pip install -e .
 ```
 
-3. Setup a development environment (Highly recommended):
+4. Setup a development environment (Highly recommended):
 ```bash
 # Windows
 python -m venv .venv
