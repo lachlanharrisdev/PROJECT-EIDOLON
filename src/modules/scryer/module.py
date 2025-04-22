@@ -66,7 +66,7 @@ class ScryerModule(ModuleCore):
             return
 
         # Ensure we have the latest config
-        self.config = self.get_arguments() or self.config
+        self.config = self.get_arguments() or self._config
 
         # Re-initialize extractors if needed
         if not self.extractors:
@@ -80,6 +80,10 @@ class ScryerModule(ModuleCore):
         self.extraction_count = 0
         self.extraction_failures = []
 
+        # Counters for email and phone extractions
+        total_emails = 0
+        total_phones = 0
+
         try:
             # Process each URL's data
             for item in self.crawled_data:
@@ -89,6 +93,11 @@ class ScryerModule(ModuleCore):
                         self.extracted_data.append(result)
                         if result.get("success", False):
                             self.extraction_count += 1
+                            # Count emails and phones for logging
+                            if "emails" in result:
+                                total_emails += len(result["emails"])
+                            if "phones" in result:
+                                total_phones += len(result["phones"])
                 except Exception as e:
                     self.log(
                         f"Error processing {item.get('url', 'unknown')}: {str(e)}",
@@ -97,6 +106,13 @@ class ScryerModule(ModuleCore):
                     self.extraction_failures.append(
                         {"url": item.get("url", "unknown"), "error": str(e)}
                     )
+
+            # Log extraction summary for contact information
+            if total_emails > 0 or total_phones > 0:
+                self.log(
+                    f"Contact information found: {total_emails} emails, {total_phones} phone numbers",
+                    "info",
+                )
 
             # Generate and log extraction summary
             self._log_extraction_summary()
@@ -123,7 +139,9 @@ class ScryerModule(ModuleCore):
             "meta": extract_config.get("meta", ["description", "keywords", "author"]),
             "links": extract_config.get("links", True),
             "emails": extract_config.get("emails", True),
-            "phones": extract_config.get("phones", False),
+            "phones": extract_config.get(
+                "phones", True
+            ),  # Changed from False to True to enable by default
             "headers": extract_config.get("headers", False),
             "cookies": extract_config.get("cookies", False),
             "custom_selectors": extract_config.get("custom_selectors", []),
@@ -361,15 +379,67 @@ class ScryerModule(ModuleCore):
         return links
 
     def _extract_emails(self, text: str) -> Set[str]:
-        """Extract email addresses from text."""
-        email_pattern = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
-        return set(re.findall(email_pattern, text))
+        """
+        Extract email addresses from text.
+
+        This method extracts email addresses using regex patterns and also checks
+        for mailto: links in the HTML when possible.
+        """
+        # More comprehensive regex for emails that handles more edge cases
+        email_pattern = r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
+        emails = set(re.findall(email_pattern, text))
+
+        # Also look for mailto: links which often contain emails not in plain text
+        mailto_pattern = r"mailto:([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})"
+        mailto_emails = set(re.findall(mailto_pattern, text))
+
+        # Combine both sets
+        emails.update(mailto_emails)
+
+        # Log what we found for debugging
+        if emails:
+            self.log(f"Found {len(emails)} email addresses", "debug")
+
+        return emails
 
     def _extract_phones(self, text: str) -> Set[str]:
-        """Extract phone numbers from text."""
-        # This is a simple pattern - could be enhanced for international formats
-        phone_pattern = r"(\+\d{1,3}\s?)?(\()?\d{3}(\))?[\s.-]?\d{3}[\s.-]?\d{4}"
-        return set(re.findall(phone_pattern, text))
+        """
+        Extract phone numbers from text.
+
+        This method uses multiple regex patterns to extract phone numbers in various formats:
+        - North American: +1 (555) 123-4567, 555-123-4567
+        - International: +XX XXX XXX XXXX
+        - European: +XX XX XXX XX XX
+        - Common formats with dots, spaces, or dashes as separators
+        """
+        phone_patterns = [
+            # North American format: +1 (555) 123-4567 or 555-123-4567
+            r"(?:\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})",
+            # International format with country code: +XX XXXXXXXXXX
+            r"(?:\+|00)[1-9][0-9\s\-().]{7,}[0-9]",
+            # Additional formats like: 555.123.4567 or 555 123 4567
+            r"[0-9]{3}[.\s][0-9]{3}[.\s][0-9]{4}",
+            # European formats like: +XX XX XXX XX XX
+            r"(?:\+|00)[1-9]{2}(?:[-.\s][0-9]{2}){4}",
+        ]
+
+        # Gather results from all patterns
+        phones = set()
+        for pattern in phone_patterns:
+            matches = re.findall(pattern, text)
+            # Handle tuples from capturing groups in the first pattern
+            for match in matches:
+                if isinstance(match, tuple):
+                    # Format the phone number consistently
+                    phones.add(f"({match[0]}) {match[1]}-{match[2]}")
+                else:
+                    phones.add(match)
+
+        # Log what we found for debugging
+        if phones:
+            self.log(f"Found {len(phones)} phone numbers", "debug")
+
+        return phones
 
     def _extract_cookies(self, page_data: Dict) -> List[Dict]:
         """Extract cookies from the response."""

@@ -13,12 +13,13 @@ pipeline:
   - name: example_malicious_module
     id: example_malicious_module
     run_mode: once
+
   - name: aethon_urllist
     id: loader
     config:
       supported_formats: [".txt", ".csv", ".json", ".xml"]
       example_mode: true
-      example_count: 30
+      example_count: 300
       skip_empty_lines: true
       strip_whitespace: true
       remove_duplicates: true
