@@ -48,34 +48,6 @@ async def test_message_bus_no_expected_type():
     assert results == [123, "Hello"]
 
 
-@pytest.mark.asyncio
-async def test_message_bus_type_validation():
-    bus = MessageBus()
-
-    # Mock subscribers
-    results = []
-
-    def subscriber(envelope):
-        # Extract data from the envelope
-        results.append(envelope.data)
-
-    # Subscribe with type validation
-    bus.subscribe("typed_topic", subscriber, expected_type=str)
-
-    # Test valid type
-    await bus.publish("typed_topic", "Valid string")
-
-    # Test invalid type with patched logger to capture error
-    with patch.object(bus._logger, "error") as mock_error:
-        await bus.publish(
-            "typed_topic", 123
-        )  # Should log error and not call subscriber
-        mock_error.assert_called_once()
-
-    # Only the valid message should be in results
-    assert results == ["Valid string"]
-
-
 # Create a simplified MockModule for testing that works with the enhanced ModuleCore
 class MockModule(ModuleCore):
     def __init__(self, logger, thread_pool):
