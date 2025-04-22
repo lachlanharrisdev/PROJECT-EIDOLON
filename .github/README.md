@@ -60,12 +60,22 @@
 
 # // OVERVIEW
 
-Eidolon is a modular, enterprise-ready pipeline framework built to automate & strengthen information-gathering workflows in OSINT, red-teaming & other cyber-security roles. It allows any tools - not just the default tools, other python applications & even non-python tools - to gracefully interact with one another, while all running asynchronously & recieving / publishing input on a shared message bus. Modules are verified before initialization, and are fully isolated from one another in error-resistant environments.
+**Imagine this.**
 
-> ### **EIDOLON**
-> #### *Noun* ● /ʌɪˈdəʊlɒn/
-> In ancient Greek literature, an eidolon is a spirit-image of a living or dead person; a shade or phantom 'look-alike' of the human form.
-> <br/>
+You plug in a single URL.
+
+One command fires off a web scraper, a web crawler, a whois lookup, a passive vulnerability scanner, an outdated JS sniffer, and even an XSS probe — all dancing together in perfect sync, no spaghetti code, no awkward bash chains, no tears.
+
+Sixty seconds later, a polished report lands in your hands like it came from a Hollywood hacking montage.
+
+**That’s Eidolon.**
+
+But don’t be fooled by the magic show. Under the hood is a modular, stateless message bus that orchestrates I/O between pluggable components — each one signed, validated, and hot-swappable. You can wrap anything into a module: a CLI tool, a Python function, a Docker container. Eidolon turns them all into actors in your own scriptable pipeline.
+
+Build once, reuse everywhere. No more writing glue code. No more rewriting your entire workflow just because you found a cooler library.
+
+Eidolon doesn’t just connect tools — it makes them **speak the same language.**
+
 <br/>
 
 # // FEATURES
@@ -79,6 +89,18 @@ Every pipeline, every module & every command is configurable down to the core. Y
 * Every module is swappable & removable
 * A sophisticated translation layer converts datatypes automatically, so everything **just works**
 
+```yaml
+modules:
+- name: aethon_crawler
+  id: crawler
+  config: [concurrency: 300, timeout: 8, verify_ssl: true]
+  input: [urls: cleaner.cleaned_urls]
+  output: [crawled_data: "crawled_data", crawled_count: "url_count"]
+
+- name: scryer
+  input: [data: crawler.crawled_data]
+```
+
 <br/>
 
 ## SECURE
@@ -89,6 +111,19 @@ Anything that has the slightest chance of exposing your device you aren't told a
 * Add or delete any trusted module authors to allow their verified modules
 * Self-sign modules you create & share them with the world
 * Many configurable arguments to automate module permission
+
+```bash
+2025-01-01 12:00:00,000 INFO     [module_security.py:317]     Module 'aethon_urllist' verified by John Doe (Project Eidolon Owner)
+2025-01-01 12:00:00,000 INFO     [engine_core.py:274]         Module 'aethon_urllist' verification successful
+
+⚠️  SECURITY WARNING: Module 'example_malicious_module' is unsigned
+This module has not been verified by any trusted signer.
+Running unverified modules can be a security risk.
+
+Do you want to proceed with this module? (yes/no/always): n
+2025-01-01 12:00:05,000 INFO     [module_security.py:290]     User declined to run untrusted module 'example_malicious_module'
+2025-01-01 12:00:05,000 WARNING  [engine_core.py:277]         Module 'example_malicious_module' verification failed - will be excluded from execution
+```
 
 <br/>
 
