@@ -5,7 +5,7 @@ import re
 from urllib.parse import urlparse
 
 from core.modules.engine import ModuleCore
-from core.modules.models import Device
+from core.modules.models import Device, CourierEnvelope
 from core.modules.util.messagebus import MessageBus
 
 # Import helper modules from src
@@ -113,8 +113,20 @@ class URLCleanModule(ModuleCore):
         if "keepslash" in self.active_filters:
             self.active_filters.remove("keepslash")
 
-    def process(self, data: Any) -> None:
-        """Process input data from the message bus"""
+    def process(self, envelope: CourierEnvelope) -> None:
+        """
+        Process input data from the message bus.
+
+        Args:
+            envelope: CourierEnvelope containing the data to process
+        """
+        # Log metadata about the incoming message
+        source = envelope.source_module or "unknown source"
+        self.log(f"Processing data from {source} via topic '{envelope.topic}'")
+
+        # Extract the actual data from the envelope
+        data = envelope.data
+
         if isinstance(data, list):
             # Handle list of URLs
             self.pending_urls.extend(data)

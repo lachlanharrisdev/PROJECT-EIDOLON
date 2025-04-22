@@ -238,33 +238,89 @@ async def execute(self, message_bus: MessageBus) -> None:
     self.pending_responses = []
 ```
 
-### Event Broadcasting
+## The CourierEnvelope Pattern
 
-For system-wide events that many modules might be interested in:
+All data passed through the message bus is wrapped in a `CourierEnvelope` object, which provides additional context about the message. This enhances modules with metadata about the messages they receive.
+
+### CourierEnvelope Structure
 
 ```python
-# Broadcasting an event
-async def execute(self, message_bus: MessageBus) -> None:
-    event = {
-        "type": "system_event",
-        "name": "configuration_changed",
-        "timestamp": datetime.now().isoformat(),
-        "details": {"changed_parameters": ["api_key"]}
-    }
-    
-    await message_bus.publish("system_events", event)
+@dataclass
+class CourierEnvelope:
+    data: Any  # The actual payload being sent
+    topic: str  # The topic this message was published to
+    source_module: Optional[str] = None  # Name of the source module, if available
+    timestamp: float = field(default_factory=time.time)  # When the message was created
+    input_name: Optional[str] = None  # Name of the destination input (if known)
+    data_type: Optional[str] = None  # String representation of the data type
 ```
 
+### Handling CourierEnvelope in Your Modules
+
+When creating or updating modules, make sure to adapt your `process()` method to accept a `CourierEnvelope` parameter instead of raw data:
+
 ```python
-# Handling events
+# Before
 def process(self, data: Any) -> None:
-    if isinstance(data, dict) and data.get("type") == "system_event":
-        event_name = data.get("name")
+    if isinstance(data, list):
+        self.keywords = data
         
-        if event_name == "configuration_changed":
-            changed_params = data.get("details", {}).get("changed_parameters", [])
-            if any(param in self.watched_parameters for param in changed_params):
-                self._reload_configuration()
+# After
+def process(self, envelope: CourierEnvelope) -> None:
+    # Extract the actual data payload
+    data = envelope.data
+    
+    # Now you can use the metadata too
+    source = envelope.source_module or "unknown source"
+    self.log(f"Processing data from {source} via topic '{envelope.topic}'")
+    
+    # Process the data as before
+    if isinstance(data, list):
+        self.keywords = data
+```
+
+### Publishing with CourierEnvelope
+
+The message bus automatically wraps published data in a CourierEnvelope, so you can continue using the publish method as before:
+
+```python
+async def execute(self, message_bus: MessageBus) -> None:
+    # The message bus will automatically wrap this in a CourierEnvelope
+    await message_bus.publish("processed_data", self.results)
+```
+
+### Example: Adding Metadata to Responses
+
+You can leverage the envelope metadata when producing responses to requests:
+
+```python
+def process(self, envelope: CourierEnvelope) -> None:
+    # Store request metadata for later use in response generation
+    if envelope.topic == "data_requests":
+        self.pending_requests.append({
+            "request_data": envelope.data,
+            "source_module": envelope.source_module,
+            "timestamp": envelope.timestamp
+        })
+
+async def execute(self, message_bus: MessageBus) -> None:
+    for request in self.pending_requests:
+        # Process the request
+        result = self._process_request(request["request_data"])
+        
+        # Include processing time in response
+        processing_time = time.time() - request["timestamp"]
+        
+        # Create response with original request metadata
+        response = {
+            "data": result, 
+            "processing_time": processing_time,
+            "source_request": request["request_data"].get("id", "unknown")
+        }
+        
+        await message_bus.publish("data_responses", response)
+    
+    self.pending_requests = []
 ```
 
 ---

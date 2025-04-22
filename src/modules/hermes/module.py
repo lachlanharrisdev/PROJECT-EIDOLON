@@ -14,6 +14,7 @@ from pathlib import Path
 
 from core.modules.engine import ModuleCore
 from core.modules.util.messagebus import MessageBus
+from core.modules.models import CourierEnvelope
 
 
 class HermesModule(ModuleCore):
@@ -34,15 +35,35 @@ class HermesModule(ModuleCore):
         os.makedirs(self.report_dir, exist_ok=True)
         self.log(f"Hermes initialized. Reports will be saved to: {self.report_dir}")
 
-    def process(self, data: Any) -> None:
-        """Process incoming data and store it for reporting."""
-        if data is None:
+        # Source tracking metadata for enhanced reporting
+        self.last_source_module = None
+        self.last_topic = None
+        self.data_received_time = None
+
+    def process(self, envelope: CourierEnvelope) -> None:
+        """
+        Process incoming data and store it for reporting.
+
+        Args:
+            envelope: CourierEnvelope containing the data to report
+        """
+        if envelope.data is None:
             self.log("Received empty data, skipping", "warning")
             return
 
         # Store the data for reporting
-        self.data_to_report = data
-        self.log(f"Received data of type: {type(data).__name__}")
+        self.data_to_report = envelope.data
+
+        # Store metadata about the message source for enhanced reporting
+        self.last_source_module = envelope.source_module
+        self.last_topic = envelope.topic
+        self.data_received_time = envelope.timestamp
+
+        self.log(
+            f"Received data of type: {type(envelope.data).__name__} from '{envelope.topic}'"
+        )
+        if envelope.source_module:
+            self.log(f"Data source: {envelope.source_module}")
 
         # For reactive mode
         if self._run_mode == "reactive":

@@ -5,6 +5,7 @@ import logging
 
 from core.modules.engine import ModuleCore
 from core.modules.util.messagebus import MessageBus
+from core.modules.models import CourierEnvelope
 
 
 class OsirisModule(ModuleCore):
@@ -35,13 +36,15 @@ class OsirisModule(ModuleCore):
             f"Osiris filter initialized with status codes: {sorted(list(self.status_codes))}"
         )
 
-    def process(self, data: Any) -> None:
+    def process(self, envelope: CourierEnvelope) -> None:
         """
         Process input data (list of dictionaries).
 
         Args:
             data: Expected to be a list of dictionaries with at least status_code key
         """
+        data = envelope.data
+
         if isinstance(data, list):
             self.log(f"Received {len(data)} items for filtering")
             self.data = data

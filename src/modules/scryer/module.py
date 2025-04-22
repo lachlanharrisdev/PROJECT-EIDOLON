@@ -17,6 +17,7 @@ from collections import defaultdict, Counter
 from bs4 import BeautifulSoup, ResultSet
 from core.modules.engine import ModuleCore
 from core.modules.util.messagebus import MessageBus
+from core.modules.models import CourierEnvelope
 
 
 class ScryerModule(ModuleCore):
@@ -36,18 +37,25 @@ class ScryerModule(ModuleCore):
         self.config = self.get_arguments() or {}
         self._initialize_extractors()
 
-    def process(self, data: Any) -> None:
-        """Process input data received from the message bus."""
-        if not data:
-            self.log("Received empty data, skipping", "warning")
-            return
+    def process(self, envelope: CourierEnvelope) -> None:
+        """
+        Process input data from the message bus.
 
-        if isinstance(data, list) and all(isinstance(item, dict) for item in data):
-            self.log(f"Received {len(data)} items to process")
+        Args:
+            envelope: CourierEnvelope containing the data to process
+        """
+        # Extract actual data from the envelope
+        data = envelope.data
+
+        # Log metadata about the incoming data
+        source = envelope.source_module or "unknown source"
+        self.log(f"Processing data from {source} via topic '{envelope.topic}'")
+
+        # Process the data as before
+        if isinstance(data, list):
+            self.log(f"Received {len(data)} items for processing")
+            # Store the crawled data for processing during execute
             self.crawled_data = data
-            # Set input_received flag for reactive mode to ensure processing happens immediately
-            if self._run_mode == "reactive":
-                self._input_received = True
         else:
             self.log(f"Received unexpected data type: {type(data)}", "warning")
 

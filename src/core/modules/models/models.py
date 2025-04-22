@@ -1,5 +1,34 @@
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any, Type
+import time
+from datetime import datetime
+
+
+@dataclass
+class CourierEnvelope:
+    """
+    A universal wrapper for data passed through the message bus.
+
+    Provides additional context about the message including metadata about
+    the source module, the input name, timestamps, and data type information.
+    """
+
+    data: Any  # The actual payload being sent
+    topic: str  # The topic this message was published to
+    source_module: Optional[str] = None  # Name of the source module, if available
+    timestamp: float = field(default_factory=time.time)  # When the message was created
+    input_name: Optional[str] = None  # Name of the destination input (if known)
+    data_type: Optional[str] = None  # String representation of the data type
+
+    @property
+    def datetime(self) -> datetime:
+        """Convert timestamp to datetime object for human-readable format"""
+        return datetime.fromtimestamp(self.timestamp)
+
+    def __str__(self) -> str:
+        """String representation of the envelope for logging"""
+        src = f"from {self.source_module}" if self.source_module else "unknown source"
+        return f"CourierEnvelope[{self.topic}] {src} at {self.datetime.isoformat()}"
 
 
 @dataclass

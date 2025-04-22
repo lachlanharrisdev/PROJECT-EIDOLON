@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 import httpx
 from core.modules.engine import ModuleCore
 from core.modules.util.messagebus import MessageBus
+from core.modules.models import CourierEnvelope
 
 
 class AethonCrawlerModule(ModuleCore):
@@ -31,13 +32,21 @@ class AethonCrawlerModule(ModuleCore):
         # Safety measure - store the original URLs separately for report generation
         self.original_url_count = 0
 
-    def process(self, data: Any) -> None:
+    def process(self, envelope: CourierEnvelope) -> None:
         """
         Process input data (list of URLs).
 
         Args:
-            data: Expected to be a list of URL strings
+            envelope: CourierEnvelope containing the data to process
         """
+        # Extract the data from the envelope
+        data = envelope.data
+
+        # Log information about the message source
+        source = envelope.source_module or "unknown source"
+        self.log(f"Processing data from {source} via topic '{envelope.topic}'")
+
+        # Process the data
         if isinstance(data, list) and all(isinstance(url, str) for url in data):
             self.log(f"Received {len(data)} URLs for crawling")
             self.urls = data

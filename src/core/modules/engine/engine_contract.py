@@ -7,7 +7,7 @@ import yaml
 import traceback
 from datetime import datetime
 
-from core.modules.models import Meta, Device
+from core.modules.models import Meta, Device, CourierEnvelope
 from core.modules.util.messagebus import MessageBus
 
 
@@ -29,7 +29,7 @@ class ModuleCore(object, metaclass=IModuleRegistry):
 
     Core lifecycle methods to override in your modules:
     - init(): For initialization code (instead of overriding __init__)
-    - process(data): Process incoming data from subscribed topics
+    - process(envelope): Process incoming data from subscribed topics
     - execute(message_bus): Execute one iteration of module logic
     - cleanup(): Release resources when module is shutting down
     """
@@ -109,16 +109,25 @@ class ModuleCore(object, metaclass=IModuleRegistry):
             self._logger.error(f"Error parsing configuration file: {e}")
             raise
 
-    def handle_input(self, data: Any) -> None:
+    def handle_input(self, envelope: CourierEnvelope) -> None:
         """
-        Handle input data from the message bus.
+        Handle input data from the message bus, wrapped in a CourierEnvelope.
         """
         try:
-            self.process(data)
+            # Log receipt of data with metadata
+            self._logger.debug(
+                f"Received data from topic '{envelope.topic}'"
+                f"{f' from {envelope.source_module}' if envelope.source_module else ''}"
+                f" ({type(envelope.data).__name__})"
+            )
 
             # Signal that new input has been received (for reactive mode)
             if self._run_mode == "reactive":
                 self._input_received = True
+
+            # Process the envelope
+            self.process(envelope)
+
         except Exception as e:
             self._logger.error(f"Error handling input in {self.meta.name}: {e}")
             self._logger.debug(traceback.format_exc())
@@ -289,18 +298,18 @@ class ModuleCore(object, metaclass=IModuleRegistry):
         """
         pass
 
-    def process(self, data: Any) -> None:
+    def process(self, envelope: CourierEnvelope) -> None:
         """
         Process input data received from subscribed topics.
         Override this method to handle incoming data.
 
         Args:
-            data: Data received from a subscribed topic
+            envelope: CourierEnvelope containing data received from a subscribed topic
         """
-        if isinstance(data, dict):
-            self.input_data = data
+        if isinstance(envelope.data, dict):
+            self.input_data = envelope.data
         else:
-            self._logger.error(f"Received unexpected data type: {type(data)}")
+            self._logger.error(f"Received unexpected data type: {type(envelope.data)}")
 
     async def execute(self, message_bus: MessageBus) -> None:
         """

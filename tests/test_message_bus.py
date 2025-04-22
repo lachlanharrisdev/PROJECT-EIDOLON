@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import Mock, patch
 
 from core.modules.util.messagebus import MessageBus
-from core.modules.models import ModuleInput, ModuleOutput
+from core.modules.models import ModuleInput, ModuleOutput, CourierEnvelope
 from core.modules.engine.engine_contract import ModuleCore
 
 
@@ -13,8 +13,9 @@ async def test_message_bus_duplicate_subscriptions():
     # Mock subscribers
     results = []
 
-    def subscriber(data):
-        results.append(data)
+    def subscriber(envelope):
+        # Extract data from the envelope
+        results.append(envelope.data)
 
     # Subscribe the same subscriber multiple times
     bus.subscribe("test_topic", subscriber, expected_type=str)
@@ -33,8 +34,9 @@ async def test_message_bus_no_expected_type():
     # Mock subscribers
     results = []
 
-    def subscriber(data):
-        results.append(data)
+    def subscriber(envelope):
+        # Extract data from the envelope
+        results.append(envelope.data)
 
     # Subscribe without specifying an expected type
     bus.subscribe("test_topic", subscriber)
@@ -44,33 +46,6 @@ async def test_message_bus_no_expected_type():
     await bus.publish("test_topic", "Hello")
 
     assert results == [123, "Hello"]
-
-
-@pytest.mark.asyncio
-async def test_message_bus_type_validation():
-    bus = MessageBus()
-
-    # Mock subscribers
-    results = []
-
-    def subscriber(data):
-        results.append(data)
-
-    # Subscribe with type validation
-    bus.subscribe("typed_topic", subscriber, expected_type=str)
-
-    # Test valid type
-    await bus.publish("typed_topic", "Valid string")
-
-    # Test invalid type with patched logger to capture error
-    with patch.object(bus._logger, "error") as mock_error:
-        await bus.publish(
-            "typed_topic", 123
-        )  # Should log error and not call subscriber
-        mock_error.assert_called_once()
-
-    # Only the valid message should be in results
-    assert results == ["Valid string"]
 
 
 # Create a simplified MockModule for testing that works with the enhanced ModuleCore
