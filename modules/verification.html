@@ -525,18 +525,27 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#verified-modules-registry" class="md-nav__link">
+  <a href="#verifying-modules" class="md-nav__link">
     <span class="md-ellipsis">
-      Verified Modules Registry
+      Verifying Modules
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#manually-verifying-a-module" class="md-nav__link">
+  <a href="#managing-trusted-signers" class="md-nav__link">
     <span class="md-ellipsis">
-      Manually Verifying a Module
+      Managing Trusted Signers
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Configuration
     </span>
   </a>
   
@@ -658,6 +667,143 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Security
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Security
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/configuration.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Security Configuration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/model.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Security Model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/signing-modules.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Module Signing Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/trusted-signers.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Managing Trusted Signers
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -718,18 +864,27 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#verified-modules-registry" class="md-nav__link">
+  <a href="#verifying-modules" class="md-nav__link">
     <span class="md-ellipsis">
-      Verified Modules Registry
+      Verifying Modules
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#manually-verifying-a-module" class="md-nav__link">
+  <a href="#managing-trusted-signers" class="md-nav__link">
     <span class="md-ellipsis">
-      Manually Verifying a Module
+      Managing Trusted Signers
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Configuration
     </span>
   </a>
   
@@ -769,48 +924,52 @@
 
 
 <h1 id="module-verification-and-security">Module Verification and Security</h1>
-<p>This document explains the security mechanisms in Project Eidolon's module system, including the verification process, cryptographic signing, and best practices for securing modules.</p>
+<blockquote>
+<p><strong>Note:</strong> The security verification system has been updated. Please see the <a href="/docs/security/index.md">Security Documentation</a> for the latest information.</p>
+</blockquote>
+<p>This document provides an overview of Eidolon's security mechanisms for module verification.</p>
 <h2 id="security-model">Security Model</h2>
-<p>Project Eidolon uses a security model based on cryptographic signatures to ensure users are aware when they are running unverified modules (that is, modules not officially a part of the project eidolon repository). This security model is crucial for OSINT workflows where data integrity and protection against malicious code are paramount concerns.</p>
+<p>Project Eidolon uses a multi-signer trust model to ensure users are aware when they are running unverified modules. This security model is crucial for OSINT workflows where data integrity and protection against malicious code are paramount concerns.</p>
 <h3 id="key-components">Key Components</h3>
 <ol>
-<li><strong>Public/Private Key Infrastructure</strong>: A keypair-based signing system for modules</li>
-<li><strong>Module Hash Generation</strong>: Automatic hashing of module code files</li>
-<li><strong>Verification System</strong>: Pre-execution validation of module hashes</li>
-<li><strong>Verified Module Registry</strong>: A record of modules that have passed verification</li>
+<li><strong>Public/Private Key Infrastructure</strong>: A distributed cryptographic signing system for modules</li>
+<li><strong>Module Signature Files</strong>: Detached signatures stored as <code>module.sig</code> files</li>
+<li><strong>Trusted Signers</strong>: A registry of trusted public keys that verify module authenticity</li>
+<li><strong>Security Modes</strong>: Configurable security levels (paranoid, default, permissive)</li>
 </ol>
 <h2 id="creating-signed-modules">Creating Signed Modules</h2>
-<p>Modules can only be signed by the CI workflow on the <a href="https://github.com/lachlanharrisdev/PROJECT-EIDOLON">official github repository</a>, and the only modules that will be accepted into this repo are ones that provide benefit to a broad range of potential users, which are built following coding standards outlined in this documentation &amp; the repository.</p>
-<p>If you'd like to contribute a module to the repository:</p>
+<p>Module authors can sign their modules using their private keys:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>eidolon<span class="w"> </span>security<span class="w"> </span>sign<span class="w"> </span>--key<span class="w"> </span>your_private_key.pem<span class="w"> </span>/path/to/your/module
+</span></code></pre></div>
+<p>For detailed instructions on signing modules, see the <a href="/docs/security/signing-modules.md">Module Signing Guide</a>.</p>
+<h2 id="verifying-modules">Verifying Modules</h2>
+<p>To manually verify a module's authenticity:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>eidolon<span class="w"> </span>security<span class="w"> </span>verify<span class="w"> </span>/path/to/module
+</span></code></pre></div>
+<p>This will check if the module's signature is valid and was created by a trusted signer.</p>
+<h2 id="managing-trusted-signers">Managing Trusted Signers</h2>
+<p>Users can manage which module authors they trust:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># List trusted signers</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>eidolon<span class="w"> </span>security<span class="w"> </span>list-trusted
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># Add a trusted signer</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>eidolon<span class="w"> </span>security<span class="w"> </span>trust<span class="w"> </span>--key<span class="w"> </span>author_public_key.pem<span class="w"> </span>--id<span class="w"> </span><span class="s2">&quot;author_name&quot;</span><span class="w"> </span>--comment<span class="w"> </span><span class="s2">&quot;Description&quot;</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># Remove a trusted signer</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>eidolon<span class="w"> </span>security<span class="w"> </span>untrust<span class="w"> </span>author_name
+</span></code></pre></div>
+<p>For complete details on managing trusted signers, see <a href="/docs/security/trusted-signers.md">Managing Trusted Signers</a>.</p>
+<h2 id="security-configuration">Security Configuration</h2>
+<p>Eidolon provides three security modes:</p>
 <ol>
-<li><strong>Develop your module</strong> following the <a href="2-creating-a-module.html">module development guidelines</a></li>
-<li><strong>Request signing</strong> by creating a PR from the module request template</li>
-<li><strong>Wait</strong> for the maintainers to merge your PR and have the workflow generate a hash for it</li>
+<li><strong>Paranoid</strong>: Only verified modules from trusted signers are allowed</li>
+<li><strong>Default</strong>: Prompts for untrusted modules, allows verified modules automatically</li>
+<li><strong>Permissive</strong>: Allows all modules with appropriate warnings</li>
 </ol>
-<h2 id="verified-modules-registry">Verified Modules Registry</h2>
-<p>The system maintains a registry of verified modules in <code>src/settings/verified_modules.json</code>:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">&quot;example_module&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">&quot;hash&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;e7a5d6c8f3b2a1...&quot;</span><span class="p">,</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="nt">&quot;signature&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4e5f6...&quot;</span><span class="p">,</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="nt">&quot;date_verified&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-03-15T12:00:00Z&quot;</span><span class="p">,</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="nt">&quot;repo&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://github.com/lachlanharrisdev/PROJECT-EIDOLON&quot;</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">}</span>
+<p>Configure the security mode when running Eidolon:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>eidolon<span class="w"> </span>run<span class="w"> </span>--security-mode<span class="o">=</span>paranoid<span class="w"> </span>my_pipeline
 </span></code></pre></div>
-<h2 id="manually-verifying-a-module">Manually Verifying a Module</h2>
-<p>You can manually verify a module's integrity:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">core.security.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">verify_module</span><span class="p">,</span> <span class="n">get_public_key</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">public_key</span> <span class="o">=</span> <span class="n">get_public_key</span><span class="p">()</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">is_verified</span> <span class="o">=</span> <span class="n">verify_module</span><span class="p">(</span><span class="s2">&quot;your_module_name&quot;</span><span class="p">,</span> <span class="n">public_key</span><span class="p">)</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="k">if</span> <span class="n">is_verified</span><span class="p">:</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Module verified successfully&quot;</span><span class="p">)</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="k">else</span><span class="p">:</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Module verification failed&quot;</span><span class="p">)</span>
-</span></code></pre></div>
+<p>For full security configuration options, see <a href="/docs/security/configuration.md">Security Configuration</a>.</p>
 <h2 id="reporting-security-issues">Reporting Security Issues</h2>
 <p>If you discover a security vulnerability in Project Eidolon:</p>
 <ol>
@@ -819,8 +978,7 @@
 <li><strong>Provide details</strong>: Include steps to reproduce and potential impact</li>
 <li><strong>Allow time for fixes</strong>: Follow responsible disclosure practices</li>
 </ol>
-<p>Please read the <a href="https://github.com/lachlanharrisdev/PROJECT-EIDOLON/security/policy">security policy</a> on the repository for more information about vulnerability reporting</p>
-<p>For information about implementing module methods securely, see the <a href="methods.html">module methods documentation</a>.</p>
+<p>Please read the <a href="https://github.com/lachlanharrisdev/PROJECT-EIDOLON/security/policy">security policy</a> on the repository for more information about vulnerability reporting.</p>
 
 
 
@@ -843,7 +1001,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="April 21, 2025 10:20:06">April 21, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="April 22, 2025 05:47:42">April 22, 2025</span>
   </span>
 
     

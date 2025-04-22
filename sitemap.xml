@@ -44,4 +44,20 @@
          <loc>https://lachlanharrisdev.github.io/PROJECT-EIDOLON/pipelines/creating-a-pipeline.html</loc>
          <lastmod>2025-04-22</lastmod>
     </url>
+    <url>
+         <loc>https://lachlanharrisdev.github.io/PROJECT-EIDOLON/security/configuration.html</loc>
+         <lastmod>2025-04-22</lastmod>
+    </url>
+    <url>
+         <loc>https://lachlanharrisdev.github.io/PROJECT-EIDOLON/security/model.html</loc>
+         <lastmod>2025-04-22</lastmod>
+    </url>
+    <url>
+         <loc>https://lachlanharrisdev.github.io/PROJECT-EIDOLON/security/signing-modules.html</loc>
+         <lastmod>2025-04-22</lastmod>
+    </url>
+    <url>
+         <loc>https://lachlanharrisdev.github.io/PROJECT-EIDOLON/security/trusted-signers.html</loc>
+         <lastmod>2025-04-22</lastmod>
+    </url>
 </urlset>
