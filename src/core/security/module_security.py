@@ -7,6 +7,7 @@ from typing import Dict, Tuple, Optional, List
 from pathlib import Path
 
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.exceptions import InvalidSignature
 
 from .trusted_signers import trusted_signers_manager
