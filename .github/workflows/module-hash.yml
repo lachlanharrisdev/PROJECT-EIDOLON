@@ -31,6 +31,9 @@ jobs:
          pip install build
          pip install PyYAML cryptography
 
+      - name: Set PYTHONPATH
+        run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/src" >> $GITHUB_ENV
+
       - name: Generate Verified Module Hashes
         env:
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
