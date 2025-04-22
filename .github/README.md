@@ -1,107 +1,258 @@
-# // PROJECT EIDOLON
+<a id="readme-top"></a>
 
-![Banner](/.github/images/Banner_2x1.jpg)
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+  <a href="https://github.com/lachlanharrisdev/PROJECT-EIDOLON">
+    <img src="/.github/images/eidolon_logo.svg" alt="Logo" width="200" height="200">
+  </a>
 
+  <h1 align="center">PROJECT EIDOLON</h1>
+
+  <p>
+    Eidolon is a modular OSINT / Cybersecurity pipeline framework that makes information gathering feel like cheating — <b>because it almost is.</b>
+    <br />
+    <a href="https://lachlanharrisdev.github.io/PROJECT-EIDOLON/"><strong>Explore the docs »</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/lachlanharrisdev/PROJECT-EIDOLON/issues">Issues</a>
+    &middot;
+    <a href="/.github/CONTRIBUTING.md">Contributing</a>
+    &middot;
+    <a href="/.github/SECURITY.md">Security</a>
+    &middot;
+    <a href="/LICENSE">License</a>
+    &middot;
+    <a href="/.github/CODE_OF_CONDUCT.md">Code of Conduct</a>
+  </p>
+</div>
+<br/>
+<!-- BADGES -->
 <div align='center'>
     
-![PYTHON](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue) 
-<a href="https://github.com/lachlanharrisdev/PROJECT-EIDOLON/packages"><img alt="Docker" src="https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white"/></a>⠀
-<a href="/LICENSE"><img alt="GPL-2.0" src="https://img.shields.io/badge/GPL--2.0-red?style=for-the-badge"/></a>⠀
-<a href="https://discord.gg/wDcxk4pCs5"><img alt="Discord" src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white"/></a>
-<a href="https://github.com/lachlanharrisdev/PROJECT-EIDOLON/sponsor"><img alt="Sponsor" src="https://img.shields.io/badge/sponsor-30363D?style=for-the-badge&logo=GitHub-Sponsors&logoColor=#white"/></a>
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
 
 </div>
-
 <br/>
 
 ## TABLE OF CONTENTS
+
+</div>
+
 * [Overview](#-overview)
 * [Features](#-features)
-    * [Default Modules](#-default-modules)
+* [How It Works](#-how-it-works)
+* [Default Modules](#-default-modules)
 * [Getting Started](#-getting-started)
-    * [Installation](#-installation)
-    * [Docker](#-docker)
+    * [Requirements](#requirements)
+    * [Installation](#installation)
+    * [Docker](#docker)
 * [Usage](#-usage)
 * [Development & contributing](#-development--contributing)
-    * [Modules](#-modules)
-    * [Testing](#-testing)
+    * [Modules](#modules)
+    * [Testing](#testing)
  * [Mission](#-mission)
 
 <br/>
 
 # // OVERVIEW
 
-Project Eidolon is a decentralised suite of OSINT tools built to analyze the evolution of political disinformation on social media. 
-
-In it's default configuration, Eidolon uses clever keyword rotation to scrape popular social media networks (primarily Twitter/X) 
-for posts about major political entities, identifies opinionated posts coming from potential bot accounts, and tracks these accounts towards botnets to identify organisations running unethical political propaganda schemes. 
-
-<br/>
+Eidolon is a modular, enterprise-ready pipeline framework built to automate & strengthen information-gathering workflows in OSINT, red-teaming & other cyber-security roles. It allows any tools - not just the default tools, other python applications & even non-python tools - to gracefully interact with one another, while all running asynchronously & recieving / publishing input on a shared message bus. Modules are verified before initialization, and are fully isolated from one another in error-resistant environments.
 
 > ### **EIDOLON**
 > #### *Noun* ● /ʌɪˈdəʊlɒn/
 > In ancient Greek literature, an eidolon is a spirit-image of a living or dead person; a shade or phantom 'look-alike' of the human form.
 > <br/>
-
 <br/>
 
 # // FEATURES
 
-- **ENTIRELY MODULE-BASED**
-    - Default modules are verified based on a key-pair-based signed hash generator
-    - Modules communicate via a universal message bus
-    - Modules specify any number of inputs & outputs, and automatically subscribe to matching outputs from other modules
-    - Modules each have their own `.yaml` file for configuration
-    - All core functionality (beyond module management, security & logging) is stored in modules, making it easy to remove unnecessary functionality
-- **DYNAMIC KEYWORD GENERATION** *\[via keyword_monitor module\]*
-    - Keywords are updated regularly in real-time based on trending political news articles
-    - Political entities are identified & classified via NLP
-    - Keywords are transmitted on the message bus for any module to subscribe to
-- **PRODUCTION-READY LOGGING**
-    - Console logging has been standardised across modules
-    - Logging has a fully customisable format, including colours, text decoration & variables
-    - All logs are saved into a persistent `.logs/` folder
+## MODULAR
+
+Every pipeline, every module & every command is configurable down to the core. Your `pipeline.yaml` file can store all of your perfect settings, but if you need to overwrite the maximum threads in the web crawler, you can do that with a single extra argument.
+
+* Workflows are stored in reusable `.yaml` files, each containing execution configuration, per-module configuration, module I/O & more
+* The CLI has a powerful array of commands & arguments to make every run feel special
+* Every module is swappable & removable
+* A sophisticated translation layer converts datatypes automatically, so everything **just works**
+
+<br/>
+
+## SECURE
+
+Anything that has the slightest chance of exposing your device you aren't told about.
+
+* Every module is checked for verification before its name is even loaded
+* Add or delete any trusted module authors to allow their verified modules
+* Self-sign modules you create & share them with the world
+* Many configurable arguments to automate module permission
+
+<br/>
+
+## PERFORMANT
+
+Modules have virtually no overhead, with an I/O system & translation layer so light you won't believe it exists.
+
+* Modules have access to a shared threadpool & can create their own
+* Modules run fully asynchronously from one-another
+* As long as it can be called from python, your CPU-bound logic can be written in **any** language
+* Default modules are designed with flexibility, extensive features & raw power in mind
+
+<br/>
+
+# // HOW IT WORKS
+```mermaid
+graph TD
+    %% Define styles
+    %%classDef moduleClass fill:#a4c2f4,stroke:#8faad9,color:#333
+    %%classDef engineClass fill:#f4cccc,stroke:#e06666,color:#333,font-weight:bold
+    %%classDef pipelineClass fill:#d9ead3,stroke:#6aa84f,color:#333
+    %%classDef securityClass fill:#fff2cc,stroke:#f1c232,color:#333
+    %%classDef messageBusClass fill:#d0e0e3,stroke:#0c343d,color:#333,font-weight:bold
+
+    classDef mainModuleClass font-weight:bold,font-size:large
+
+    %% Core System Components
+    Engine[Module Engine] --> MessageBus[Message Bus]
+    Engine --> PipelineLoader[Pipeline Loader]
+
+    %% Security System (Expanded)
+    subgraph SecuritySystem[Security Layer]
+        direction TB
+        Security{Module Security}
+        TrustedSigners[(Trusted Signers)]
+        SignVerification[Signature Verification]
+        HashValidation[Hash Validation]
+        SecurityManager[Security Manager]
+        
+        Security --> TrustedSigners
+        TrustedSigners -.-> Security
+        Security --> SignVerification
+        SignVerification --> HashValidation
+        SecurityManager --> Security
+    end
+    
+    Engine --> SecuritySystem
+
+    %% Module Loading Flow
+    Engine -- "1\. Load Pipeline" --> PipelineLoader
+    PipelineLoader -- "2\. Return Config" --> Engine
+    Engine -- "3\. Discover Modules" --> ModuleDiscovery[Module Discovery]
+    ModuleDiscovery -- "4\. Verify Modules" --> SecuritySystem
+    SecuritySystem -- "5\. Return Verified Modules" --> Engine
+    
+
+    %% Module System
+    subgraph ModulesGroup[Module System]
+        direction LR
+        %% Generic Module Components
+        ModuleA -.-> |"publish"| MessageBus
+        ModuleB -.-> |"publish"| MessageBus
+        
+        TranslationLayer -.-> |"subscribe"| ModuleB
+        TranslationLayer -.-> |"subscribe"| ModuleC
+
+        %% Translation Layer (Added)
+        subgraph TranslationLayer[Translation Layer]
+            TypeValidation[Type Validation]
+            LRUCache[(LRU Cache)]
+            DataConversion[Data Conversion]
+            TranslationRules[(Translation Rules)]
+            Module[Module]
+            
+            TypeValidation --> LRUCache
+            TypeValidation --> DataConversion
+            DataConversion --> TranslationRules
+            TranslationRules -.-> DataConversion
+            DataConversion -.-> Module
+            LRUCache --> Module
+        end
+        
+        MessageBus -- "Unexpected input goes through translation" --> TranslationLayer
+    end
+
+    %% Module Initialization
+    Engine -- "6\. Initialize Modules" --> ModulesGroup
+    Engine -- "7\. Start Modules" --> Lifecycle[Module Lifecycle]
+    Lifecycle -- "Controls" --> ModulesGroup
+    
+    %% Message Envelope
+    %% MessageBus -- "Publish" --> EnvelopeContent["<b>Envelope:</b><br/>Data<br>Topic<br>Source Module<br>Timestamp"]
+    
+    %% Legend/styling
+    Engine:::engineClass
+    MessageBus:::messageBusClass
+    PipelineLoader:::pipelineClass
+    Security:::securityClass
+    TrustedSigners:::securityClass
+    SecurityManager:::securityClass
+    SignVerification:::securityClass
+    HashValidation:::securityClass
+    ModuleA:::moduleClass
+    ModuleB:::moduleClass
+    ModuleC:::moduleClass
+
+    MessageBus:::mainModuleClass
+    Engine:::mainModuleClass
+    
+    CLI[Eidolon CLI] --> Engine
+```
+
+<br/>
+
+<br/>
  
 <br/>
 
-## // DEFAULT MODULES
+# // DEFAULT MODULES
 
 | Module | Description |
 | --- | --- |
-| Keyword Monitor | Scrapes RSS feeds for popular political news articles, then uses NLP to identify political entities |
+| Aethon | An ultra-high performance web crawler inspired by the architecture of [Photon](https://github.com/s0md3v/Photon). <br/> Comes with three modules: `Aethon_Crawler`, `Aethon_URLList` (parses various formats of URL Lists into List[str], w/ example link generation) & `Aethon_URLClean` (Filters out & cleans URL Lists, based on unnecessary URL extensions, file extensions, duplicates & more) |
+| Scryer | An offline web-scraper that takes raw HTML data and searches for metadata, headers, URLs, phone numbers, emails & more |
+| Osiris | A maximally-configurable data filter that takes in huge lists / dictionaries & rapidly translates the output |
+| Hermes | An ultra-lightweight report generator that takes in any raw data and parses it to a (mostly) human-readable format |
 
 <br/>
 
 # // GETTING STARTED
 
-To get started with contributing, please read [contributing.md](/CONTRIBUTING.md) & the [code of conduct](/.github/CODE_OF_CONDUCT.md).
-
-## // REQUIREMENTS
+## REQUIREMENTS
 - Python 3.12\*
 - *\[Optional\]* Docker CLI
 
 
-\* *specifically tested on `3.12.10`. Other python versions may work but are untested. If you'd like to request full support for a version, please create a github issue, PR, or raise a ticket in [the discord](https://discord.gg/wDcxk4pCs5)*
+\* *specifically tested on `3.12.10`. Other python versions may work but are untested. If you'd like to request full support for a version, please create a github issue, PR, or raise a ticket in [the discord](https://discord.gg/wDcxk4pCs5). Our current limit is GitHub actions minutes D:*
 
 <br/>
 
-## // INSTALLATION
+## INSTALLATION
 
 1. Clone the repo
 ```bash
 git clone https://github.com/lachlanharrisdev/project-eidolon.git
 cd project-eidolon
 ```
+> **NON-DEVELOPERS:** If you don't plan on modifying any source code, just only follow the step below:
+
+2. Install the tool
+```bash
+pip install .
+```
+
+<br/>
+
+> **DEVELOPERS / CONTRIBUTORS:** If you plan on modifying any code, then please continue from here
 
 2. Install package + dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-<br/>
-
-**DEVELOPERS / CONTRIBUTORS:** It is recommended you setup a virtual environment if you plan on creating and/or modifying any code:
-
+3. Setup a development environment (Highly recommended):
 ```bash
 # Windows
 python -m venv .venv
@@ -114,9 +265,9 @@ source .venv/bin/activate
 
 <br/>
 
-## // DOCKER
+## DOCKER
 
-**For a quick setup,** navigate to [packages](https://github.com/lachlanharrisdev/PROJECT-EIDOLON/packages) and download / install the desired docker container
+> You can also pull from the [GitHub Container Registry](https://github.com/lachlanharrisdev/PROJECT-EIDOLON/packages) and download / install the desired docker container from there
 
 1. Clone the repo
 ```bash
@@ -141,32 +292,21 @@ docker run -it eidolon
 # // USAGE
 
 ```bash
-Usage:
-  eidolon run [<module>] [--log-level=<level> | --verbose] [--output-format=<format>]
-  eidolon version
-  eidolon (-h | --help)
-
-Options:
-  -h --help                 Show this help message.
-  --log-level=<level>       Set the logging level [default: INFO].
-                            Options: DEBUG, INFO, WARNING, ERROR, CRITICAL.
-  --verbose                 Enable verbose output (equivalent to --log-level=DEBUG).
-  --output-format=<format>  Set the output format [default: text].
-                            Options: text, json.
-
-Commands:
-  run       Run the main application or a specific module.
-            If <module> is not specified, all modules will be run.
-  version   Show the version of the CLI.
-
-Examples:
-  eidolon run --log-level=DEBUG
-  eidolon run my_module --output-format=json --verbose
-  eidolon version
-  eidolon -h
+╭─ Options ────────────────────────────────────────────────────────────────────────────╮
+│ --help          Show this message and exit.                                          │
+╰──────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────────────╮
+│ run        Run the application with modules specified in the pipeline.               │
+│ list       List available pipelines or modules, including descriptions and metadata. │
+│ config     View or update a configuration setting.                                   │
+│ validate   Run tests using pytest in the specified directory.                        │
+│ version    Display the CLI version and check for updates.                            │
+│ update     Update Eidolon to the latest version from the repository.                 │
+│ security   Security-related commands for module verification and key management      │
+╰──────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-\* *Usage as of 18/04/2025, v0.3.0. For up-to-date usage and command-specific help, please install the tool and run* `eidolon -h` *or* `eidolon --help`
+\* *Usage as of 22/04/2025, v0.5.0. For up-to-date usage and command-specific help, please install the tool and run* `eidolon --help`
 
 <br/>
 
@@ -176,37 +316,27 @@ To see more about how to contribute, please refer to [contributing.md](/CONTRIBU
 
 <br/>
 
-## // MODULES
+## MODULES
 
 Modules are the core functionality behind Eidolon. Each module is self-contained and communicates with other modules via the message bus.
 
 <br/>
 
-### // ADDING NEW MODULES
-
-Please refer to the full documentation for instructions on creating modules
-
-1. Create a new directory under `src/modules`
-2. Add a `module.yaml` file with the module's configuration, and a `main.py` file that inherents the `ModuleCore` class
-3. Incorporate your functionality based off the abstract functions inherited from `ModuleCore`
-
-If built correctly, the module should be loaded when running `eidolon run`, `eidolon run <module_name>` or its otherwise loaded as a dependency to another module.
-
-<br/>
-
-### // SUBMITTING MODULES
+### SUBMITTING MODULES
 
 Currently, we only accept modules in PRs which either directly affect core functionality with a (mostly) universal benefit to users. No modules will be accepted into this repository as verified modules if they are for a niche usecase, connect with other non-open-source tools, or they do not inherit the core values behind the project.
 
+Note that modules can still be *verified*, they just cannot be verified as default modules. Please check the documentation to understand how to verify your modules.
+
 If you believe your module is ready to become a default module, please open a pull request detailing everything about your module, and we will review it carefully.
 
-For more information on module security, please read [security.md](/.github/SECURITY.md)
+For more information on module security, please read [security.md](/.github/SECURITY.md), or check out the documentation
 
 <br/>
 
-## // TESTING
+## TESTING
 
-This project uses `pytest` for testing. Major modules & every individual module uses tests to ensure code quality. All test files begin with the prefix `test_`, as per the [pytest documentation](https://docs.pytest.org/en/stable/getting-started.html).
+This project uses `pytest` for testing. Major core functionality & every individual module uses tests to ensure code quality. All test files begin with the prefix `test_`, as per the [pytest documentation](https://docs.pytest.org/en/stable/getting-started.html).
 
 To run all the tests in the project locally before creating a pull request, run the following in the project directory:
 
@@ -228,7 +358,50 @@ For more info, refer to the [pytest documentation](https://docs.pytest.org/en/st
 
 # // MISSION
 
-This is just the beginning. Eidolon will evolve — as propaganda does. The methods will change, but our values will stay the same.
+Eidolon aims to revolutionize the OSINT landscape. We don't belive that information gathering should be a boring, repetitive & error-prone task, it should be fast, dynamic & interesting. Eidolon aims to take out the monotony of intelligence-gathering, so you and your company can focus on real problem solving, analysis, & satisfying your clients.
 
-Help us build a system that resists the spread of disinformation. Contribute code. Fork the project. Share the mission. Start discussions.
+<br />
+<div align="center">
+  <a href="https://github.com/lachlanharrisdev/PROJECT-EIDOLON">
+    <img src="/.github/images/eidolon_logo.svg" alt="Logo" width="120" height="120">
+  </a>
+
+  <h1 align="center">PROJECT EIDOLON</h1>
+    <a href="#readme-top"><strong>Back to top</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/lachlanharrisdev/PROJECT-EIDOLON/issues">Issues</a>
+    &middot;
+    <a href="/.github/CONTRIBUTING.md">Contributing</a>
+    &middot;
+    <a href="/.github/SECURITY.md">Security</a>
+    &middot;
+    <a href="/LICENSE">License</a>
+    &middot;
+    <a href="/.github/CODE_OF_CONDUCT.md">Code of Conduct</a>
+  </p>
+</div>
+<br/>
+
+
+
+<!-- MARKDOWN LINKS & IMAGES -->
+<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+[contributors-shield]: https://img.shields.io/github/contributors/lachlanharrisdev/PROJECT-EIDOLON.svg?style=for-the-badge
+[contributors-url]: https://github.com/lachlanharrisdev/PROJECT-EIDOLON/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/lachlanharrisdev/PROJECT-EIDOLON.svg?style=for-the-badge
+[forks-url]: https://github.com/lachlanharrisdev/PROJECT-EIDOLON/network/members
+[stars-shield]: https://img.shields.io/github/stars/lachlanharrisdev/PROJECT-EIDOLON.svg?style=for-the-badge
+[stars-url]: https://github.com/lachlanharrisdev/PROJECT-EIDOLON/stargazers
+[issues-shield]: https://img.shields.io/github/issues/lachlanharrisdev/PROJECT-EIDOLON.svg?style=for-the-badge
+[issues-url]: https://github.com/lachlanharrisdev/PROJECT-EIDOLON/issues
+[license-shield]: https://img.shields.io/github/license/lachlanharrisdev/PROJECT-EIDOLON.svg?style=for-the-badge
+[license-url]: https://github.com/lachlanharrisdev/PROJECT-EIDOLON/blob/master/LICENSE.txt
+
+[issues]: https://github.com/lachlanharrisdev/PROJECT-EIDOLON/issues
+[contributing]: /.github/CONTRIBUTING.md
+[security]: /.github/SECURITY.md
+[license]: /LICENSE
+[code-of-conduct]: /.github/CODE_OF_CONDUCT.md
+[product-screenshot]: images/screenshot.png
 
