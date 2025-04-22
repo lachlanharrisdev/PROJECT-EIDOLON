@@ -1,0 +1,58 @@
+conversions:
+  # String to list conversions
+  str_to_list_str:
+    from_type: str
+    to_type: List[str]
+    method: split_string
+    
+  str_to_list_int:
+    from_type: str
+    to_type: List[int]
+    method: split_string
+    # Will first split the string, then attempt to convert each element to int
+    
+  # Simple type casting conversions
+  int_to_str:
+    from_type: int
+    to_type: str
+    method: simple_cast
+    
+  float_to_str:
+    from_type: float
+    to_type: str
+    method: simple_cast
+    
+  str_to_int:
+    from_type: str
+    to_type: int
+    method: simple_cast
+    
+  str_to_float:
+    from_type: str
+    to_type: float
+    method: simple_cast
+    
+  # Boolean conversions
+  str_to_bool:
+    from_type: str
+    to_type: bool
+    method: string_to_bool
+    
+  int_to_bool:
+    from_type: int
+    to_type: bool
+    method: simple_cast
+    
+  # List type conversions  
+  list_to_str:
+    from_type: list
+    to_type: str
+    method: simple_cast
+    # Will join list elements with commas
+    
+  # Dict conversions
+  dict_to_str:
+    from_type: dict
+    to_type: str
+    method: simple_cast
+    # Will convert dict to JSON-like string

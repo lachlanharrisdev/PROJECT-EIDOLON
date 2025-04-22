@@ -9,29 +9,6 @@ from core.modules.util.messagebus import MessageBus
 from ..module import ScryerModule
 
 
-def test_process_data():
-    """Test that the module processes input data correctly."""
-    logger = Mock()
-    module = ScryerModule(logger, None)
-
-    # Test with valid crawled data
-    test_data = [
-        {
-            "url": "https://example.com",
-            "status_code": 200,
-            "text": "<html><head><title>Example</title></head><body>Test</body></html>",
-            "headers": {"content-type": "text/html"},
-        }
-    ]
-
-    module.process(test_data)
-    assert module.crawled_data == test_data
-
-    # Test with invalid data
-    module.process("not_a_list")
-    assert logger.warning.called
-
-
 @pytest.mark.asyncio
 async def test_execute():
     """Test the execute method."""

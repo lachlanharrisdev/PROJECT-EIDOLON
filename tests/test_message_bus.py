@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import Mock, patch
 
 from core.modules.util.messagebus import MessageBus
-from core.modules.models import ModuleInput, ModuleOutput
+from core.modules.models import ModuleInput, ModuleOutput, CourierEnvelope
 from core.modules.engine.engine_contract import ModuleCore
 
 
@@ -13,8 +13,9 @@ async def test_message_bus_duplicate_subscriptions():
     # Mock subscribers
     results = []
 
-    def subscriber(data):
-        results.append(data)
+    def subscriber(envelope):
+        # Extract data from the envelope
+        results.append(envelope.data)
 
     # Subscribe the same subscriber multiple times
     bus.subscribe("test_topic", subscriber, expected_type=str)
@@ -33,8 +34,9 @@ async def test_message_bus_no_expected_type():
     # Mock subscribers
     results = []
 
-    def subscriber(data):
-        results.append(data)
+    def subscriber(envelope):
+        # Extract data from the envelope
+        results.append(envelope.data)
 
     # Subscribe without specifying an expected type
     bus.subscribe("test_topic", subscriber)
@@ -53,8 +55,9 @@ async def test_message_bus_type_validation():
     # Mock subscribers
     results = []
 
-    def subscriber(data):
-        results.append(data)
+    def subscriber(envelope):
+        # Extract data from the envelope
+        results.append(envelope.data)
 
     # Subscribe with type validation
     bus.subscribe("typed_topic", subscriber, expected_type=str)
