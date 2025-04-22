@@ -10,7 +10,7 @@
   <h1 align="center">PROJECT EIDOLON</h1>
 
   <p>
-    Eidolon is a modular OSINT / Cybersecurity pipeline framework that makes information gathering feel like cheating — <b>because it almost is.</b>
+    Eidolon is a modular OSINT pipeline framework that makes information gathering feel like cheating — <b>because it almost is.</b>
     <br />
     <a href="https://lachlanharrisdev.github.io/PROJECT-EIDOLON/"><strong>Explore the docs »</strong></a>
     <br />
@@ -145,11 +145,11 @@ Modules have virtually no overhead, with an I/O system & translation layer so li
 ```mermaid
 graph TD
     %% Define styles
-    %%classDef moduleClass fill:#a4c2f4,stroke:#8faad9,color:#333
-    %%classDef engineClass fill:#f4cccc,stroke:#e06666,color:#333,font-weight:bold
-    %%classDef pipelineClass fill:#d9ead3,stroke:#6aa84f,color:#333
-    %%classDef securityClass fill:#fff2cc,stroke:#f1c232,color:#333
-    %%classDef messageBusClass fill:#d0e0e3,stroke:#0c343d,color:#333,font-weight:bold
+    classDef moduleClass fill:#a4c2f4,stroke:#8faad9,color:#333
+    classDef engineClass fill:#f4cccc,stroke:#e06666,color:#333,font-weight:bold
+    classDef pipelineClass fill:#d9ead3,stroke:#6aa84f,color:#333
+    classDef securityClass fill:#fff2cc,stroke:#f1c232,color:#333
+    classDef messageBusClass fill:#d0e0e3,stroke:#0c343d,color:#333,font-weight:bold
 
     classDef mainModuleClass font-weight:bold,font-size:large
 
@@ -350,31 +350,25 @@ docker run -it eidolon
 ╰──────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-\* *Usage as of 22/04/2025, v0.5.0. For up-to-date usage and command-specific help, please install the tool and run* `eidolon --help`
+\* *Usage as of 23/04/2025, v0.6.0. For up-to-date usage and command-specific help, please install the tool and run* `eidolon --help`
 
 <br/>
 
 # // DEVELOPMENT && CONTRIBUTING
 
-To see more about how to contribute, please refer to [contributing.md](/CONTRIBUTING.md). We welcome more than just developers - documentation writers, researchers / journalists, funders, bug hunters etc.
+To see more about how to contribute, please refer to [contributing.md](/CONTRIBUTING.md). We welcome more than just developers - documentation writers, researchers / journalists, funders, bug hunters etc. Even just pointing out bugs or noting some features you'd like to see will immensely help
 
 <br/>
 
-## MODULES
+## SUBMITTING MODULES
 
-Modules are the core functionality behind Eidolon. Each module is self-contained and communicates with other modules via the message bus.
-
-<br/>
-
-### SUBMITTING MODULES
-
-Currently, we only accept modules in PRs which either directly affect core functionality with a (mostly) universal benefit to users. No modules will be accepted into this repository as verified modules if they are for a niche usecase, connect with other non-open-source tools, or they do not inherit the core values behind the project.
+We're open to reviewing any modules for addition to this repository to come default with Eidolon, however they must be made to a high standard and by the guidelines outlined in [contributing.md](/CONTRIBUTING.md). No modules will be accepted into this repository if they are for a niche usecase, connect with other non-open-source tools, or they do not inherit the core values behind the project.
 
 Note that modules can still be *verified*, they just cannot be verified as default modules. Please check the documentation to understand how to verify your modules.
 
 If you believe your module is ready to become a default module, please open a pull request detailing everything about your module, and we will review it carefully.
 
-For more information on module security, please read [security.md](/.github/SECURITY.md), or check out the documentation
+For more information on module verification, please read [security.md](/.github/SECURITY.md), or check out the documentation
 
 <br/>
 
@@ -402,7 +396,7 @@ For more info, refer to the [pytest documentation](https://docs.pytest.org/en/st
 
 # // MISSION
 
-Eidolon aims to revolutionize the OSINT landscape. We don't belive that information gathering should be a boring, repetitive & error-prone task, it should be fast, dynamic & interesting. Eidolon aims to take out the monotony of intelligence-gathering, so you and your company can focus on real problem solving, analysis, & satisfying your clients.
+Eidolon aims to revolutionize the OSINT landscape. We don't belive that information gathering should be a boring, repetitive & mistake-prone task, it should be fast, dynamic & interesting. Eidolon aims to take out the monotony of intelligence-gathering, so you and your company can focus on real problem solving, analysis & the beauty of data.
 
 <br />
 <div align="center">
