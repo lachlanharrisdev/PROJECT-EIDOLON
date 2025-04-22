@@ -19,6 +19,9 @@ from core.security.utils import (
     get_module_verification_status,
 )
 
+# Import the new security verification system
+from core.security.module_security import module_security_manager
+
 
 class ModuleEngine:
     def __init__(self, **args):
@@ -234,15 +237,6 @@ class ModuleEngine:
             modules: List of specific module names to reload
             pipeline: Pipeline configuration containing modules to load
         """
-        # Discover and load modules
-        self.use_case.discover_modules(True, pipeline, self.thread_pool)
-
-        # Verify the loaded modules
-        public_key = get_public_key()
-        if not public_key:
-            self._logger.error("Failed to load public key for module verification")
-            return
-
         # Import here to avoid circular imports
         from core.modules.usecase.utilities import ModuleUtility
 
@@ -265,16 +259,44 @@ class ModuleEngine:
         else:
             module_paths_to_check = all_module_paths
 
-        # Verify each module
+        # Create dictionary to track modules that passed verification
+        verified_module_paths = set()
+
+        # First, verify each module before loading it
         for module_path in module_paths_to_check:
             full_path = os.path.join(modules_directory, module_path)
             module_name = os.path.basename(module_path)
-            is_verified = verify_module(full_path, public_key)
 
-            if is_verified:
-                self._logger.info(f"Module {module_name} VERIFIED")
+            # Use the new module_security_manager to verify the module
+            is_allowed = module_security_manager.handle_module_verification(full_path)
+
+            if is_allowed:
+                self._logger.info(f"Module '{module_name}' verification successful")
+                verified_module_paths.add(module_name)
             else:
-                self._logger.warning(f"Module {module_name} UNVERIFIED")
+                self._logger.warning(
+                    f"Module '{module_name}' verification failed - will be excluded from execution"
+                )
+
+        # Now discover and load only the verified modules
+        # We'll give the discover_modules function a list of modules to ignore
+        excluded_modules = [
+            os.path.basename(path)
+            for path in module_paths_to_check
+            if os.path.basename(path) not in verified_module_paths
+        ]
+
+        # Discover and load modules
+        self.use_case.discover_modules(
+            True, pipeline, self.thread_pool, excluded_modules
+        )
+
+        # Initialize modules that passed verification
+        for module in self.use_case.modules:
+            if hasattr(module, "meta") and hasattr(module, "initialize_module"):
+                module_name = module.meta.name
+                self._logger.debug(f"Initializing verified module: {module_name}")
+                module.initialize_module()
 
     def _build_input_mappings(self, pipeline_modules: List[PipelineModule]) -> None:
         """

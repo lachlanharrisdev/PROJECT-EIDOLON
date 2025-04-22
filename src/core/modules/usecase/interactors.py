@@ -59,6 +59,7 @@ class ModuleUseCase:
         modules_path: List[str],
         package_name: str,
         allowed_modules: Optional[Set[str]] = None,
+        excluded_modules: List[str] = None,
     ):
         for directory in modules_path:
             # For modules in the pipeline, we need to match only the module name,
@@ -71,6 +72,15 @@ class ModuleUseCase:
             }:
                 self._logger.debug(
                     f"Skipping module {module_name} (not in pipeline configuration)"
+                )
+                continue
+
+            # Skip directories in excluded_modules if specified
+            if excluded_modules is not None and module_name.lower() in {
+                mod.lower() for mod in excluded_modules
+            }:
+                self._logger.debug(
+                    f"Skipping module {module_name} (excluded from loading)"
                 )
                 continue
 
@@ -98,7 +108,11 @@ class ModuleUseCase:
                 self._logger.debug(f"No valid module entry point found in {directory}")
 
     def discover_modules(
-        self, reload: bool, pipeline: Optional[Pipeline] = None, thread_pool=None
+        self,
+        reload: bool,
+        pipeline: Optional[Pipeline] = None,
+        thread_pool=None,
+        excluded_modules: List[str] = None,
     ):
         """
         Discover the module classes contained in Python files, given a
@@ -107,6 +121,7 @@ class ModuleUseCase:
         :param reload: Whether to reload modules or use cached versions
         :param pipeline: Optional pipeline configuration to filter modules
         :param thread_pool: Optional thread pool to pass to modules
+        :param excluded_modules: Optional list of module names to exclude (e.g., unverified modules)
         """
         # Update thread_pool if provided
         if thread_pool is not None:
@@ -128,7 +143,25 @@ class ModuleUseCase:
                     f"Loading pipeline '{pipeline.name}' modules: {', '.join(allowed_modules)}"
                 )
 
-            self.__search_for_modules_in(modules_path, package_name, allowed_modules)
+                # If we have excluded modules, remove them from allowed modules
+                if excluded_modules:
+                    # Convert to lowercase for case-insensitive comparison
+                    excluded_set = {m.lower() for m in excluded_modules}
+                    allowed_modules = {
+                        m for m in allowed_modules if m.lower() not in excluded_set
+                    }
+                    self._logger.info(
+                        f"Excluding {len(excluded_set)} unverified modules from loading"
+                    )
+            elif excluded_modules:
+                # If we're not using a pipeline, we'll apply exclusion during module search
+                self._logger.info(
+                    f"Excluding {len(excluded_modules)} unverified modules from loading"
+                )
+
+            self.__search_for_modules_in(
+                modules_path, package_name, allowed_modules, excluded_modules
+            )
 
     def clear_modules(self):
         """

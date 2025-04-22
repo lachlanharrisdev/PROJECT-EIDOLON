@@ -1,59 +1,72 @@
 # Module Verification and Security
 
-This document explains the security mechanisms in Project Eidolon's module system, including the verification process, cryptographic signing, and best practices for securing modules.
+> **Note:** The security verification system has been updated. Please see the [Security Documentation](/docs/security/index.md) for the latest information.
+
+This document provides an overview of Eidolon's security mechanisms for module verification.
 
 ## Security Model
 
-Project Eidolon uses a security model based on cryptographic signatures to ensure users are aware when they are running unverified modules (that is, modules not officially a part of the project eidolon repository). This security model is crucial for OSINT workflows where data integrity and protection against malicious code are paramount concerns.
+Project Eidolon uses a multi-signer trust model to ensure users are aware when they are running unverified modules. This security model is crucial for OSINT workflows where data integrity and protection against malicious code are paramount concerns.
 
 ### Key Components
 
-1. **Public/Private Key Infrastructure**: A keypair-based signing system for modules
-2. **Module Hash Generation**: Automatic hashing of module code files
-3. **Verification System**: Pre-execution validation of module hashes
-4. **Verified Module Registry**: A record of modules that have passed verification
+1. **Public/Private Key Infrastructure**: A distributed cryptographic signing system for modules
+2. **Module Signature Files**: Detached signatures stored as `module.sig` files
+3. **Trusted Signers**: A registry of trusted public keys that verify module authenticity
+4. **Security Modes**: Configurable security levels (paranoid, default, permissive)
 
 ## Creating Signed Modules
 
-Modules can only be signed by the CI workflow on the [official github repository](https://github.com/lachlanharrisdev/PROJECT-EIDOLON), and the only modules that will be accepted into this repo are ones that provide benefit to a broad range of potential users, which are built following coding standards outlined in this documentation & the repository.
+Module authors can sign their modules using their private keys:
 
-If you'd like to contribute a module to the repository:
-
-1. **Develop your module** following the [module development guidelines](2-creating-a-module.md)
-2. **Request signing** by creating a PR from the module request template
-3. **Wait** for the maintainers to merge your PR and have the workflow generate a hash for it
-
-## Verified Modules Registry
-
-The system maintains a registry of verified modules in `src/settings/verified_modules.json`:
-
-```json
-{
-  "example_module": {
-    "hash": "e7a5d6c8f3b2a1...",
-    "signature": "a1b2c3d4e5f6...",
-    "version": "1.0.0",
-    "date_verified": "2025-03-15T12:00:00Z",
-    "repo": "https://github.com/lachlanharrisdev/PROJECT-EIDOLON"
-  }
-}
+```bash
+eidolon security sign --key your_private_key.pem /path/to/your/module
 ```
 
-## Manually Verifying a Module
+For detailed instructions on signing modules, see the [Module Signing Guide](/docs/security/signing-modules.md).
 
-You can manually verify a module's integrity:
+## Verifying Modules
 
-```python
-from core.security.utils import verify_module, get_public_key
+To manually verify a module's authenticity:
 
-public_key = get_public_key()
-is_verified = verify_module("your_module_name", public_key)
-
-if is_verified:
-    print("Module verified successfully")
-else:
-    print("Module verification failed")
+```bash
+eidolon security verify /path/to/module
 ```
+
+This will check if the module's signature is valid and was created by a trusted signer.
+
+## Managing Trusted Signers
+
+Users can manage which module authors they trust:
+
+```bash
+# List trusted signers
+eidolon security list-trusted
+
+# Add a trusted signer
+eidolon security trust --key author_public_key.pem --id "author_name" --comment "Description"
+
+# Remove a trusted signer
+eidolon security untrust author_name
+```
+
+For complete details on managing trusted signers, see [Managing Trusted Signers](/docs/security/trusted-signers.md).
+
+## Security Configuration
+
+Eidolon provides three security modes:
+
+1. **Paranoid**: Only verified modules from trusted signers are allowed
+2. **Default**: Prompts for untrusted modules, allows verified modules automatically
+3. **Permissive**: Allows all modules with appropriate warnings
+
+Configure the security mode when running Eidolon:
+
+```bash
+eidolon run --security-mode=paranoid my_pipeline
+```
+
+For full security configuration options, see [Security Configuration](/docs/security/configuration.md).
 
 ## Reporting Security Issues
 
@@ -64,6 +77,4 @@ If you discover a security vulnerability in Project Eidolon:
 3. **Provide details**: Include steps to reproduce and potential impact
 4. **Allow time for fixes**: Follow responsible disclosure practices
 
-Please read the [security policy](https://github.com/lachlanharrisdev/PROJECT-EIDOLON/security/policy) on the repository for more information about vulnerability reporting
-
-For information about implementing module methods securely, see the [module methods documentation](methods.md).
+Please read the [security policy](https://github.com/lachlanharrisdev/PROJECT-EIDOLON/security/policy) on the repository for more information about vulnerability reporting.

@@ -1,13 +1,18 @@
 pipeline:
   name: default 
   description: >
-    Demonstration of the basic suite of built-in tools.
+    Demonstration of the full suite of built-in tools. No config required.
+    This pipeline will crawl a URL list, filter the results, extract data,
+    and generate a report, with a security test built-in too.
 
   execution:
     timeout: 600s
     max_threads: 8
 
   modules:
+  - name: example_malicious_module
+    id: example_malicious_module
+    run_mode: once
   - name: aethon_urllist
     id: loader
     config:

@@ -49,6 +49,7 @@ class ModuleCore(object, metaclass=IModuleRegistry):
         self._shutdown_event = asyncio.Event()
         self._run_mode = "once"  # Modes: once, loop, reactive
         self._is_completed = False
+        self._initialized = False  # Track whether init() has been called
 
         # Reactive mode state
         self._is_processing = False
@@ -85,8 +86,17 @@ class ModuleCore(object, metaclass=IModuleRegistry):
             )
             self._logger.error(f"Failed to load module configuration: {e}")
 
-        # Initialize module-specific state
-        self.init()
+        # No longer immediately initialize - init() will be called after security verification
+        # by the initialize_module() method
+
+    def initialize_module(self) -> None:
+        """
+        Initialize the module after security verification.
+        This method is called by the module engine after security checks have passed.
+        """
+        if not self._initialized:
+            self.init()
+            self._initialized = True
 
     def get_config(self) -> dict:
         """

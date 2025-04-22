@@ -32,10 +32,6 @@ class OsirisModule(ModuleCore):
         # Extract status code filter rules (default to 200-299 for success codes)
         self.status_codes = set(filter_rules.get("status_codes", range(200, 300)))
 
-        self.log(
-            f"Osiris filter initialized with status codes: {sorted(list(self.status_codes))}"
-        )
-
     def process(self, envelope: CourierEnvelope) -> None:
         """
         Process input data (list of dictionaries).
