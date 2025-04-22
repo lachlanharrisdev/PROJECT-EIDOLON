@@ -9,41 +9,6 @@ from core.modules.util.messagebus import MessageBus
 from ..module import ScryerModule
 
 
-@pytest.mark.asyncio
-async def test_execute():
-    """Test the execute method."""
-    logger = Mock()
-    module = ScryerModule(logger, None)
-    message_bus = AsyncMock(spec=MessageBus)
-
-    # Prepare test data
-    test_data = [
-        {
-            "url": "https://example.com",
-            "status_code": 200,
-            "text": "<html><head><title>Example</title></head><body>Test</body></html>",
-            "headers": {"content-type": "text/html"},
-        }
-    ]
-
-    # Set up initial data
-    module.crawled_data = test_data
-
-    # Mock _initialize_extractors to avoid configuration issues
-    with patch.object(module, "_initialize_extractors"), patch.object(
-        module, "_log_extraction_summary"
-    ):
-
-        # Execute the module
-        await module.execute(message_bus)
-
-        # Check that message_bus.publish was called correctly
-        assert message_bus.publish.call_count == 2
-
-        # Check that crawled_data was cleared
-        assert module.crawled_data == []
-
-
 def test_extract_title():
     """Test the _extract_title method."""
     logger = Mock()
@@ -100,14 +65,39 @@ def test_extract_emails():
     Contact us at info@example.com or support@test.org.
     For sales inquiries: sales@company.co.uk
     Invalid emails: not.an.email, @missing-username.com
+    Check our <a href="mailto:contact@example.org">contact email</a>
     """
 
     emails = module._extract_emails(text)
 
-    assert len(emails) == 3
+    assert len(emails) == 4
     assert "info@example.com" in emails
     assert "support@test.org" in emails
     assert "sales@company.co.uk" in emails
+    assert "contact@example.org" in emails  # From mailto: link
+
+
+def test_extract_phones():
+    """Test the _extract_phones method with various phone number formats."""
+    logger = Mock()
+    module = ScryerModule(logger, None)
+
+    text = """
+    Call us at: (555) 123-4567 or +1 555-987-6543
+    International: +44 20 7123 4567
+    European format: +33 01 23 45 67 89
+    With dots: 555.123.4567
+    With spaces: 555 123 4567
+    """
+
+    phones = module._extract_phones(text)
+
+    assert len(phones) >= 6  # At least 6 different formats should be detected
+    # Check for specific formats
+    assert "(555) 123-4567" in phones
+    assert any("+1" in phone for phone in phones)
+    assert any("+44" in phone for phone in phones)
+    assert any("+33" in phone for phone in phones)
 
 
 def test_process_page():

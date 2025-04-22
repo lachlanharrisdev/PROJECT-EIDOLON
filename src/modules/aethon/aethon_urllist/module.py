@@ -294,13 +294,7 @@ class URLListModule(ModuleCore):
         # Base domains for example URLs
         domains = [
             "example.com",
-            "test-site.org",
-            "sample-domain.net",
-            "demo.io",
-            "testing.dev",
-            "sandbox.app",
-            "mockup.co",
-            "staging-env.tech",
+            "crawler-test.com/redirects/infinite_redirect",
         ]
 
         # URL paths and parameters

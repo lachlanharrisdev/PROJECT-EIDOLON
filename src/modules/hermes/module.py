@@ -123,10 +123,12 @@ class HermesModule(ModuleCore):
             lines.append(f"Data type: Dictionary with {len(self.data_to_report)} keys")
             if self.data_to_report:
                 lines.append("Top-level keys:")
-                for key in list(self.data_to_report.keys())[:10]:
+                for key in list(self.data_to_report.keys())[:100]:
                     lines.append(f"  - {key}")
-                if len(self.data_to_report) > 10:
-                    lines.append(f"  - ... ({len(self.data_to_report) - 10} more keys)")
+                if len(self.data_to_report) > 100:
+                    lines.append(
+                        f"  - ... ({len(self.data_to_report) - 100} more keys)"
+                    )
         else:
             lines.append(f"Data type: {type(self.data_to_report).__name__}")
 
@@ -137,13 +139,13 @@ class HermesModule(ModuleCore):
         # Format the data for readability
         try:
             # Different handling based on data type for better readability
-            if isinstance(self.data_to_report, list) and len(self.data_to_report) > 5:
+            if isinstance(self.data_to_report, list) and len(self.data_to_report) > 50:
                 # For long lists, show just a few items
-                for i, item in enumerate(self.data_to_report[:5]):
+                for i, item in enumerate(self.data_to_report[:50]):
                     formatted_item = pp.pformat(item)
                     lines.append(f"Item {i+1}:")
                     lines.extend("  " + line for line in formatted_item.splitlines())
-                lines.append(f"... ({len(self.data_to_report) - 5} more items)")
+                lines.append(f"... ({len(self.data_to_report) - 50} more items)")
             else:
                 # For all other cases, use pretty printing
                 formatted_data = pp.pformat(self.data_to_report)

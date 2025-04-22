@@ -1,0 +1,10 @@
+name: 'example_malicious_module'
+description: "This is an unsigned module that showcases Eidolon's security system"
+version: '1.0.0'
+alias: 'malicious-module'
+creator: 'Hacky McHackface'
+runtime:
+  main: 'main.py'
+  tests: []
+repository: ''
+requirements: []
