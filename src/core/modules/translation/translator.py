@@ -1,5 +1,6 @@
 import logging
 import functools
+import hashlib
 from typing import Any, Dict, List, Tuple, Optional, Type, Union, Callable
 import yaml
 from pathlib import Path
@@ -117,6 +118,37 @@ class TypeTranslator(Translations):
         """
         return f"{from_type}_to_{to_type}"
 
+    def _create_cache_key(self, from_type: str, to_type: str, data: Any) -> Tuple:
+        """
+        Create a robust cache key using hashing for data values.
+
+        This prevents collision issues with large string inputs by using
+        a hash digest instead of truncated strings.
+
+        Args:
+            from_type: Source type name
+            to_type: Target type name
+            data: The data being converted
+
+        Returns:
+            A tuple that can be used as a cache key
+        """
+        try:
+            # For strings, use a hash to avoid collisions with large inputs
+            if isinstance(data, str):
+                # Create a hash of the string data
+                data_hash = hashlib.md5(
+                    data.encode("utf-8", errors="replace")
+                ).hexdigest()
+                return (from_type, to_type, data_hash)
+            # For other types, use their type name as the key component
+            else:
+                return (from_type, to_type, str(type(data)))
+        except Exception as e:
+            # If anything goes wrong, fall back to a simple type-based key
+            self.logger.warning(f"Error creating cache key: {e}, using fallback")
+            return (from_type, to_type, "fallback")
+
     def can_convert(self, from_type: str, to_type: str) -> bool:
         """
         Check if a conversion is possible between the given types.
@@ -150,13 +182,9 @@ class TypeTranslator(Translations):
             if from_type == to_type:
                 return data, True
 
-            # Check the cache first using (from_type, to_type) as the key
+            # Check the cache first using a robust cache key
             try:
-                cache_key = (
-                    from_type,
-                    to_type,
-                    str(data)[:100] if isinstance(data, str) else str(type(data)),
-                )
+                cache_key = self._create_cache_key(from_type, to_type, data)
                 if cache_key in self._translation_cache:
                     return self._translation_cache[cache_key], True
             except Exception as cache_error:

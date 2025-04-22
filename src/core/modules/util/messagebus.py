@@ -171,7 +171,8 @@ class MessageBus:
                 f"Error creating envelope: {e}, using minimal envelope"
             )
             # Create a minimal envelope if the full one fails
-            envelope = CourierEnvelope(data=data, topic=topic)
+            data_type = type(data).__name__ if data is not None else None
+            envelope = CourierEnvelope(data=data, topic=topic, data_type=data_type)
 
         for subscriber in self.subscribers[topic]:
             try:
