@@ -52,7 +52,6 @@
     * [Docker](#docker)
 * [Usage](#-usage)
 * [Development & contributing](#-development--contributing)
-    * [Modules](#modules)
     * [Testing](#testing)
  * [Mission](#-mission)
 
@@ -138,6 +137,38 @@ Modules have virtually no overhead, with an I/O system & translation layer so li
 * Modules run fully asynchronously from one-another
 * As long as it can be called from python, your CPU-bound logic can be written in **any** language
 * Default modules are designed with flexibility, extensive features & raw power in mind
+
+```python
+2025-04-23 14:44:24,232 INFO     [aethon_crawler] Crawl finished. URLs added to queue: 1274. Unique URLs visited (approx): 1274
+2025-04-23 14:44:24,233 INFO     [aethon_crawler] Crawl execution finished in 29.47 seconds.
+...
+2025-04-23 14:44:24,233 INFO     [osiris] Received 1274 items for filtering
+2025-04-23 14:44:24,235 INFO     [osiris] ==================================================
+2025-04-23 14:44:24,236 INFO     [osiris] OSIRIS FILTER REPORT
+2025-04-23 14:44:24,237 INFO     [osiris] ==================================================
+2025-04-23 14:44:24,237 INFO     [osiris] Items processed: 1274
+2025-04-23 14:44:24,237 INFO     [osiris] Items passed: 894 (70.2%)
+2025-04-23 14:44:24,237 INFO     [osiris] Items rejected: 380 (29.8%)
+2025-04-23 14:44:24,237 INFO     [osiris] ==================================================
+...
+2025-04-23 14:44:24,338 INFO     [scryer] Processing 894 pages of crawled data
+2025-04-23 14:44:24,348 INFO     [scryer] ==================================================
+2025-04-23 14:44:24,348 INFO     [scryer] SCRYER EXTRACTION REPORT
+2025-04-23 14:44:24,348 INFO     [scryer] ==================================================
+2025-04-23 14:44:24,351 INFO     [scryer] Total pages processed: 894
+...
+```
+**Crawl -> Filter -> Scrape**, all in under **30 seconds**
+<br/>
+
+## RELIABLE
+
+Gone are the days of a single error throwing out your two-hour-long python script. Errors are isolated, logged, and life just continues without them.
+
+* Custom translation layer automatically converts mismatching datatypes between modules
+* Errors don't stop your script from running (Unless you want them to)
+* Logs are safely stored for easy reporting
+* A custom shutdown coordinator ensures your files & data are safe
 
 <br/>
 
@@ -279,6 +310,8 @@ git clone https://github.com/lachlanharrisdev/project-eidolon.git
 cd project-eidolon
 ```
 
+<br/>
+
 > **NON-DEVELOPERS:** If you don't plan on modifying any source code, just only follow the step below:
 
 3. Install the tool
@@ -335,7 +368,7 @@ docker run -it eidolon
 
 # // USAGE
 
-```bash
+```yaml
 ╭─ Options ────────────────────────────────────────────────────────────────────────────╮
 │ --help          Show this message and exit.                                          │
 ╰──────────────────────────────────────────────────────────────────────────────────────╯
