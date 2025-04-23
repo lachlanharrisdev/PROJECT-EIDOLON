@@ -8,6 +8,7 @@ from logging import Logger
 
 from core.modules.engine.engine_contract import ModuleCore
 from core.modules.util.messagebus import MessageBus
+from core.modules.models import CourierEnvelope
 
 
 class URLListModule(ModuleCore):
@@ -41,13 +42,15 @@ class URLListModule(ModuleCore):
         # Initialize data structures
         self.urls = []
 
-    def process(self, data: Any) -> None:
+    def process(self, envelope: CourierEnvelope) -> None:
         """
         Process input data received from message bus.
 
         Args:
             data: The input data, expected to be a file path or list of file paths
         """
+        data = envelope.data
+
         if isinstance(data, dict) and "file_paths" in data:
             self.file_paths = data["file_paths"]
             self.log(
@@ -73,6 +76,12 @@ class URLListModule(ModuleCore):
             # This ensures we have the latest configuration when the module runs
             args = self.get_arguments()
             self.log(f"Running with configuration: {args}", log_level="debug")
+
+            if args.get("crawler_test", False):
+                await message_bus.publish(
+                    "urls", "https://crawler-test.com/"
+                )  # also tests the translation layer
+                return
 
             # Setup module configuration with fallbacks to module.yaml defaults
             self.supported_formats = args.get(
@@ -294,7 +303,16 @@ class URLListModule(ModuleCore):
         # Base domains for example URLs
         domains = [
             "example.com",
-            "crawler-test.com/redirects/infinite_redirect",
+            "crawler-test.com",
+            "youtube.com",
+            "google.com",
+            "facebook.com",
+            "x.com",
+            "instagram.com",
+            "linkedin.com",
+            "github.com",
+            "reddit.com",
+            "pinterest.com",
         ]
 
         # URL paths and parameters

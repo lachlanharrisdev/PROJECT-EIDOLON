@@ -234,8 +234,8 @@ class ModuleCore(object, metaclass=IModuleRegistry):
         """
         Log a message with the specified log level.
         """
-        if hasattr(self._logger, log_level):
-            getattr(self._logger, log_level)(f"[{self.meta.name}] {message}")
+        if hasattr(self._logger, log_level.lower()):
+            getattr(self._logger, log_level.lower())(f"[{self.meta.name}] {message}")
         else:
             self._logger.debug(f"Invalid log level '{log_level}' specified")
 
