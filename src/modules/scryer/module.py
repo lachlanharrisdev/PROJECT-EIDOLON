@@ -267,13 +267,23 @@ class ScryerModule(ModuleCore):
         if status_code not in allowed_codes:
             return False
 
-        # Check content type
+        # Check content type - allow processing if empty but text exists
         content_type = self._get_content_type(page_data)
         allowed_types = self.config.get("filters", {}).get(
             "content_type", ["text/html"]
         )
-        if not any(allowed in content_type.lower() for allowed in allowed_types):
+        has_text = bool(page_data.get("text", ""))  # Check if text content exists
+
+        # If content_type is not empty, check against allowed types
+        if content_type and not any(
+            allowed in content_type.lower() for allowed in allowed_types
+        ):
             return False
+        # If content_type IS empty, only proceed if there's text content
+        elif not content_type and not has_text:
+            # Skip if content type is empty AND there's no text
+            return False
+        # Otherwise (content_type is allowed OR content_type is empty but text exists), continue checks...
 
         # Check domain filtering if specified
         url = page_data.get("url", "")
@@ -311,8 +321,16 @@ class ScryerModule(ModuleCore):
         allowed_types = self.config.get("filters", {}).get(
             "content_type", ["text/html"]
         )
-        if not any(allowed in content_type.lower() for allowed in allowed_types):
+        has_text = bool(page_data.get("text", ""))
+
+        # Check content type condition based on the modified logic
+        if content_type and not any(
+            allowed in content_type.lower() for allowed in allowed_types
+        ):
             return f"Content type '{content_type}' not in allowed types"
+        elif not content_type and not has_text:
+            return "Content type missing and no text content found"
+        # If we got here, content type wasn't the primary reason for skipping (if skipped)
 
         url = page_data.get("url", "")
         include_domains = self.config.get("filters", {}).get("include_domains", [])

@@ -2,11 +2,13 @@ pipeline:
   name: default 
   description: >
     Demonstration of the full suite of built-in tools. No config required.
-    This pipeline will crawl a URL list, filter the results, extract data,
-    and generate a report, with a security test built-in too.
+    This pipeline will crawl the crawler test site, filter the results,
+    scrape that data for any information it can find, and then generate a report.
+    
+    This is a great example to show how all of the built-in tools work together,
+    and how your own pipeline can look too.
 
   execution:
-    timeout: 600s
     max_threads: 8
 
   modules:
@@ -14,24 +16,27 @@ pipeline:
     id: example_malicious_module
     run_mode: once
 
+  # Generate a list of 100 URLs to crawl
   - name: aethon_urllist
     id: loader
     config:
       supported_formats: [".txt", ".csv", ".json", ".xml"]
-      example_mode: true
-      example_count: 300
-      skip_empty_lines: true
-      strip_whitespace: true
-      remove_duplicates: true
+      example_mode: true # example mode generates a list of random URLs w/ extensions based on popular sites
+      example_count: 30
+      crawler_test: false # just gives the url to https://crawler-test.com/
+      skip_empty_lines: false
+      strip_whitespace: false
+      remove_duplicates: false
     outputs:
     - urls: "urls"
     run_mode: once
 
+  # Clean the URLs
   - name: aethon_urlclean
     id: cleaner
     config:
       whitelist: []
-      blacklist: ["css", "png", "jpg", "jpeg", "svg"]
+      blacklist: ["css", "png", "jpg", "jpeg", "svg"] # File extensions to ignore
       filters: ["removecontent", "noparams"]
       keepslash: true
     input:
@@ -42,17 +47,18 @@ pipeline:
     run_mode: reactive
     depends_on: [loader]
 
+  # Crawl the cleaned URLs & output the raw HTML data
   - name: aethon_crawler
     id: crawler
     config:
-      concurrency: 300
-      timeout: 8
-      user_agent: "Eidolon/1.0 Web Crawler"
-      follow_redirects: true
-      max_redirects: 5
-      retry_count: 3
-      retry_delay: 1
-      verify_ssl: true
+      max_depth: 2
+      max_urls: 300
+      max_concurrency_global: 30
+      max_concurrency_per_domain: 10
+      crawl_delay: 0.25
+      max_page_size: 1048576
+      user_agent: "AethonCrawler_ByEidolon/0.1"
+      stay_on_domain: true
     input:
       urls: cleaner.cleaned_urls
     outputs:
@@ -60,7 +66,8 @@ pipeline:
     - crawl_count: "crawl_count"
     run_mode: reactive
     depends_on: [cleaner]
-
+  
+  # Filter the crawled data to only successful responses
   - name: osiris
     id: filter
     config:
@@ -76,8 +83,9 @@ pipeline:
     run_mode: reactive
     depends_on: [crawler]
 
+  # Scrape the filtered HTML data for emails, phones, links etc.
   - name: scryer
-    id: extractor
+    id: scraper
     depends_on: [filter]
     input:
       crawled_data: filter.filtered_data
@@ -97,7 +105,7 @@ pipeline:
             selector: "p"
       output_format: "json"
       include_failed: false
-      min_text_length: 200
+      min_text_length: 5
       max_text_length: 50000
       filters:
         content_type: ["text/html"]
@@ -107,11 +115,12 @@ pipeline:
     - extraction_count: "extraction_count"
     run_mode: reactive
     
+  # Generate a basic report from the data
   - name: hermes
     id: reporter
-    depends_on: [extractor]
+    depends_on: [scraper]
     input:
-      data: extractor.extracted_data
+      data: scraper.extracted_data
     config:
       report_title: "Aethon Web Analysis Report"
       output_dir: "reports"

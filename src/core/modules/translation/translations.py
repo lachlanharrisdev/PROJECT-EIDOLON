@@ -73,9 +73,6 @@ class Translations:
             Boolean value
         """
         try:
-            if isinstance(data, bool):
-                return data
-
             if isinstance(data, str):
                 lowered = data.lower().strip()
                 if lowered in ("true", "yes", "y", "1", "on"):

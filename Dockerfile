@@ -1,5 +1,5 @@
 # Build stage
-FROM python:3.12.10-slim as builder
+FROM python:3.12.10-slim AS builder
 
 WORKDIR /build
 
@@ -26,13 +26,14 @@ COPY --from=builder /wheels /wheels
 RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels
 
 # Install the application in development mode (without copying all code first)
-COPY pyproject.toml setup.py* ./
+COPY [pyproject.toml](http://_vscodecontentref_/6) ./
 # If setup.py doesn't exist, this will have no effect
-RUN pip install -e . || echo "No setup.py found, continuing with alternate install method"
 
 # Copy application code - this layer will change frequently
 # We put this after dependency installation to maximize cache hits
 COPY . .
+
+RUN pip install .
 
 
 # Set permissions for the eidolon user
@@ -42,9 +43,8 @@ RUN chown -R eidolon:eidolon /app
 USER eidolon
 
 # Set environment variables
-ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
-# Set up entrypoint for CLI interface
-ENTRYPOINT ["python", "-m", "src.core.cli.commands"]
+# Set up entrypoint using the installed script
+ENTRYPOINT ["eidolon"]
 CMD ["run"]

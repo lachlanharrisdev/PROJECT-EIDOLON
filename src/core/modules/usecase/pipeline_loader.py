@@ -18,7 +18,9 @@ from core.modules.util import FileSystem
 class PipelineLoader:
     def __init__(self, logger: logging.Logger):
         self._logger = logger
+        # Revert to original: Get path from FileSystem, which now checks env vars
         self._pipeline_dir = FileSystem.get_pipelines_directory()
+        self._logger.info(f"Pipeline directory set to: {self._pipeline_dir}")
 
     def load_pipeline(self, pipeline_name: str) -> Optional[Pipeline]:
         """

@@ -45,7 +45,7 @@ from cryptography.hazmat.primitives.asymmetric import padding, rsa
 # Create Typer app
 app = typer.Typer(
     help="Eidolon CLI Tool - A modular OSINT suite for analyzing disinformation.",
-    add_completion=False,
+    add_completion=True,
 )
 
 # Create security commands subgroup

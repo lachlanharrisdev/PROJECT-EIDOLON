@@ -1,36 +1,30 @@
-version: '3.8'
-
 services:
   eidolon:
     build:
-      context: ..
+      context: . # Changed context to current directory
       dockerfile: Dockerfile
     image: eidolon:latest
     container_name: eidolon
     restart: unless-stopped
     volumes:
       # Mount pipelines directory to allow easy pipeline configuration
-      - src/pipelines:/app/src/pipelines
+      - ./src/pipelines:/app/src/pipelines
       # Mount modules directory to allow adding custom modules
-      - src/modules:/app/src/modules
+      - ./src/modules:/app/src/modules
       # Mount settings directory for configuration
-      - src/settings:/app/src/settings
-    environment:
-      - LOG_LEVEL=INFO
-    # Default command is "run" which executes the default pipeline
-    # Override with: docker-compose run eidolon <command>
+      - ./src/settings:/app/src/settings
+      # Mount reports directory for output
+      - ./reports:/app/reports
+    environment: # Add this section
+      - PIPELINE_DIR=/app/src/pipelines
+      - MODULE_DIR=/app/src/modules
+    # Default command is "run" which executes the default pipeline (defined in src/settings/configuration.yaml or default.yaml)
+    # Override command: docker-compose run eidolon <command> [options]
+    # Example: docker-compose run eidolon run --pipeline aethon
+    # Example: docker-compose run eidolon list modules
 
-  # Example of adding a database service if needed
-  # db:
-  #   image: postgres:15
-  #   environment:
-  #     - POSTGRES_PASSWORD=postgres
-  #     - POSTGRES_USER=postgres
-  #     - POSTGRES_DB=eidolon
-  #   volumes:
-  #     - db-data:/var/lib/postgresql/data
-
-# Define volumes for persistent data if needed
-volumes:
-  db-data:
-    driver: local
+# Removed commented-out db service and volumes for clarity
+# Define volumes for persistent data if needed (e.g., for specific module data)
+# volumes:
+#   module-data:
+#     driver: local

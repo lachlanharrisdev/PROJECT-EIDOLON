@@ -20,5 +20,7 @@ Repository = "https://github.com/lachlanharrisdev/PROJECT-EIDOLON.git"
 Issues = "https://github.com/lachlanharrisdev/PROJECT-EIDOLON/issues"
 
 [tool.setuptools]
-packages = ["core"]
-package-dir = {"" = "src"}
+package-dir = {"" = "src"} # Change "." to "src"
+
+[tool.setuptools.packages.find] # Add this section
+where = ["src"]

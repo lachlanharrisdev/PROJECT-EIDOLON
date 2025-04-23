@@ -9,6 +9,11 @@ runtime:
   main: module.py
   tests: []
 
+requirements:
+  - name: robotexclusionrulesparser
+    version: 1.7.0
+  - name: httpx[http2]
+    version: 0.24.0
 
 inputs:
   - name: urls

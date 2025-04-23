@@ -1,6 +1,6 @@
 # Module Verification and Security
 
-> **Note:** The security verification system has been updated. Please see the [Security Documentation](/docs/security/index.md) for the latest information.
+> **Note:** The security verification system has been updated. Please see the [Security Documentation](../security/model.md) for the latest information.
 
 This document provides an overview of Eidolon's security mechanisms for module verification.
 
