@@ -80,12 +80,12 @@ jobs:
           cache-to: |
             ${{ env.BUILDX_CACHE_TO }}
 
-      - name: Sign the published Docker image
-        if: ${{ github.event_name != 'pull_request' }}
-        env:
-          DIGEST: ${{ steps.build-and-push.outputs.digest }}
-          IMAGE_REF: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build-and-push.outputs.digest }}
-        run: |
-          echo "DIGEST: $DIGEST"
-          echo "IMAGE_REF: $IMAGE_REF"
-          cosign sign --yes "${IMAGE_REF}"
+#      - name: Sign the published Docker image
+#        if: ${{ github.event_name != 'pull_request' }}
+#        env:
+#          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+#          IMAGE_REF: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build-and-push.outputs.digest }}
+#        run: |
+#          echo "DIGEST: $DIGEST"
+#          echo "IMAGE_REF: $IMAGE_REF"
+#          cosign sign --yes "${IMAGE_REF}"
