@@ -63,13 +63,13 @@
 
 You plug in a single URL.
 
-One command fires off a web scraper, a web crawler, a whois lookup, a passive vulnerability scanner, an outdated JS sniffer, and even an XSS probe — all dancing together in perfect sync, no spaghetti code, no awkward bash chains, no tears.
+One command fires off a DAG with a web scraper, a web crawler, a whois lookup, a passive vulnerability scanner, an outdated JS sniffer, and even an XSS probe — all dancing together in perfect sync, no spaghetti code, no awkward bash chains, no tears.
 
 Sixty seconds later, a polished report lands in your hands like it came from a Hollywood hacking montage.
 
 **That’s Eidolon.**
 
-But don’t be fooled by the magic show. Under the hood is a modular, stateless message bus that orchestrates I/O between pluggable components — each one signed, validated, and hot-swappable. You can wrap anything into a module: a CLI tool, a Python function, a Docker container. Eidolon turns them all into actors in your own scriptable pipeline.
+But don’t be fooled by the magic show. Under the hood is a modular, stateless message bus that orchestrates I/O between pluggable components — each one signed, validated, and hot-swappable. Eidolon turns them all into actors in your own scriptable pipeline.
 
 Build once, reuse everywhere. No more writing glue code. No more rewriting your entire workflow just because you found a cooler library.
 
@@ -291,7 +291,7 @@ graph TD
 
 ## REQUIREMENTS
 - Python 3.12\*
-- *\[Optional\]* Docker CLI
+- *\[Optional\]* Docker Engine + Docker Compose
 
 
 \* *specifically tested on `3.12.10`. Other python versions may work but are untested. If you'd like to request full support for a version, please create a github issue, PR, or raise a ticket in [the discord](https://discord.gg/wDcxk4pCs5). Our current limit is GitHub actions minutes D:*
@@ -344,7 +344,7 @@ source .venv/bin/activate
 
 ## DOCKER
 
-> You can also pull from the [GitHub Container Registry](https://github.com/lachlanharrisdev/PROJECT-EIDOLON/packages) and download / install the desired docker container from there
+> For a full usage guide, please see the [docker usage documentation](https://lachlanharrisdev.github.io/PROJECT-EIDOLON/docker-usage) on Eidolon's documentation site
 
 1. Clone the repo
 ```bash
@@ -352,17 +352,31 @@ git clone https://github.com/lachlanharrisdev/project-eidolon.git
 cd project-eidolon
 ```
 
-2. Build the full Docker image
+2. Build the image & start the container in detached mode (-d)
 
 ```bash
-docker build -f .Dockerfile -t eidolon .
+docker-compose up --build -d
 ```
 
-3. Run the container
-
+3.  View the output from the running container
 ```bash
-docker run -it eidolon
+docker-compose logs -f
 ```
+
+4.  The default command runs the pipeline specified in your configuration. To run other `eidolon` CLI commands (like listing modules or running a specific pipeline), use `docker-compose run`:
+```bash
+# List available modules
+docker-compose run --rm eidolon list-modules
+
+# Run a specific pipeline (e.g., 'aethon')
+docker-compose run --rm eidolon run --pipeline aethon
+
+# Get help for the run command
+docker-compose run --rm eidolon run --help
+```
+*   `--rm`: Automatically removes the temporary container created by `run` after the command finishes.
+*   `eidolon`: Specifies the service name defined in `docker-compose.yaml`.
+*   The rest of the command (`list-modules`, `run --pipeline aethon`, etc.) is passed directly to the container's entrypoint (`python -m src.core.cli.commands`).
 
 <br/>
 
