@@ -85,4 +85,7 @@ jobs:
         env:
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
           IMAGE_REF: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build-and-push.outputs.digest }}
-        run: cosign sign --yes "${IMAGE_REF}"
+        run: |
+          echo "DIGEST: $DIGEST"
+          echo "IMAGE_REF: $IMAGE_REF"
+          cosign sign --yes "${IMAGE_REF}"
