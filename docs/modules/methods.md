@@ -325,6 +325,6 @@ async def execute(self, message_bus: MessageBus) -> None:
 
 ---
 
-For module verification and security, see the [verification documentation](verification.md).
+For module verification and security, see the [security documentation](../security/model.md).
 
 For testing message bus interactions, see the [testing documentation](tests.md).

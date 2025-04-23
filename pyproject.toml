@@ -13,12 +13,14 @@ keywords = ["osint", "bot", "botnets", "politics", "data", "social media", "soci
 dynamic = ["version"]
 
 [project.scripts]
-eidolon = "src.core.cli.commands:main"
+eidolon = "core.cli.commands:main"
 
 [project.urls]
 Repository = "https://github.com/lachlanharrisdev/PROJECT-EIDOLON.git"
 Issues = "https://github.com/lachlanharrisdev/PROJECT-EIDOLON/issues"
 
 [tool.setuptools]
-packages = ["src"]
-package-dir = {"" = "."}
+package-dir = {"" = "src"} # Change "." to "src"
+
+[tool.setuptools.packages.find] # Add this section
+where = ["src"]

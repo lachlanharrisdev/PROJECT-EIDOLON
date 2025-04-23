@@ -1,4 +1,4 @@
-from core.modules.models.models import *
+from .models import *
 
 __all__ = [
     ModuleConfig,

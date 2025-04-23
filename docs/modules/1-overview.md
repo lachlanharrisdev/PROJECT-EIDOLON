@@ -40,6 +40,7 @@ Modules communicate through a type-safe message bus using a publish-subscribe pa
 1. **Publishers**: Modules publish data to named topics
 2. **Subscribers**: Modules subscribe to topics they're interested in
 3. **Type Validation**: The system validates that published data matches expected types
+4. **Metadata Wrapping**: All data is automatically wrapped in a `CourierEnvelope` which includes metadata like the source module and timestamp.
 
 Note that modules can be both publishers and subscribers, or neither of the two\*
 
@@ -88,7 +89,7 @@ The module system includes security features to protect data integrity and preve
 - Module hashes are verified before loading
 - A public key infrastructure notifies a user when modules they are loading are unverified
 
-For more information on module security, see the [Verification documentation](verification.md).
+For more information on module security, see the [Security documentation](../security/model.md).
 
 ## Next Steps
 

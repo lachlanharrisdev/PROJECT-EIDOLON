@@ -7,8 +7,8 @@ import yaml
 import traceback
 from datetime import datetime
 
-from core.modules.models import Meta, Device, CourierEnvelope
-from core.modules.util.messagebus import MessageBus
+from ..models import Meta, Device, CourierEnvelope
+from ..util.messagebus import MessageBus
 
 
 class IModuleRegistry(type):

@@ -189,4 +189,4 @@ outputs:
 
 For information on creating a complete module, see the [Creating a Module guide](2-creating-a-module.md).
 
-For guidance on module verification and security, see the [verification documentation](verification.md).
+For guidance on module verification and security, see the [security documentation](../security/module.md).

@@ -71,7 +71,7 @@ import os
 import sys
 
 from core.modules.engine import ModuleCore
-from core.modules.util.messagebus import MessageBus
+from core.modules.util.messagebus import MessageBus, CourierEnvelope
 
 # Import your existing application
 # This assumes your code has been moved to the src subdirectory
@@ -115,16 +115,17 @@ class YourAppModule(ModuleCore):
                 if advanced and 'timeout' in advanced:
                     self.app_instance.set_timeout(advanced['timeout'])
     
-    def process(self, data: Dict[str, Any]) -> None:
+    def process(self, envelope: CourierEnvelope) -> None:
         """
         Process input data received from the message bus.
         This replaces the input handling from your original app.
         """
+        data = envelope.data
         if isinstance(data, dict):
             self.input_data = data
-            self._logger.info(f"Received input data with keys: {data.keys()}")
+            self._logger.info(f"Received input data from {envelope.source_module or 'unknown'} via topic '{envelope.topic}' with keys: {data.keys()}")
         else:
-            self._logger.warning(f"Received unexpected data type: {type(data)}")
+            self._logger.warning(f"Received unexpected data type: {type(data)} from {envelope.source_module or 'unknown'}")
     
     async def execute(self, message_bus: MessageBus) -> None:
         """
@@ -373,11 +374,11 @@ if __name__ == "__main__":
 ### Converted Module
 ```python
 # module.py
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Union
 import os
 
 from core.modules.engine import ModuleCore
-from core.modules.util.messagebus import MessageBus
+from core.modules.util.messagebus import MessageBus, CourierEnvelope
 
 # Import the existing functionality
 from .src.text_analyzer import analyze_sentiment
@@ -392,19 +393,23 @@ class TextAnalyzerModule(ModuleCore):
         self.texts = []
         self.results = []
     
-    def process(self, data: Any) -> None:
+    def process(self, envelope: CourierEnvelope) -> None:
         """Process incoming texts for analysis."""
-        if isinstance(data, list):
+        data = envelope.data
+        source = envelope.source_module or 'unknown'
+        topic = envelope.topic
+        
+        if isinstance(data, list) and all(isinstance(item, str) for item in data):
             self.texts = data
-            self._logger.info(f"Received {len(data)} texts for analysis")
-        elif isinstance(data, dict) and 'texts' in data:
+            self._logger.info(f"Received {len(data)} texts from {source} via topic '{topic}'")
+        elif isinstance(data, dict) and 'texts' in data and isinstance(data['texts'], list):
             self.texts = data['texts']
-            self._logger.info(f"Received {len(data['texts'])} texts for analysis")
+            self._logger.info(f"Received {len(data['texts'])} texts from {source} via topic '{topic}'")
         elif isinstance(data, str):
             self.texts = [data]
-            self._logger.info(f"Received 1 text for analysis")
+            self._logger.info(f"Received 1 text from {source} via topic '{topic}'")
         else:
-            self._logger.warning(f"Received unexpected data type: {type(data)}")
+            self._logger.warning(f"Received unexpected data type: {type(data)} from {source} via topic '{topic}'")
     
     async def execute(self, message_bus: MessageBus) -> None:
         """Execute sentiment analysis on the received texts."""
@@ -438,7 +443,7 @@ version: '1.0.0'
 inputs:
   - name: "texts"
     type: "Union[List[str], str, Dict[str, List[str]]]"
-    description: "Text content to analyze"
+    description: "Text content to analyze. Can be a single string, a list of strings, or a dict with a 'texts' key containing a list of strings."
 outputs:
   - name: "sentiment_results"
     type: "List[Dict[str, Any]]"

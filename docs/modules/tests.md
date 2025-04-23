@@ -61,20 +61,22 @@ Integration tests verify that the module works correctly with the message bus an
 # test_integration.py
 import pytest
 from unittest.mock import Mock, patch
-from core.modules.util.messagebus import MessageBus
+from core.modules.util.messagebus import MessageBus, CourierEnvelope
 from ..main import YourModule
 
-def test_message_bus_publishing():
+@pytest.mark.asyncio
+async def test_message_bus_publishing():
     logger = Mock()
     module = YourModule(logger)
     messagebus = Mock(spec=MessageBus)
-    
-    module.input_data = {"test": "data"}
-    module.run(messagebus)
-    
+    messagebus.publish = Mock() # Mock the publish method directly for async check
+
+    module.input_data = {"test": "data"} # Assuming _process_data uses this
+    await module.execute(messagebus) # Use execute for async operation
+
     messagebus.publish.assert_called_once()
     args = messagebus.publish.call_args[0]
-    assert args[0] == "processed_results"
+    assert args[0] == "processed_results" # Assuming this is the output topic
     assert isinstance(args[1], list)
 ```
 
@@ -86,20 +88,23 @@ Behavioral tests verify that the module behaves correctly in response to differe
 # test_edge_cases.py
 import pytest
 from unittest.mock import Mock
+from core.modules.util.messagebus import CourierEnvelope
 from ..main import YourModule
 
 def test_empty_input_handling():
     logger = Mock()
     module = YourModule(logger)
-    
-    module.handle_input({})
-    assert module.input_data == {}
+    envelope = CourierEnvelope(data={}, topic="input_topic")
+
+    module.process(envelope) # Pass envelope to process
+    assert module.input_data == {} # Check internal state
 
 def test_invalid_input_handling():
     logger = Mock()
     module = YourModule(logger)
-    
-    module.handle_input("not_a_dict")
+    envelope = CourierEnvelope(data="not_a_dict", topic="input_topic")
+
+    module.process(envelope) # Pass envelope to process
     logger.warning.assert_called_once()
 ```
 
@@ -112,7 +117,7 @@ Pytest fixtures can help set up common test environments:
 import pytest
 from unittest.mock import Mock
 from ..main import YourModule
-from core.modules.util.messagebus import MessageBus
+from core.modules.util.messagebus import MessageBus, CourierEnvelope # Import CourierEnvelope
 
 @pytest.fixture
 def mock_logger():
@@ -121,11 +126,16 @@ def mock_logger():
 @pytest.fixture
 def test_module(mock_logger):
     module = YourModule(mock_logger)
+    # Perform any necessary initialization based on _initialize_module
+    module._initialize_module()
     return module
 
 @pytest.fixture
 def mock_messagebus():
-    return Mock(spec=MessageBus)
+    # Mock the async publish method if needed
+    bus = Mock(spec=MessageBus)
+    bus.publish = Mock()
+    return bus
 
 @pytest.fixture
 def sample_data():
@@ -134,16 +144,33 @@ def sample_data():
         "source": "test_source",
         "timestamp": "2025-01-01T12:00:00Z"
     }
+
+@pytest.fixture
+def sample_envelope(sample_data):
+    # Fixture for creating a sample envelope
+    return CourierEnvelope(
+        data=sample_data,
+        topic="input_topic",
+        source_module="test_source_module"
+    )
 ```
 
 Using these fixtures in tests:
 
 ```python
-def test_message_publishing(test_module, mock_messagebus, sample_data):
-    test_module.input_data = sample_data
-    test_module.run(mock_messagebus)
-    
+@pytest.mark.asyncio
+async def test_message_publishing(test_module, mock_messagebus, sample_envelope):
+    # Use process to set input data via envelope
+    test_module.process(sample_envelope)
+
+    # Call execute to trigger processing and publishing
+    await test_module.execute(mock_messagebus)
+
     mock_messagebus.publish.assert_called_once()
+    # Add more specific assertions about the published data if needed
+    args = mock_messagebus.publish.call_args[0]
+    assert args[0] == test_module.default_output_topic() # Check against default topic
+    # assert args[1] == expected_output_data
 ```
 
 ## Mocking External Dependencies
@@ -165,28 +192,40 @@ def test_api_client(test_module):
 
 ## Testing Input/Output Types
 
-Test that the module correctly handles its defined input and output types:
+Test that the module correctly handles its defined input and output types via the `process` method.
 
 ```python
 def test_type_handling(test_module):
-    test_module.handle_input(["keyword1", "keyword2"])
-    assert hasattr(test_module, "keywords")
-    assert len(test_module.keywords) == 2
-    
-    test_module.handle_input(("keyword3", "keyword4"))
-    assert len(test_module.keywords) == 2
+    # Test handling list input via envelope
+    list_envelope = CourierEnvelope(data=["keyword1", "keyword2"], topic="input_topic")
+    test_module.process(list_envelope)
+    # Assert based on how your process method handles list data
+    # Example: assert test_module.keywords == ["keyword1", "keyword2"]
+
+    # Test handling tuple input (should likely be rejected or handled specifically)
+    tuple_envelope = CourierEnvelope(data=("keyword3", "keyword4"), topic="input_topic")
+    test_module.process(tuple_envelope)
+    # Assert based on expected behavior for non-list sequence
+    # Example: assert test_module.keywords == ["keyword1", "keyword2"] # Assuming it ignores tuple
+    # Or assert logger.warning.called if it logs a warning
 ```
 
 ## Testing Error Conditions
 
-Test how your module handles errors and edge cases:
+Test how your module handles errors and edge cases within its processing logic, often triggered via `execute`.
 
 ```python
-def test_error_handling(test_module, mock_logger):
+@pytest.mark.asyncio
+async def test_error_handling(test_module, mock_logger, mock_messagebus, sample_envelope):
+    test_module.process(sample_envelope) # Set up input data
+
+    # Patch the internal processing method to raise an error
     with patch.object(test_module, '_process_data', side_effect=ValueError("Test error")):
-        test_module.run(Mock())
-        
+        await test_module.execute(mock_messagebus) # Run the execute cycle
+
         mock_logger.error.assert_called_once()
+        # Check that publish was NOT called, or an error topic was published to
+        mock_messagebus.publish.assert_not_called()
 ```
 
 ## Testing Module Commands
@@ -206,16 +245,18 @@ def test_module_commands(test_module):
 
 ## Testing Shutdown Logic
 
-Test that the module's `shutdown` method works correctly:
+Test that the module's `cleanup` method (or `_after_run`) works correctly.
 
 ```python
 @pytest.mark.asyncio
 async def test_shutdown_cleanup(test_module):
+    # Setup any resources that cleanup should handle
     test_module.connection = Mock()
-    test_module.connection.close = Mock()
-    
-    await test_module.shutdown()
-    
+    test_module.connection.close = Mock(return_value=None) # Mock async close if needed
+
+    # Call the cleanup method directly
+    await test_module.cleanup()
+
     test_module.connection.close.assert_called_once()
 ```
 
@@ -303,16 +344,35 @@ mock_validator.validate.assert_called_once()
 class FakeMessageBus:
     def __init__(self):
         self.messages = {}
-    
-    def publish(self, topic, data):
-        self.messages[topic] = data
-        
+        self.subscribers = {} # Add subscribers dict
+
+    async def publish(self, topic, data): # Make publish async
+        # Wrap data in an envelope like the real bus
+        envelope = CourierEnvelope(
+            data=data,
+            topic=topic,
+            source_module="fake_publisher" # Simulate source
+        )
+        self.messages[topic] = envelope
+        # Simulate delivery to subscribers
+        if topic in self.subscribers:
+            for callback in self.subscribers[topic]:
+                callback(envelope) # Call subscriber callback
+
     def subscribe(self, topic, callback, expected_type):
-        pass
-        
-fake_bus = FakeMessageBus()
-module.run(fake_bus)
-assert "keywords" in fake_bus.messages
+        if topic not in self.subscribers:
+            self.subscribers[topic] = []
+        self.subscribers[topic].append(callback)
+
+@pytest.mark.asyncio
+async def test_with_fake_bus(test_module):
+    fake_bus = FakeMessageBus()
+    test_module.process(CourierEnvelope(data={"key": "value"}, topic="input")) # Provide input
+
+    await test_module.execute(fake_bus) # Run execute
+
+    assert test_module.default_output_topic() in fake_bus.messages
+    # assert fake_bus.messages[test_module.default_output_topic()].data == expected_output
 ```
 
 ## Best Practices

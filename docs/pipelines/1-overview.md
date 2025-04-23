@@ -23,9 +23,7 @@ pipeline:
   description: "Description of what this pipeline does"
   
   execution:
-    timeout: 300s
-    retries: 2
-    error_policy: halt
+    max_threads: 8
     
   modules:
     - id: first_module
@@ -63,7 +61,7 @@ pipeline:
     - **`depends_on`**: List of module IDs this module depends on
     - **`input`**: Dictionary mapping this module's inputs to other modules' outputs
     - **`config`**: Module-specific configuration
-    - **`run_mode`**: How the module executes (loop, once, reactive, on_trigger)
+    - **`run_mode`**: How the module executes (loop, once, reactive)
 
 ## Input Mappings
 
