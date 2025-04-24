@@ -39,7 +39,7 @@ class TrustedSignersManager:
         try:
             if not os.path.exists(self.signers_file_path):
                 logger.warning(
-                    f"Trusted signers file not found: {self.signers_file_path}"
+                    "Trusted signers file not found. Please ensure the file exists."
                 )
                 return {}
 
