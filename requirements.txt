@@ -6,4 +6,4 @@ Requests==2.32.3
 spacy==3.8.5
 typer==0.15.2
 rich==14.0.0
-beautifulsoup4==4.12.2
+beautifulsoup4==4.13.4
