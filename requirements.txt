@@ -4,6 +4,6 @@ pytest==8.3.5
 PyYAML==6.0.2
 Requests==2.32.3
 spacy==3.8.7
-typer==0.15.4
+typer==0.16.0
 rich==14.0.0
 beautifulsoup4==4.13.4
